@@ -7,9 +7,12 @@ Writes to a file
 import (
 	"log"
 	"os"
+	"time"
 )
 
 func WriteLineToFile(fileName string, line string) {
+	currentTime := time.Now()
+
 	// Open or create the file for writing (append if it exists)
 	f, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -17,5 +20,5 @@ func WriteLineToFile(fileName string, line string) {
 	}
 	defer f.Close()
 
-	_, _ = f.WriteString(line + "\n")
+	_, _ = f.WriteString(line + " | " + currentTime.Format("2006-01-02 15:04:05") + "\n")
 }
