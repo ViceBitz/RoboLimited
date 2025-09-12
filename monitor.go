@@ -26,7 +26,7 @@ type DealDetails struct {
 }
 
 func buyCheck(bestPrice int, RAP_r int, value_r int) bool {
-	if bestPrice == 0 { //Error occurred if price is 0
+	if bestPrice == 0 { //Error occurred or no resellers if price is 0
 		return false
 	}
 	RAP := float64(RAP_r)
