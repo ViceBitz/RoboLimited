@@ -34,14 +34,14 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 ### Deal Sniping (more efficient & broad)
 1. Monitor **Rolimons Deals API** for price updates.  
    - `isRAP = 1` → refresh RAP for deal calculation.  
-   - `isRAP = 0` → refresh best price.  
+   - `isRAP = 0` → update new best price.  
 2. Compare updates against RAP & Value.  
-3. Confirm best price with HTML scraping.  
+3. Consider buy decision with Confirm best price with HTML scraping.  
 4. Place purchase order via **Roblox site cookies**.  
 5. Loop every few seconds for near real-time sniping (and to prevent rate limit).
 
 #### Final Steps (in both methods):
- +  **Buy** if price dips 25% below RAP or 35% below Value.
+ +  **Buy Decision** → buy or do nothing
  +  Track and log actions to a `.log` file.  
 
 ---
