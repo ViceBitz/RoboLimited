@@ -212,10 +212,16 @@ func monitorDeals() {
 			id_r := int(info[2].(float64))
 			id := strconv.Itoa(id_r)
 			price := int(info[3].(float64))
-			projected := int(info[7].(float64))
 
-			//Handle not found error or projected
-			if len(itemDetails.Items[id]) == 0 || projected != -1 {
+			//Handle not found error
+			if len(itemDetails.Items[id]) == 0 {
+				continue
+			}
+
+			projected := int(itemDetails.Items[id][7].(float64))
+
+			//Exclude projected items
+			if projected != -1 {
 				continue
 			}
 
