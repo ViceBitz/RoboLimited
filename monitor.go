@@ -117,7 +117,7 @@ func monitorDirectly() {
 	}
 	fmt.Printf("Total item count: %d\n", len(targetItems))
 	//Monitor all targetted items for price drops
-	for i := 0; i < 100; i++ {
+	for i := range 1000 {
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = getLimitedData()
@@ -197,7 +197,12 @@ func monitorDeals() {
 
 	RAP_map := map[string]int{}
 
-	for {
+	for i := range 1000 {
+		if i%config.ValueCycles == 0 {
+			//Recalculate RAP / Value and limited data from Rolimon API
+			itemDetails = getLimitedData()
+		}
+
 		//[[timestamp, isRAP, id, bestPrice / RAP]]
 		dealDetails := getDealsData()
 		activities := dealDetails.Activities
@@ -207,10 +212,12 @@ func monitorDeals() {
 			id_r := int(info[2].(float64))
 			id := strconv.Itoa(id_r)
 			price := int(info[3].(float64))
+			projected := int(info[7].(float64))
 
-			if len(itemDetails.Items[id]) == 0 {
+			//Handle not found error or projected
+			if len(itemDetails.Items[id]) == 0 || projected != -1 {
 				continue
-			} //Handle not found error
+			}
 
 			//Scan for item details
 			name := itemDetails.Items[id][0].(string)
