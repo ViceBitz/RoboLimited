@@ -70,21 +70,24 @@ func getLimitedData() *ItemDetails {
 	//Make a GET request to the Rolimons API
 	resp, err := http.Get(apiURL)
 	if err != nil {
-		log.Fatalf("Error making HTTP request: %v", err)
+		log.Printf("Error making HTTP request: %v", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
 	//Read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Error reading response body: %v", err)
+		log.Printf("Error reading response body: %v", err)
+		return nil
 	}
 
 	//Unmarshal JSON response into the ItemDetails struct
 	var itemDetails ItemDetails
 	err = json.Unmarshal(body, &itemDetails)
 	if err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+		log.Printf("Error unmarshalling JSON: %v", err)
+		return nil
 	}
 
 	return &itemDetails
@@ -96,6 +99,9 @@ func monitorDirectly() {
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
 	itemDetails := getLimitedData()
+	if itemDetails == nil {
+		return
+	} //Abort on error (on startup)
 
 	//Filter out projected and low demand items
 	targetItems := []string{}
@@ -121,6 +127,9 @@ func monitorDirectly() {
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = getLimitedData()
+			if itemDetails == nil {
+				continue
+			} //Catch error, wait for resolution
 		}
 		fmt.Println("________________________________")
 
@@ -168,21 +177,24 @@ func getDealsData() *DealDetails {
 	//Make a GET request to API
 	resp, err := http.Get(dealURL)
 	if err != nil {
-		log.Fatalf("Error making HTTP request: %v", err)
+		log.Printf("Error making HTTP request: %v", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
 	//Read response body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Error reading response body: %v", err)
+		log.Printf("Error reading response body: %v", err)
+		return nil
 	}
 
 	//Unmarshal JSON response into DealDetails struct
 	var dealDetails DealDetails
 	err = json.Unmarshal(body, &dealDetails)
 	if err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+		log.Printf("Error unmarshalling JSON: %v", err)
+		return nil
 	}
 
 	return &dealDetails
@@ -201,10 +213,17 @@ func monitorDeals() {
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = getLimitedData()
+			if itemDetails == nil {
+				continue
+			} //Catch error, wait for resolution
 		}
 
 		//[[timestamp, isRAP, id, bestPrice / RAP]]
 		dealDetails := getDealsData()
+		if dealDetails == nil {
+			continue
+		} //Catch error, wait for resolution
+
 		activities := dealDetails.Activities
 
 		for _, info := range activities {
