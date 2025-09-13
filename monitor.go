@@ -210,6 +210,7 @@ func monitorDeals() {
 	RAP_map := map[string]int{}
 
 	for i := range 10000 {
+		fmt.Println("____________________________________________________")
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = getLimitedData()
