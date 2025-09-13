@@ -25,7 +25,7 @@ type DealDetails struct {
 	Activities [][]interface{} `json:"activities"`
 }
 
-func buyCheck(bestPrice int, RAP_r int, value_r int) bool {
+func BuyCheck(bestPrice int, RAP_r int, value_r int) bool {
 	if bestPrice == 0 { //Error occurred or no resellers if price is 0
 		return false
 	}
@@ -40,7 +40,8 @@ func buyCheck(bestPrice int, RAP_r int, value_r int) bool {
 	}
 }
 
-func sellCheck(boughtPrice_r int, bestPrice_r int, value_r int) bool {
+/* DEPRECATED
+func SellCheck(boughtPrice_r int, bestPrice_r int, value_r int) bool {
 	value := float64(value_r)
 	boughtPrice := float64(boughtPrice_r)
 	bestPrice := float64(bestPrice_r)
@@ -54,6 +55,7 @@ func sellCheck(boughtPrice_r int, bestPrice_r int, value_r int) bool {
 	}
 
 }
+*/
 
 func getPriceInBatch(itemIDs []string) map[string]string {
 	pool := tools.NewScraperPool(3) // 5 Chrome instances
@@ -63,7 +65,7 @@ func getPriceInBatch(itemIDs []string) map[string]string {
 	return concurrentResults
 }
 
-func getLimitedData() *ItemDetails {
+func GetLimitedData() *ItemDetails {
 	//Rolimons API endpoint for item details
 	apiURL := config.RolimonsAPI
 
@@ -98,7 +100,7 @@ func monitorDirectly() {
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
-	itemDetails := getLimitedData()
+	itemDetails := GetLimitedData()
 	if itemDetails == nil {
 		return
 	} //Abort on error (on startup)
@@ -126,7 +128,7 @@ func monitorDirectly() {
 	for i := range 1000 {
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
-			itemDetails = getLimitedData()
+			itemDetails = GetLimitedData()
 			if itemDetails == nil {
 				continue
 			} //Catch error, wait for resolution
@@ -152,25 +154,27 @@ func monitorDirectly() {
 
 			best_price := best_prices[id]
 			//Check buys
-			if buyCheck(best_price, RAP, value) {
+			if BuyCheck(best_price, RAP, value) {
 				//BUY
 				tradeSim.BuyItem(id, name, best_price)
 			}
 			//Check sells
+			/* DEPRECATED
 			for _, bought_price := range tradeSim.GetPortfolio()[id] {
-				if sellCheck(bought_price, best_price, value) {
+				if SellCheck(bought_price, best_price, value) {
 					//SELL
 					tradeSim.SellItem(id, name, best_price, value)
 					continue
 				}
 			}
+			*/
 		}
 
 		time.Sleep(180 * time.Second)
 	}
 }
 
-func getDealsData() *DealDetails {
+func GetDealsData() *DealDetails {
 	//Rolimons API for deal data
 	dealURL := config.RolimonsDeals
 
@@ -205,7 +209,7 @@ func monitorDeals() {
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
-	itemDetails := getLimitedData()
+	itemDetails := GetLimitedData()
 
 	RAP_map := map[string]int{}
 
@@ -213,14 +217,14 @@ func monitorDeals() {
 		fmt.Println("____________________________________________________")
 		if i%config.ValueCycles == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
-			itemDetails = getLimitedData()
+			itemDetails = GetLimitedData()
 			if itemDetails == nil {
 				continue
 			} //Catch error, wait for resolution
 		}
 
 		//[[timestamp, isRAP, id, bestPrice / RAP]]
-		dealDetails := getDealsData()
+		dealDetails := GetDealsData()
 		if dealDetails == nil {
 			continue
 		} //Catch error, wait for resolution
@@ -257,18 +261,20 @@ func monitorDeals() {
 				//Make decision to buy/sell
 
 				//Check buys
-				if buyCheck(price, RAP_map[id], value) {
+				if BuyCheck(price, RAP_map[id], value) {
 					//BUY
 					tradeSim.BuyItem(id, name, price)
 				}
+				/* DEPRECATED
 				//Check sells
 				for _, bought_price := range tradeSim.GetPortfolio()[id] {
-					if sellCheck(bought_price, price, value) {
+					if SellCheck(bought_price, price, value) {
 						//SELL
 						tradeSim.SellItem(id, name, price, value)
 						continue
 					}
 				}
+				*/
 
 				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
 
@@ -287,5 +293,6 @@ func monitorDeals() {
 // Driver
 func main() {
 	//monitorDirectly()
-	monitorDeals()
+	//monitorDeals()
+	OrderPurchase("20573078")
 }

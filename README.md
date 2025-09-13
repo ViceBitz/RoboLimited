@@ -52,6 +52,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
  +  Track and log actions to a `.log` file.
  +  Loop every few seconds for near real-time sniping (and to prevent rate limit).
 
+*🎭 Both methods exclude projected (price-manipulated) limited items.*
 *⚠️ Program handles all errors & exceptions (continues running even on failures).*
 
 ---
