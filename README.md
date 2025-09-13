@@ -48,12 +48,15 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
  +  Confirm Buy Action on two conditions:
     - Refresh RAP / Value via Rolimon’s item details API
     - Real best price listed on Roblox website
- +  Place purchase order via **Roblox site cookies**.
+ +  Execute Purchase
+    - Log in with Roblox Cookie (sensitive) and navigate to item page
+    - Final validation on shown best price against RAP / Value
+    - Click buy / confirm buttons on real-time Roblox site
  +  Track and log actions to a `.log` file.
  +  Loop every few seconds for near real-time sniping (and to prevent rate limit).
 
-*🎭 Both methods exclude projected (price-manipulated) limited items.*
-*⚠️ Program handles all errors & exceptions (continues running even on failures).*
+*🎭 Both methods exclude projected (price-manipulated) limited items.<br>
+⚠️ Program handles all errors & exceptions (continues running even on failures).*
 
 ---
 
