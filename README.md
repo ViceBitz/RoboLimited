@@ -5,7 +5,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ---
 
-## 📌 Features
+# 📌 Features
 
 ### Price Sniper
 - Auto-buys limiteds within **1 second** of appearing at a low price.  
@@ -15,38 +15,48 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ---
 
-## 🛠 Workflow
+# 🛠 Workflow
+
+
+## Price Sniper
 
 ### Direct Sniping (suitable for few limiteds with high accuracy)
-1. **Precompute** all limited data (RAP, Value, Projected, Demand).  
-2. Fetch JSON from **Rolimon API**.  
+1. **Precompute** all limited data (RAP, Value, Projected, Demand)   
+   - Fetch JSON from **Rolimon API**.
+   - Refresh every few cycles.
 3. Parse & filter items to target.  
-4. Refresh every few cycles.  
 5. Scrape live best prices from **Rolimons website**:  
    - Uses ChromeDB scraper objects with **mutexes**.  
    - Renews context after every scrape.  
    - CSS targeting of best-price element.  
 6. Process results with **batch + multithreading**.  
    - Thread-safe dictionary to store best-price results.  
-   - Built-in delays to prevent rate limiting.  
-7. Error handling (continues running even on failures).  
+   - Built-in delays to prevent rate limiting.
+7. *Do Common Steps...*  
 
 ### Deal Sniping (more efficient & broad)
 1. Monitor **Rolimons Deals API** for price updates.  
    - `isRAP = 1` → refresh RAP for deal calculation.  
    - `isRAP = 0` → update new best price.  
-2. Compare updates against RAP & Value.  
-3. Consider buy decision with Confirm best price with HTML scraping.  
-4. Place purchase order via **Roblox site cookies**.  
-5. Loop every few seconds for near real-time sniping (and to prevent rate limit).
+2. Update RAP or best price in table
+3. *Do Common Steps...*
 
-#### Final Steps (in both methods):
- +  **Buy Decision** → buy or do nothing
- +  Track and log actions to a `.log` file.  
+#### Common Steps (in both methods):
+ +  **Buy Decision:** buy or do nothing
+    - Simple Evaluation: if price is 25% below RAP or 35% below value
+    - Tapered Evaluation: interpolate margin from 40% to 20% (or 50% to 30% for value) on small limiteds (~100R) to big limiteds (3000-1000R)
+ +  Confirm Buy Action on two conditions:
+    - Refresh RAP / Value via Rolimon’s item details API
+    - Real best price listed on Roblox website
+ +  Place purchase order via **Roblox site cookies**.
+ +  Track and log actions to a `.log` file.
+ +  Loop every few seconds for near real-time sniping (and to prevent rate limit).
+
+*⚠️ Program handles all errors & exceptions (continues running even on failures).*
 
 ---
 
-## ⚙️ Deployment
+# ⚙️ Deployment
 
 - Designed to run **24/7** on a Raspberry Pi.  
 - Logs trades, profit, and system actions.
@@ -54,7 +64,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ---
 
-## 🚧 Future Features
+# 🚧 Future Features
 - [ ] Add web dashboard for live tracking.  
 - [ ] Smarter buy strategy with ML-driven prediction.  
 - [ ] Cloud deployment option.
@@ -63,4 +73,4 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ---
 
-##
+#
