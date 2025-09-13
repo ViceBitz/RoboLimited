@@ -269,11 +269,14 @@ func monitorDeals() {
 					}
 				}
 
+				fmt.Println("Scanned", name, "|", RAP_map[id], value, price)
+
 			} else { //Updating RAP
 				RAP_map[id] = price
+
+				fmt.Println("Updated", name, "|", RAP_map[id], value, price)
 			}
 
-			fmt.Println("Scanned", name, "|", RAP_map[id], value, price)
 		}
 
 		time.Sleep(time.Second * 3)
