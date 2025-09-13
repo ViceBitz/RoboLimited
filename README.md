@@ -9,9 +9,8 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ### Price Sniper
 - Auto-buys limiteds within **1 second** of appearing at a low price.  
-- Integrates directly with **Rolimons** and **Roblox APIs**:  
-  - Example endpoint: [`/v1/assets/{assetId}/resale-data`](https://economy.roblox.com/v1/assets/16652251/resale-data)
-- Formula-driven decisions
+- Integrates directly with **Rolimons** and **Roblox APIs**
+- Formula-driven decisions (using margins)
 
 ---
 
