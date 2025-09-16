@@ -44,8 +44,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
  +  **Buy Decision:** buy or do nothing
     - Simple Evaluation: if price is 25% below RAP or 35% below value
     - Tapered Evaluation: interpolate margin from 40% to 20% (or 50% to 30% for value) on small limiteds (~100R) to big limiteds (3000-1000R)
-    - Demand Evaluation: lower margins (25%/35%) on high demand items compared to non-popular items (30%/35%)
-    - **Combine both Tapered & Demand for General Evaluation
+    - Demand Evaluation (preferred): lower margins (25%/35%) on high demand items compared to non-popular items (30%/35%)
  +  Confirm Buy Action on two conditions:
     - Refresh RAP / Value via Rolimon’s item details API
     - Real best price listed on Roblox website
