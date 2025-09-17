@@ -10,17 +10,22 @@ const (
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
 	//Limited Sniper Constraints
-	RAPDipF   = 0.25 //0.25 //% below RAP to buy
-	ValueDipF = 0.35 //0.35 //% below Value to buy
+	RAPDipD    = 0.25 //Demand % below RAP to buy
+	ValueDipD  = 0.35 //Demand % below Value to buy
+	RAPDipND   = 0.30 //Non-demand % below RAP to buy
+	ValueDipND = 0.35 //Non-demand % below Value to buy
 
 	/* DEPRECATED SellMargin = 1000 //0.1 //% return on investment */
 
-	PriceRangeLow  = 2000 //Price range of limiteds to consider
-	PriceRangeHigh = 10000
-	MaxLimiteds    = 50   //Number of limiteds to consider
-	HighDemand     = true //Only consider high demand items
+	PriceRangeLow  = 400 //Price range of limiteds to consider
+	PriceRangeHigh = 1500
 
-	ValueCycles = 5 //Re-extract RAP / Value off Rolimon's API after this many rounds
+	LiveMoney = false //Run with real money (true) or simulated costs (false)
+
+	MaxLimiteds = 50   //Number of limiteds to consider (for direct monitoring only)
+	HighDemand  = true //Only consider high demand items (for direct monitoring only)
+
+	RefreshRate = 5 //Re-extract RAP / Value off Rolimon's API after this many rounds
 
 	//Catalog page
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
@@ -34,5 +39,5 @@ const (
 	ConfirmButtonSelector = "button.modal-button.btn-primary-md.btn-min-width"             //Confirm Button
 
 	//Private Cookies
-	RobloxCookie = "<YOU CANNOT STEAL THIS FROM ME>"
+	RobloxCookie = ""
 )

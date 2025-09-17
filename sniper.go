@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"robolimited/config"
 	"strconv"
 	"strings"
@@ -32,25 +31,6 @@ func copyFile(src, dst string) error {
 
 	_, err = io.Copy(dstFile, srcFile)
 	return err
-}
-
-// Copies a directory
-func copyDir(src, dst string) error {
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		dstPath := filepath.Join(dst, relPath)
-
-		if info.IsDir() {
-			return os.MkdirAll(dstPath, info.Mode())
-		}
-		return copyFile(path, dstPath)
-	})
 }
 
 // Helper method for logging into account
@@ -154,10 +134,11 @@ func OrderPurchase(id string) bool {
 	name := info[0].(string)
 	RAP := int(info[2].(float64))
 	value := int(info[3].(float64))
+	demand := int(info[5].(float64))
 	projected := int(info[7].(float64))
 
 	log.Println("Comparing", bestPrice_r, "to", "RAP", RAP, "and value", value)
-	if !BuyCheck(bestPrice, RAP, value) || projected != -1 { //Failed price validation!
+	if !BuyCheck(bestPrice, RAP, value, demand != -1) || projected != -1 { //Failed price validation!
 		log.Println("Failed price validation! Canceling..")
 		return false
 	}

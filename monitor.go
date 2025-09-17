@@ -25,18 +25,37 @@ type DealDetails struct {
 	Activities [][]interface{} `json:"activities"`
 }
 
-func BuyCheck(bestPrice int, RAP_r int, value_r int) bool {
+// Evaluates if margins are good enough to buy
+func BuyF(rap_margin float64, value_margin float64, hasValue bool, isDemand bool) bool {
+	//Implement demand evaluation (higher demand items have lower margin standards)
+	if isDemand {
+		if hasValue {
+			return value_margin >= config.ValueDipD
+		}
+		return rap_margin >= config.RAPDipD
+	} else {
+		if hasValue {
+			return value_margin >= config.ValueDipND
+		}
+		return rap_margin >= config.RAPDipND
+	}
+}
+
+// Make decision on whether to buy or stand
+func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	if bestPrice == 0 { //Error occurred or no resellers if price is 0
 		return false
 	}
 	RAP := float64(RAP_r)
 	value := float64(value_r)
+	bpF := float64(bestPrice)
+	fmt.Println((RAP - bpF) / bpF)
 	if value == -1 {
 		//RAP limited
-		return bestPrice <= int(RAP*(1.0-config.RAPDipF))
+		return BuyF((RAP-bpF)/bpF, -1, false, isDemand)
 	} else {
 		//Value limited
-		return bestPrice <= int(RAP*(1.0-config.RAPDipF)) || bestPrice <= int(value*(1.0-config.ValueDipF))
+		return BuyF((RAP-bpF)/bpF, (value-bpF)/value, true, isDemand)
 	}
 }
 
@@ -96,7 +115,7 @@ func GetLimitedData() *ItemDetails {
 }
 
 // Monitors the prices of limiteds by scanning limited site pages directly
-func monitorDirectly() {
+func monitorDirectly(live_money bool) {
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
@@ -126,7 +145,7 @@ func monitorDirectly() {
 	fmt.Printf("Total item count: %d\n", len(targetItems))
 	//Monitor all targetted items for price drops
 	for i := range 1000 {
-		if i%config.ValueCycles == 0 {
+		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = GetLimitedData()
 			if itemDetails == nil {
@@ -151,12 +170,17 @@ func monitorDirectly() {
 			name := info[0].(string)
 			RAP := int(info[2].(float64))
 			value := int(info[3].(float64))
+			demand := int(info[5].(float64))
 
 			best_price := best_prices[id]
 			//Check buys
-			if BuyCheck(best_price, RAP, value) {
+			if BuyCheck(best_price, RAP, value, demand != -1) {
 				//BUY
-				tradeSim.BuyItem(id, name, best_price)
+				if !live_money {
+					tradeSim.BuyItem(id, name, best_price)
+				} else {
+					OrderPurchase(id)
+				}
 			}
 			//Check sells
 			/* DEPRECATED
@@ -205,7 +229,7 @@ func GetDealsData() *DealDetails {
 }
 
 // Monitor limited deals via Rolimon's deals page
-func monitorDeals() {
+func monitorDeals(live_money bool) {
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
@@ -215,7 +239,7 @@ func monitorDeals() {
 
 	for i := range 10000 {
 		fmt.Println("____________________________________________________")
-		if i%config.ValueCycles == 0 {
+		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetails = GetLimitedData()
 			if itemDetails == nil {
@@ -242,6 +266,7 @@ func monitorDeals() {
 				continue
 			}
 
+			demand := int(itemDetails.Items[id][5].(float64))
 			projected := int(itemDetails.Items[id][7].(float64))
 
 			//Exclude projected items
@@ -261,9 +286,13 @@ func monitorDeals() {
 				//Make decision to buy/sell
 
 				//Check buys
-				if BuyCheck(price, RAP_map[id], value) {
+				if BuyCheck(price, RAP_map[id], value, demand != -1) {
 					//BUY
-					tradeSim.BuyItem(id, name, price)
+					if !live_money {
+						tradeSim.BuyItem(id, name, price)
+					} else {
+						OrderPurchase(id)
+					}
 				}
 				/* DEPRECATED
 				//Check sells
@@ -276,12 +305,12 @@ func monitorDeals() {
 				}
 				*/
 
-				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Demand: ", demand != -1)
 
 			} else { //Updating RAP
 				RAP_map[id] = price
 
-				fmt.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				fmt.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Demand: ", demand != -1)
 			}
 
 		}
@@ -293,6 +322,5 @@ func monitorDeals() {
 // Driver
 func main() {
 	//monitorDirectly()
-	//monitorDeals()
-	OrderPurchase("20573078")
+	monitorDeals(config.LiveMoney)
 }

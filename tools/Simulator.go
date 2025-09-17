@@ -32,6 +32,7 @@ func (ts *TradeSimulator) BuyItem(id string, name string, price int) {
 	ts.RobuxSpent += price
 }
 
+/* DEPRECATED
 // Sell an item
 func (ts *TradeSimulator) SellItem(id string, name string, price int, value int) {
 	if value != -1 {
@@ -54,6 +55,7 @@ func (ts *TradeSimulator) SellItem(id string, name string, price int, value int)
 
 	ts.Portfolio[id] = newCosts
 }
+*/
 
 // Get item portfolio
 func (ts *TradeSimulator) GetPortfolio() map[string][]int {
