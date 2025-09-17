@@ -9,7 +9,6 @@ import (
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -75,14 +74,6 @@ func SellCheck(boughtPrice_r int, bestPrice_r int, value_r int) bool {
 }
 */
 
-func getPriceInBatch(itemIDs []string) map[string]string {
-	pool := tools.NewScraperPool(3) // 5 Chrome instances
-	defer pool.Close()
-
-	concurrentResults := pool.ProcessConcurrent(itemIDs)
-	return concurrentResults
-}
-
 func GetLimitedData() *ItemDetails {
 	//Rolimons API endpoint for item details
 	apiURL := config.RolimonsAPI
@@ -111,90 +102,6 @@ func GetLimitedData() *ItemDetails {
 	}
 
 	return &itemDetails
-}
-
-// Monitors the prices of limiteds by scanning limited site pages directly
-func monitorDirectly(live_money bool) {
-	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
-
-	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
-	itemDetails := GetLimitedData()
-	if itemDetails == nil {
-		return
-	} //Abort on error (on startup)
-
-	//Filter out projected and low demand items
-	targetItems := []string{}
-	for id, _ := range itemDetails.Items {
-		info := itemDetails.Items[id]
-		//name := info[0].(string)
-		RAP := int(info[2].(float64))
-		//value := int(info[3].(float64))
-		demand := int(info[5].(float64))
-		projected := int(info[7].(float64))
-
-		//Check within price range & demand
-		if RAP >= config.PriceRangeLow && RAP <= config.PriceRangeHigh && projected == -1 && (!config.HighDemand || demand != -1) {
-			targetItems = append(targetItems, id)
-		}
-		if len(targetItems) >= config.MaxLimiteds {
-			break
-		}
-	}
-	fmt.Printf("Total item count: %d\n", len(targetItems))
-	//Monitor all targetted items for price drops
-	for i := range 1000 {
-		if i%config.RefreshRate == 0 {
-			//Recalculate RAP / Value and limited data from Rolimon API
-			itemDetails = GetLimitedData()
-			if itemDetails == nil {
-				continue
-			} //Catch error, wait for resolution
-		}
-		fmt.Println("________________________________")
-
-		//Get all best prices via multithreading (in batches)
-		results := getPriceInBatch(targetItems)
-
-		best_prices := make(map[string]int) //Convert sync map to concrete
-		for _, id := range targetItems {
-			results[id] = strings.ReplaceAll(results[id], ",", "")
-			numPrice, _ := strconv.Atoi(results[id])
-			best_prices[id] = numPrice
-		}
-
-		//Make decisions to buy/sell
-		for _, id := range targetItems {
-			info := itemDetails.Items[id]
-			name := info[0].(string)
-			RAP := int(info[2].(float64))
-			value := int(info[3].(float64))
-			demand := int(info[5].(float64))
-
-			best_price := best_prices[id]
-			//Check buys
-			if BuyCheck(best_price, RAP, value, demand != -1) {
-				//BUY
-				if !live_money {
-					tradeSim.BuyItem(id, name, best_price)
-				} else {
-					OrderPurchase(id)
-				}
-			}
-			//Check sells
-			/* DEPRECATED
-			for _, bought_price := range tradeSim.GetPortfolio()[id] {
-				if SellCheck(bought_price, best_price, value) {
-					//SELL
-					tradeSim.SellItem(id, name, best_price, value)
-					continue
-				}
-			}
-			*/
-		}
-
-		time.Sleep(180 * time.Second)
-	}
 }
 
 func GetDealsData() *DealDetails {
@@ -290,11 +197,14 @@ func monitorDeals(live_money bool) {
 
 				//Check buys
 				if BuyCheck(price, RAP_map[id], value, demand != -1) {
-					//BUY
-					if !live_money {
-						tradeSim.BuyItem(id, name, price)
-					} else {
-						OrderPurchase(id)
+					//Final price manipulation check
+					if !CheckProjected(id, float64(RAP_map[id])) {
+						//BUY
+						if !live_money {
+							tradeSim.BuyItem(id, name, price)
+						} else {
+							OrderPurchase(id)
+						}
 					}
 				}
 				/* DEPRECATED
@@ -324,6 +234,6 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	//monitorDirectly()
-	monitorDeals(config.LiveMoney)
+	//monitorDeals(config.LiveMoney)
+	fmt.Println(CheckProjected("162066176", 20019.0))
 }
