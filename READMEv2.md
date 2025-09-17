@@ -3,7 +3,7 @@
 A system for analyzing and sniping Roblox limiteds using **Rolimons** and the **Roblox API** that is built for automated trading, deal-sniping, and technical analysis of limited items. While intended for a digital collectibles marketplace, concepts map directly to broader financial technology systems such as market monitoring & algorithmic trading.
 
 ### 💡 Inspiration ###
-Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Roblox Limiteds, which function in many ways like NFTs. Growing up, Roblox was a part of my childhood, so many years later, I decided to use its marketplace as the foundation for this project. I figured it'd be a perfect opportunity to practice building an efficient fintech-style trading system within a real, dynamic online economy.
+Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Growing up, Roblox was a part of my childhood, so many years later, I decided to use its marketplace as the foundation for this project. It offers the perfect opportunity to practice building an efficient fintech-style trading system within a real, dynamic online economy.
 
 On the platform, players buy and trade limited accessories with each other, creating price fluctuations and intrinsic value much like shares of stock. Market activity revolves around several key metrics:
 - RAP (Recent Average Price): historical average based on recent trades.
