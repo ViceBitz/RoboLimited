@@ -9,9 +9,8 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 ### Price Sniper
 - Auto-buys limiteds within **1 second** of appearing at a low price.  
-- Integrates directly with **Rolimons** and **Roblox APIs**:  
-  - Example endpoint: [`/v1/assets/{assetId}/resale-data`](https://economy.roblox.com/v1/assets/16652251/resale-data)
-- Formula-driven decisions
+- Integrates directly with **Rolimons** and **Roblox APIs**
+- Formula-driven decisions (using margins)
 
 ---
 
@@ -21,7 +20,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 ## Price Sniper
 
 ### Direct Sniping (suitable for few limiteds with high accuracy)
-1. **Precompute** all limited data (RAP, Value, Projected, Demand)   
+1. **Precompute** all limited data (RAP, Value, Projected, IsDemand)   
    - Fetch JSON from **Rolimon API**.
    - Refresh every few cycles.
 3. Parse & filter items to target.  
@@ -45,15 +44,19 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
  +  **Buy Decision:** buy or do nothing
     - Simple Evaluation: if price is 25% below RAP or 35% below value
     - Tapered Evaluation: interpolate margin from 40% to 20% (or 50% to 30% for value) on small limiteds (~100R) to big limiteds (3000-1000R)
+    - Demand Evaluation (preferred): lower margins (25%/35%) on high demand items compared to non-popular items (30%/35%)
  +  Confirm Buy Action on two conditions:
     - Refresh RAP / Value via Rolimon’s item details API
     - Real best price listed on Roblox website
- +  Place purchase order via **Roblox site cookies**.
+ +  Execute Purchase
+    - Log in with Roblox Cookie (sensitive) and navigate to item page
+    - Final validation on shown best price against RAP / Value
+    - Click buy / confirm buttons on real-time Roblox site
  +  Track and log actions to a `.log` file.
  +  Loop every few seconds for near real-time sniping (and to prevent rate limit).
 
-*🎭 Both methods exclude projected (price-manipulated) limited items.*
-*⚠️ Program handles all errors & exceptions (continues running even on failures).*
+*🎭 Both methods exclude projected (price-manipulated) limited items.<br>
+⚠️ Program handles all errors & exceptions (continues running even on failures).*
 
 ---
 
