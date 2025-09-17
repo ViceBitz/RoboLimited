@@ -235,5 +235,5 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//monitorDeals(config.LiveMoney)
-	fmt.Println(CheckProjected("162066176", 20019.0))
+	fmt.Println(CheckProjected("91294485", 42500.0))
 }

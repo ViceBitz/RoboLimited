@@ -21,25 +21,24 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Integrates directly with **Rolimons** and **Roblox APIs**
 - Formula-driven decisions (using margins)
 
+### Limited Analyzer
+- Detects price manipulation with time-series analysis
+
 ---
 
 ## 🚀 Features
-
-### Trading Modes
-- **Direct Targeting**  
-  Precomputes asset fundamentals (historical averages, intrinsic value, demand profile) and continuously monitors order books for high-accuracy entries.  
 
 - **Deal Scanning**  
   Broad, efficient monitoring of market deals with automated price refresh and adjustment logic through HTTP GET requests to known API endpoints.
 
 ### Market Evaluation
-- **Rule-Based Filters**: Excludes manipulated or illiquid assets.  
+- **Rule-Based Filters**: Excludes manipulated assets based on sales data in past months.
 - **Demand-Aware Strategies**: Adjust thresholds based on popularity and liquidity signals.
 
 ### Execution Layer
-- **Trade Signal Validation**: Confirms opportunities with real-time API data.  
-- **Automated Transactions**: Executes purchases programmatically with safeguards against stale data.  
-- **Logging & Auditability**: Every decision and action is tracked for post-trade analysis.
+- **Signal Validation**: Confirms opportunities with real-time API data.  
+- **Automated Transactions**: Executes purchases programmatically with safeguards against false data.  
+- **Logging**: Every decision and action is tracked for post-trade analysis.
 
 ---
 

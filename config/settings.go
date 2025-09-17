@@ -22,9 +22,9 @@ const (
 
 	LiveMoney = false //Run with real money (true) or simulated costs (false)
 
-	MaxLimiteds           = 50   //Number of limiteds to consider (for direct monitoring only)
-	HighDemand            = true //Only consider high demand items (for direct monitoring only)
-	ProjectedPriceHistory = 1000 //Amount of latest price points to consider when scanning for projecteds
+	MaxLimiteds    = 50   //Number of limiteds to consider (for direct monitoring only)
+	HighDemand     = true //Only consider high demand items (for direct monitoring only)
+	LookbackPeriod = 60   //Past number of days to consider when scanning for projecteds
 
 	RefreshRate = 5 //Re-extract RAP / Value off Rolimon's API after this many rounds
 
