@@ -49,7 +49,6 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	RAP := float64(RAP_r)
 	value := float64(value_r)
 	bpF := float64(bestPrice)
-	fmt.Println((RAP - bpF) / bpF)
 	if value == -1 {
 		//RAP limited
 		return BuyF((RAP-bpF)/bpF, -1, false, isDemand)
