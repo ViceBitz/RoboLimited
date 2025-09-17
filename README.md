@@ -1,7 +1,6 @@
 # Roblox Limited Sniper & Analyzer
 
-A system for analyzing and sniping Roblox limiteds using **Rolimons** and the **Roblox API**.  
-Built for automated trading, deal-sniping, and technical analysis of limited items — runs 24/7 on a Raspberry Pi.  
+A system for analyzing and sniping Roblox limiteds using **Rolimons** and the **Roblox API** that is built for automated trading, deal-sniping, and technical analysis of limited items. While intended for a digital collectibles marketplace, concepts map directly to broader financial technology systems such as market monitoring & algorithmic trading.
 
 ---
 
@@ -15,7 +14,6 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 ---
 
 # 🛠 Workflow
-
 
 ## Price Sniper
 
@@ -62,7 +60,7 @@ Built for automated trading, deal-sniping, and technical analysis of limited ite
 
 # ⚙️ Deployment
 
-- Designed to run **24/7** on a Raspberry Pi.  
+- Designed to run **24/7**.  
 - Logs trades, profit, and system actions.
 - Test strategy across long periods to confirm validity.  
 
