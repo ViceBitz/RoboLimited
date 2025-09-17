@@ -58,23 +58,6 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	}
 }
 
-/* DEPRECATED
-func SellCheck(boughtPrice_r int, bestPrice_r int, value_r int) bool {
-	value := float64(value_r)
-	boughtPrice := float64(boughtPrice_r)
-	bestPrice := float64(bestPrice_r)
-
-	if value == -1 {
-		//RAP limited
-		return bestPrice*0.7-boughtPrice > boughtPrice*config.SellMargin
-	} else {
-		//Value limited
-		return value*0.7-boughtPrice > boughtPrice*config.SellMargin
-	}
-
-}
-*/
-
 func GetLimitedData() *ItemDetails {
 	//Rolimons API endpoint for item details
 	apiURL := config.RolimonsAPI
@@ -208,16 +191,6 @@ func monitorDeals(live_money bool) {
 						}
 					}
 				}
-				/* DEPRECATED
-				//Check sells
-				for _, bought_price := range tradeSim.GetPortfolio()[id] {
-					if SellCheck(bought_price, price, value) {
-						//SELL
-						tradeSim.SellItem(id, name, price, value)
-						continue
-					}
-				}
-				*/
 
 				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
 

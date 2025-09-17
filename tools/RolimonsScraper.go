@@ -4,6 +4,7 @@ package tools
 Scrapes item details (best price) directly from Rolimon item page
 */
 
+/* DEPRECATED
 import (
 	"context"
 	"fmt"
@@ -185,3 +186,4 @@ func (sp *ScraperPool) Close() {
 		scraper.Close()
 	}
 }
+*/
