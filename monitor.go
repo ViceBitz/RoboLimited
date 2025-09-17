@@ -272,6 +272,10 @@ func monitorDeals(live_money bool) {
 			if projected != -1 {
 				continue
 			}
+			//Exclude items out of price range
+			if price >= config.PriceRangeLow && price <= config.PriceRangeHigh {
+				continue
+			}
 
 			//Scan for item details
 			name := itemDetails.Items[id][0].(string)
@@ -304,12 +308,12 @@ func monitorDeals(live_money bool) {
 				}
 				*/
 
-				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Demand: ", demand != -1)
+				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
 
 			} else { //Updating RAP
 				RAP_map[id] = price
 
-				fmt.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Demand: ", demand != -1)
+				fmt.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
 			}
 
 		}
