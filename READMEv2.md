@@ -22,7 +22,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Formula-driven decisions (using margins)
 
 ### Limited Analyzer
-- Detects price manipulation with time-series analysis
+- Detects price manipulated items with statistical outlier tests on sales data
 
 ---
 
@@ -32,7 +32,7 @@ Market participants use these indicators to infer a limited's worth and make a p
   Broad, efficient monitoring of market deals with automated price refresh and adjustment logic through HTTP GET requests to known API endpoints.
 
 ### Market Evaluation
-- **Rule-Based Filters**: Excludes manipulated assets based on sales data in past months.
+- **Rule-Based Filters**: Excludes manipulated assets based on sales data in past month.
 - **Demand-Aware Strategies**: Adjust thresholds based on popularity and liquidity signals.
 
 ### Execution Layer

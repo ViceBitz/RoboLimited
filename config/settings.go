@@ -10,21 +10,23 @@ const (
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
 	//Limited Sniper Constraints
-	RAPDipD    = 0.25 //Demand % below RAP to buy
-	ValueDipD  = 0.35 //Demand % below Value to buy
-	RAPDipND   = 0.30 //Non-demand % below RAP to buy
-	ValueDipND = 0.35 //Non-demand % below Value to buy
+	RAPDipD    = 0.25  //Demand % below RAP to buy
+	ValueDipD  = 0.35  //Demand % below Value to buy
+	RAPDipND   = 0.275 //Non-demand % below RAP to buy
+	ValueDipND = 0.35  //Non-demand % below Value to buy
 
 	/* DEPRECATED SellMargin = 1000 //0.1 //% return on investment */
 
 	PriceRangeLow  = 400 //Price range of limiteds to consider
-	PriceRangeHigh = 1500
+	PriceRangeHigh = 15000
 
 	LiveMoney = false //Run with real money (true) or simulated costs (false)
 
-	MaxLimiteds    = 50   //Number of limiteds to consider (for direct monitoring only)
-	HighDemand     = true //Only consider high demand items (for direct monitoring only)
-	LookbackPeriod = 60   //Past number of days to consider when scanning for projecteds
+	MaxLimiteds = 50   //Number of limiteds to consider (for direct monitoring only)
+	HighDemand  = true //Only consider high demand items (for direct monitoring only)
+
+	//Price manipulation analysis
+	LookbackPeriod = 30 //Past number of days to consider when scanning for projecteds
 
 	RefreshRate = 5 //Re-extract RAP / Value off Rolimon's API after this many rounds
 

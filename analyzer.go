@@ -38,12 +38,14 @@ func CheckProjected(id string, rap float64) bool {
 	pricePointsAll := historyData.AvgDailySalesPrice
 	timestamps := historyData.Timestamp
 	var pricePoints []int
-	for i := len(timestamps) - 1; i >= 0; i-- {
+	for i := len(pricePointsAll) - 1; i >= 0; i-- {
 		//Exclude points beyond lookback period
 		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*config.LookbackPeriod {
 			break
 		}
+
 		pricePoints = append(pricePoints, pricePointsAll[i])
+
 	}
 
 	// Calculate z-index of point (across past points)
@@ -57,7 +59,6 @@ func CheckProjected(id string, rap float64) bool {
 	std := 0.0
 	for _, p := range pricePoints {
 		std += math.Pow((float64(p) - mean), 2)
-		fmt.Println(p)
 	}
 	std = math.Sqrt(std / (N - 1))
 	z_score := (rap - mean) / std

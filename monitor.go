@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"robolimited/config"
 	"robolimited/tools"
@@ -180,7 +181,7 @@ func monitorDeals(live_money bool) {
 				continue
 			}
 			//Exclude items out of price range
-			if price >= config.PriceRangeLow && price <= config.PriceRangeHigh {
+			if !(config.PriceRangeLow <= price && price <= config.PriceRangeHigh) {
 				continue
 			}
 
@@ -218,7 +219,7 @@ func monitorDeals(live_money bool) {
 				}
 				*/
 
-				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
 
 			} else { //Updating RAP
 				RAP_map[id] = price
@@ -234,6 +235,5 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	//monitorDeals(config.LiveMoney)
-	fmt.Println(CheckProjected("91294485", 42500.0))
+	monitorDeals(config.LiveMoney)
 }
