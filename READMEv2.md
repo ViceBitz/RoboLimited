@@ -22,7 +22,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Formula-driven decisions (using margins)
 
 ### Limited Analyzer
-- Detects price manipulated items with statistical outlier tests on sales data
+- Detects price manipulated items with Z-index outlier test on current RAP based on past sales data
 
 ---
 
