@@ -105,7 +105,7 @@ func OrderPurchase(id string) bool {
 	// Navigate to item page
 	log.Println("Navigating to item page...")
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 	err = chromedp.Run(ctx,
 		chromedp.Navigate(*url),
 	)
@@ -156,11 +156,11 @@ func OrderPurchase(id string) bool {
 	log.Println("Clicked buy button")
 
 	// Wait for purchase modal to appear (a bit of extra time for network)
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	err = chromedp.Run(ctx, //Confirm click
 		chromedp.WaitVisible(*confirmSelector, chromedp.ByQuery),
-		chromedp.Sleep(1000*time.Millisecond),
+		chromedp.Sleep(500*time.Millisecond),
 		chromedp.Click(*confirmSelector, chromedp.NodeVisible, chromedp.ByQuery),
 	)
 

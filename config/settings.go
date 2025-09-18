@@ -10,9 +10,9 @@ const (
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
 	//Limited Sniper Constraints
-	RAPDipD    = 0.25  //Demand % below RAP to buy
+	RAPDipD    = 0.225 //Demand % below RAP to buy
 	ValueDipD  = 0.35  //Demand % below Value to buy
-	RAPDipND   = 0.275 //Non-demand % below RAP to buy
+	RAPDipND   = 0.25  //Non-demand % below RAP to buy
 	ValueDipND = 0.35  //Non-demand % below Value to buy
 
 	/* DEPRECATED SellMargin = 1000 //0.1 //% return on investment */

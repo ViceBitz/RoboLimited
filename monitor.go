@@ -131,10 +131,13 @@ func monitorDeals(live_money bool) {
 		fmt.Println("____________________________________________________")
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
-			itemDetails = GetLimitedData()
-			if itemDetails == nil {
-				continue
-			} //Catch error, wait for resolution
+			itemDetailsNew := GetLimitedData()
+			if itemDetailsNew == nil {
+				//Mark errors in updating
+				fmt.Println("Could not refresh item details..")
+			} else {
+				itemDetails = itemDetailsNew
+			}
 		}
 
 		//[[timestamp, isRAP, id, bestPrice / RAP]]
@@ -152,7 +155,7 @@ func monitorDeals(live_money bool) {
 			price := int(info[3].(float64))
 
 			//Handle not found error
-			if len(itemDetails.Items[id]) == 0 {
+			if itemDetails == nil || len(itemDetails.Items[id]) == 0 {
 				continue
 			}
 
@@ -202,7 +205,7 @@ func monitorDeals(live_money bool) {
 
 		}
 
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Millisecond * 1500)
 	}
 }
 
