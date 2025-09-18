@@ -211,6 +211,5 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	//monitorDeals(config.LiveMoney)
-	OrderPurchase("162066176")
+	monitorDeals(config.LiveMoney)
 }
