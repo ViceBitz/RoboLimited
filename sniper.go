@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"math"
 	"robolimited/config"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ func robloxLogin(ctx context.Context) error {
 }
 
 // Orders purchase on an item given id, checks best price against presumed RAP / value and returns success
-func OrderPurchase(id string) bool {
+func OrderPurchase(id string, expectedPrice int) bool {
 	url := config.RobloxCatalogBaseURL + id
 	priceSelector := config.PriceSelector
 	buySelector := config.BuyButtonSelector
@@ -107,16 +108,9 @@ func OrderPurchase(id string) bool {
 	bestPrice_r = strings.ReplaceAll(bestPrice_r, ",", "")
 	bestPrice, _ := strconv.Atoi(bestPrice_r)
 
-	itemDetails := GetLimitedData()
-	info := itemDetails.Items[id]
-	name := info[0].(string)
-	RAP := int(info[2].(float64))
-	value := int(info[3].(float64))
-	demand := int(info[5].(float64))
-	projected := int(info[7].(float64))
-
-	log.Println("Comparing", bestPrice_r, "to", "RAP", RAP, "and value", value)
-	if !BuyCheck(bestPrice, RAP, value, demand != -1) || projected != -1 || (config.StrictBuyCondition && !CheckDip(id, float64(bestPrice))) { //Failed price validation!
+	log.Println("Comparing listed price", bestPrice_r, "to expected price", expectedPrice)
+	//Must be within 5 robux of price error
+	if math.Abs(float64(expectedPrice-bestPrice)) > 5 {
 		log.Println("Failed price validation! Canceling..")
 		return false
 	}
@@ -147,7 +141,7 @@ func OrderPurchase(id string) bool {
 		return false
 	}
 
-	log.Println("Executed buy order on:", name, id)
+	log.Println("Executed buy order on:", id)
 
 	time.Sleep(5 * time.Second)
 

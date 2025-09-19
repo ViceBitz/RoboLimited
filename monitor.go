@@ -193,7 +193,7 @@ func monitorDeals(live_money bool) {
 								tradeSim.BuyItem(id, name, price)
 							} else {
 								tradeSim.BuyItem(id, name, price)
-								OrderPurchase(id)
+								OrderPurchase(id, price)
 							}
 						}
 					}
@@ -215,5 +215,6 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	monitorDeals(config.LiveMoney)
+	//monitorDeals(config.LiveMoney)
+	OrderPurchase("21070012", 5)
 }

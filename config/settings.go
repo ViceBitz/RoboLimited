@@ -13,7 +13,7 @@ const (
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
-	//Limited Sniper Constraints
+	//Limited Sniper Constraints (for margin eval)
 	RAPDipD    = 0.25 //Demand % below RAP to buy
 	ValueDipD  = 0.35 //Demand % below Value to buy
 	RAPDipND   = 0.30 //Non-demand % below RAP to buy
@@ -21,15 +21,15 @@ const (
 
 	/* DEPRECATED SellMargin = 1000 //0.1 //% return on investment */
 
-	PriceRangeLow  = 100 //Price range of limiteds to consider
+	PriceRangeLow  = 500 //Price range of limiteds to consider
 	PriceRangeHigh = 1500
 
-	LiveMoney = false //Run with real money (true) or simulated costs (false)
+	LiveMoney = true //Run with real money (true) or simulated costs (false)
 
 	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
 	StrictBuyCondition    = true  //Use standard deviations in buy checks
-	OutlierThreshold      = 1.5   //Standard deviations to consider item as projected
-	DipThreshold          = -1.5  //Standard deviations to consider a dip in price, buy immediately
+	OutlierThreshold      = 1     //Standard deviations to consider item as projected
+	DipThreshold          = -2    //Standard deviations to consider a dip in price (for z-score eval)
 
 	//Price manipulation analysis
 	LookbackPeriod = 90 //Past number of days to consider when scanning for projecteds
