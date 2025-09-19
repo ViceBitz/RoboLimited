@@ -19,10 +19,11 @@ Market participants use these indicators to infer a limited's worth and make a p
 ### Price Sniper
 - Auto-buys limiteds within **1 second** of appearing at a low price.  
 - Integrates directly with **Rolimons** and **Roblox APIs**
-- Formula-driven decisions (using margins)
+- Formula-driven decisions (using margins and statistical z-scores)
 
 ### Limited Analyzer
-- Detects price manipulated items with Z-index outlier test on current RAP based on past sales data
+- Detects price manipulated items on RAP based on past sales data
+- Finds dips in prices for strict buy condition on sniper
 
 ---
 

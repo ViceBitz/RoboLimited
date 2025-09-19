@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
-	"io"
 	"log"
-	"os"
 	"robolimited/config"
 	"strconv"
 	"strings"
@@ -14,24 +11,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
-
-// Copies file
-func copyFile(src, dst string) error {
-	srcFile, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer srcFile.Close()
-
-	dstFile, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer dstFile.Close()
-
-	_, err = io.Copy(dstFile, srcFile)
-	return err
-}
 
 // Helper method for logging into account
 func robloxLogin(ctx context.Context) error {
@@ -64,11 +43,11 @@ func robloxLogin(ctx context.Context) error {
 
 // Orders purchase on an item given id, checks best price against presumed RAP / value and returns success
 func OrderPurchase(id string) bool {
-	url := flag.String("url", config.RobloxCatalogBaseURL+id, "Roblox catalog URL")
-	priceSelector := flag.String("pricesel", config.PriceSelector, "CSS selector for best price")
-	buySelector := flag.String("buysel", config.BuyButtonSelector, "CSS selector for Buy")
-	confirmSelector := flag.String("confirmsel", config.ConfirmButtonSelector, "CSS selector for Confirm")
-	timeoutSec := flag.Int("timeout", 15, "Timeout")
+	url := config.RobloxCatalogBaseURL + id
+	priceSelector := config.PriceSelector
+	buySelector := config.BuyButtonSelector
+	confirmSelector := config.ConfirmButtonSelector
+	timeoutSec := 15
 
 	// chrome flags: headful & use profile to reuse login
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
@@ -91,7 +70,7 @@ func OrderPurchase(id string) bool {
 	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, time.Duration(*timeoutSec)*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, time.Duration(timeoutSec)*time.Second)
 	defer cancel()
 
 	// Log into account
@@ -106,7 +85,7 @@ func OrderPurchase(id string) bool {
 	log.Println("Navigating to item page...")
 
 	err = chromedp.Run(ctx,
-		chromedp.Navigate(*url),
+		chromedp.Navigate(url),
 	)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -117,8 +96,8 @@ func OrderPurchase(id string) bool {
 	log.Println("Validating best price...")
 	var bestPrice_r string
 	err = chromedp.Run(ctx,
-		chromedp.WaitVisible(*priceSelector, chromedp.ByQuery),
-		chromedp.Text(*priceSelector, &bestPrice_r, chromedp.ByQuery),
+		chromedp.WaitVisible(priceSelector, chromedp.ByQuery),
+		chromedp.Text(priceSelector, &bestPrice_r, chromedp.ByQuery),
 	)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -137,15 +116,15 @@ func OrderPurchase(id string) bool {
 	projected := int(info[7].(float64))
 
 	log.Println("Comparing", bestPrice_r, "to", "RAP", RAP, "and value", value)
-	if !BuyCheck(bestPrice, RAP, value, demand != -1) || projected != -1 { //Failed price validation!
+	if !BuyCheck(bestPrice, RAP, value, demand != -1) || projected != -1 || (config.StrictBuyCondition && !CheckDip(id, float64(bestPrice))) { //Failed price validation!
 		log.Println("Failed price validation! Canceling..")
 		return false
 	}
 
 	//Click purchase
 	err = chromedp.Run(ctx,
-		chromedp.WaitVisible(*buySelector, chromedp.ByQuery),
-		chromedp.Click(*buySelector, chromedp.NodeVisible, chromedp.ByQuery),
+		chromedp.WaitVisible(buySelector, chromedp.ByQuery),
+		chromedp.Click(buySelector, chromedp.NodeVisible, chromedp.ByQuery),
 	)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -158,9 +137,9 @@ func OrderPurchase(id string) bool {
 	time.Sleep(250 * time.Millisecond)
 
 	err = chromedp.Run(ctx, //Confirm click
-		chromedp.WaitVisible(*confirmSelector, chromedp.ByQuery),
+		chromedp.WaitVisible(confirmSelector, chromedp.ByQuery),
 		chromedp.Sleep(250*time.Millisecond),
-		chromedp.Click(*confirmSelector, chromedp.NodeVisible, chromedp.ByQuery),
+		chromedp.Click(confirmSelector, chromedp.NodeVisible, chromedp.ByQuery),
 	)
 
 	if err != nil {

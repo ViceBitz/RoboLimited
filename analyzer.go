@@ -25,13 +25,13 @@ type SalesPoint struct {
 	SalesVolume        int
 }
 
-// Analyzes historical time series data to determine if an item is price manipulated
-func CheckProjected(id string, rap float64) bool {
+// Calculates Z-score of price relative to past sales data
+func findZIndex(id string, price float64) float64 {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
 
 	if err != nil {
-		return true
+		return 999.0
 	}
 
 	// Find segment of time series to consider
@@ -43,9 +43,7 @@ func CheckProjected(id string, rap float64) bool {
 		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*config.LookbackPeriod {
 			break
 		}
-
 		pricePoints = append(pricePoints, pricePointsAll[i])
-
 	}
 
 	// Calculate z-index of point (across past points)
@@ -61,11 +59,25 @@ func CheckProjected(id string, rap float64) bool {
 		std += math.Pow((float64(p) - mean), 2)
 	}
 	std = math.Sqrt(std / (N - 1))
-	z_score := (rap - mean) / std
-	fmt.Println("Projected Check | ID:", id)
+	z_score := (price - mean) / std
+
 	fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
 
-	return z_score > 2 //z-index > 2 (standard deviations) is an outlier
+	return z_score
+}
+
+// Analyzes historical time series data to determine if an item is price manipulated
+func CheckProjected(id string, rap float64) bool {
+	fmt.Println("Projected Check | ID:", id)
+	z_score := findZIndex(id, rap)
+	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
+}
+
+// Uses Z-score of best price across past sales data to identify dip and make buy decision
+func CheckDip(id string, bestPrice float64) bool {
+	fmt.Println("Dip Check | ID:", id)
+	z_score := findZIndex(id, bestPrice)
+	return z_score <= config.DipThreshold //z-score below threshold is dip
 }
 
 func extractPriceSeries(url string) (*SalesData, error) {
@@ -91,16 +103,10 @@ func extractPriceSeries(url string) (*SalesData, error) {
 	var salesDataJSON string
 
 	err := chromedp.Run(chromeCtx,
-		// Navigate to the page
 		chromedp.Navigate(url),
-
-		// Wait for page to load
 		chromedp.WaitReady("body"),
+		chromedp.Sleep(1*time.Second),
 
-		// Wait a bit more for JavaScript to execute
-		chromedp.Sleep(3*time.Second),
-
-		// Execute JavaScript to get window.sales_data
 		chromedp.Evaluate(`
 			(function() {
 				return JSON.stringify(window.sales_data);
@@ -127,25 +133,4 @@ func extractPriceSeries(url string) (*SalesData, error) {
 	}
 
 	return &salesData, nil
-}
-
-func convertToPoints(data *SalesData) []SalesPoint {
-	points := make([]SalesPoint, len(data.AvgDailySalesPrice))
-
-	for i := 0; i < len(data.AvgDailySalesPrice); i++ {
-		points[i] = SalesPoint{
-			Date:               time.Unix(data.Timestamp[i], 0),
-			AvgDailySalesPrice: data.AvgDailySalesPrice[i],
-			SalesVolume:        getSafeInt(data.SalesVolume, i),
-		}
-	}
-
-	return points
-}
-
-func getSafeInt(arr []int, index int) int {
-	if index < len(arr) {
-		return arr[index]
-	}
-	return 0
 }

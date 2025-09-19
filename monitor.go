@@ -51,10 +51,10 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	bpF := float64(bestPrice)
 	if value == -1 {
 		//RAP limited
-		return BuyF((RAP-bpF)/bpF, -1, false, isDemand)
+		return BuyF((RAP-bpF)/RAP, -1, false, isDemand)
 	} else {
 		//Value limited
-		return BuyF((RAP-bpF)/bpF, (value-bpF)/value, true, isDemand)
+		return BuyF((RAP-bpF)/RAP, (value-bpF)/value, true, isDemand)
 	}
 }
 
@@ -185,12 +185,16 @@ func monitorDeals(live_money bool) {
 				//Check buys
 				if BuyCheck(price, RAP_map[id], value, demand != -1) {
 					//Final price manipulation check
-					if !CheckProjected(id, float64(RAP_map[id])) {
-						//BUY
-						if !live_money {
-							tradeSim.BuyItem(id, name, price)
-						} else {
-							OrderPurchase(id)
+					if !(config.DeepManipulationCheck && CheckProjected(id, float64(RAP_map[id]))) {
+						//Final dip check (if strict buy conditions)
+						if !config.StrictBuyCondition || CheckDip(id, float64(price)) {
+							//BUY
+							if !live_money {
+								tradeSim.BuyItem(id, name, price)
+							} else {
+								tradeSim.BuyItem(id, name, price)
+								OrderPurchase(id)
+							}
 						}
 					}
 				}
@@ -205,7 +209,7 @@ func monitorDeals(live_money bool) {
 
 		}
 
-		time.Sleep(time.Millisecond * 1500)
+		time.Sleep(time.Millisecond * 1000)
 	}
 }
 
