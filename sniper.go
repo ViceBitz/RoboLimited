@@ -5,15 +5,36 @@ import (
 	"log"
 	"math"
 	"robolimited/config"
+	"robolimited/tools"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
 
-// Helper method for logging into account
+// Global Chrome browser for fast page navigation
+var (
+	globalBrowser *tools.Browser
+	browserOnce   sync.Once
+	browserErr    error
+)
+
+// Initialize global browser instance on package initialization
+func init() {
+	browserOnce.Do(func() {
+		globalBrowser, browserErr = tools.NewBrowser()
+		if browserErr != nil {
+			log.Printf("Failed to initialize global browser: %v", browserErr)
+		} else {
+			log.Println("Global browser initialized and ready for use")
+		}
+	})
+}
+
+// Logs into Roblox account
 func robloxLogin(ctx context.Context) error {
 	return chromedp.Run(ctx,
 		// First navigate to Roblox
@@ -48,30 +69,8 @@ func OrderPurchase(id string, expectedPrice int) bool {
 	priceSelector := config.PriceSelector
 	buySelector := config.BuyButtonSelector
 	confirmSelector := config.ConfirmButtonSelector
-	timeoutSec := 15
 
-	// chrome flags: headful & use profile to reuse login
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		// Use headful so you can see what's happening
-		chromedp.Flag("headless", false),
-		chromedp.Flag("disable-gpu", false),
-		chromedp.Flag("no-sandbox", true),
-
-		chromedp.Flag("disable-blink-features", "AutomationControlled"),
-		chromedp.Flag("exclude-switches", "enable-automation"),
-		chromedp.Flag("disable-extensions-except", ""),
-		chromedp.Flag("disable-plugins-discovery", ""),
-		chromedp.Flag("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
-	)
-
-	// Create Chrome contexts
-	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
-	defer cancel()
-
-	ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
-	defer cancel()
-
-	ctx, cancel = context.WithTimeout(ctx, time.Duration(timeoutSec)*time.Second)
+	ctx, cancel := globalBrowser.GetContextWithTimeout(15 * time.Second)
 	defer cancel()
 
 	// Log into account

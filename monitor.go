@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math"
@@ -128,13 +127,13 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range 10000 {
-		fmt.Println("____________________________________________________")
+		log.Println("____________________________________________________")
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetailsNew := GetLimitedData()
 			if itemDetailsNew == nil {
 				//Mark errors in updating
-				fmt.Println("Could not refresh item details..")
+				log.Println("Could not refresh item details..")
 			} else {
 				itemDetails = itemDetailsNew
 			}
@@ -199,12 +198,12 @@ func monitorDeals(live_money bool) {
 					}
 				}
 
-				fmt.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
+				log.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
 
 			} else { //Updating RAP
 				RAP_map[id] = price
 
-				fmt.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				log.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
 			}
 
 		}
@@ -215,6 +214,5 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	//monitorDeals(config.LiveMoney)
-	OrderPurchase("21070012", 5)
+	monitorDeals(config.LiveMoney)
 }

@@ -32,13 +32,13 @@ Market participants use these indicators to infer a limited's worth and make a p
 ### Deal Scanning  
 - **Efficient Monitoring** tracking market deals with automated price refresh and adjustment logic through HTTP GET requests to known API endpoints.
 - **Resilient Automation** with error handling and fault tolerance.
-- **Throttling and rate-limit protection** to sustain long-term operation.
+- **Throttling** to sustain long-term operation and prevent rate-limiting.
 - **Console Messages** to provide constant status reports and information on current operation.
 
 ### Market Evaluation
 - **Rule-Based Filters**: Excludes manipulated assets based on sales data in past month.
 - **Demand-Aware Strategies**: Adjust thresholds based on popularity and liquidity signals.
-- **Spikes & Dips**: Identifies abnormalities in sales data to guide buying and selling
+- **Spikes & Dips**: Finds abnormalities in sales data to guide buying, trading, selling
 
 ### Execution Layer
 - **Signal Validation**: Confirms opportunities comparing expected to actual market listing.  
