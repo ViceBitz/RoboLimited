@@ -28,8 +28,10 @@ const (
 
 	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
 	StrictBuyCondition    = true  //Use standard deviations in buy checks
-	OutlierThreshold      = 1     //Standard deviations to consider item as projected
-	DipThreshold          = -2    //Standard deviations to consider a dip in price (for z-score eval)
+	PopulateSalesData     = true  //Updates sales data for all items in data store
+
+	OutlierThreshold = 1  //Standard deviations to consider item as projected
+	DipThreshold     = -2 //Standard deviations to consider a dip in price (for z-score eval)
 
 	//Price manipulation analysis
 	LookbackPeriod = 90 //Past number of days to consider when scanning for projecteds
@@ -40,6 +42,7 @@ const (
 
 	//Files
 	ActionLogFile = "data/actions.log"
+	SalesDataFile = "data/sales.csv"
 
 	//CSS Selectors
 	PriceSelector         = "span.text-robux-lg"                                           //Best Price

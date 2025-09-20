@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"robolimited/config"
+	"robolimited/tools"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -25,13 +26,13 @@ type SalesPoint struct {
 	SalesVolume        int
 }
 
-// Calculates Z-score of price relative to past sales data
-func findZIndex(id string, price float64) float64 {
+// Calculates mean and SD of past sales data
+func findMeanSD(id string) (float64, float64) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
 
 	if err != nil {
-		return 999.0
+		return 0, 0
 	}
 
 	// Find segment of time series to consider
@@ -59,6 +60,13 @@ func findZIndex(id string, price float64) float64 {
 		std += math.Pow((float64(p) - mean), 2)
 	}
 	std = math.Sqrt(std / (N - 1))
+
+	return mean, std
+}
+
+// Calculates Z-score of price relative to past sales data
+func findZIndex(id string, price float64) float64 {
+	mean, std := findMeanSD(id)
 	z_score := (price - mean) / std
 
 	fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
@@ -133,4 +141,17 @@ func extractPriceSeries(url string) (*SalesData, error) {
 	}
 
 	return &salesData, nil
+}
+
+func init() {
+	if config.PopulateSalesData {
+		itemDetails := GetLimitedData()
+		var sales_data []tools.StatsData
+		for id, _ := range itemDetails.Items {
+			mean, SD := findMeanSD(id)
+			sales_data = append(sales_data, tools.StatsData{ID: id, Mean: mean, StdDev: SD})
+		}
+		tools.StoreSales(sales_data)
+	}
+	tools.SalesData = tools.RetrieveSales()
 }

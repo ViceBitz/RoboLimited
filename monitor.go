@@ -214,5 +214,5 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
-	monitorDeals(config.LiveMoney)
+	//monitorDeals(config.LiveMoney)
 }
