@@ -20,11 +20,14 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Auto-buys limiteds within **3 seconds** of appearing at a low price.  
 - Integrates directly with **Rolimons** and **Roblox APIs**
 - Formula-driven decisions (using margins and statistical sampling)
+- Fast purchase execution with **low-latency price checks** and **logged-in Chrome window**
 
 ### Limited Analyzer
 - **Identifies outliers** and **finds trends** in past sales data of items
-- Utilizes **caching and statistical z-scoring** to classify price points
-- Tracks **snapshot of general & select item market** for big-picture patterns
+- Utilizes **data caching of statistical z-scoring** to classify price points quickly
+- Track item sales prices across time period for big-picture trends
+
+
 
 
 ---
@@ -38,24 +41,16 @@ Market participants use these indicators to infer a limited's worth and make a p
 - **Throttling** to prevent rate-limiting and sustain long-term operation.
 
 ### Market Evaluation
-- **Rule-Based Filters**: Excludes manipulated assets based on sales data in past month.
-- **Demand-Aware Strategies**: Adjust thresholds based on popularity and liquidity signals.
 - **Spikes & Dips**: Finds abnormalities in sales data to guide buying, trading, selling
+- **Item Filtering**: Excludes manipulated assets based on sales data in past month.
+- **Market Metrics**: Tracks prices of item groups across time period for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast retrieval and querying
 
 ### Execution Layer
-- **Signal Validation**: Confirms opportunities by comparing expected to actual market listing.  
+- **Signal Validation**: Confirms opportunities by comparing expected to actual market listing.
+- **Floating Window**: Maintains Chrome window logged into account to cut down navigation time.  
 - **Automated Transactions**: Executes purchases with safeguards against false data.  
 - **Logging**: Every decision and action is tracked for post-trade analysis.
-
-
----
-
-## ⚙️ Deployment
-
-- Designed to run **24/7**.  
-- Logs trades, profit, and system actions.
-- Test strategy across long periods to confirm validity.  
 
 ---
 

@@ -22,20 +22,9 @@ var (
 	browserErr    error
 )
 
-// Initialize global browser instance on package initialization
-func init() {
-	browserOnce.Do(func() {
-		globalBrowser, browserErr = tools.NewBrowser()
-		if browserErr != nil {
-			log.Printf("Failed to initialize global browser: %v", browserErr)
-		} else {
-			log.Println("Global browser initialized and ready for use")
-		}
-	})
-}
-
 // Logs into Roblox account
 func robloxLogin(ctx context.Context) error {
+	log.Println("Logging into Roblox account...")
 	return chromedp.Run(ctx,
 		// First navigate to Roblox
 		chromedp.Navigate("https://www.roblox.com"),
@@ -73,18 +62,10 @@ func OrderPurchase(id string, expectedPrice int) bool {
 	ctx, cancel := globalBrowser.GetContextWithTimeout(15 * time.Second)
 	defer cancel()
 
-	// Log into account
-	log.Println("Logging into Roblox account...")
-	err := robloxLogin(ctx)
-	if err != nil {
-		log.Printf("Login failed: %v\n", err)
-		return false
-	}
-
 	// Navigate to item page
 	log.Println("Navigating to item page...")
 
-	err = chromedp.Run(ctx,
+	err := chromedp.Run(ctx,
 		chromedp.Navigate(url),
 	)
 	if err != nil {
@@ -145,4 +126,22 @@ func OrderPurchase(id string, expectedPrice int) bool {
 	time.Sleep(5 * time.Second)
 
 	return true
+}
+
+// Initialize global browser instance on package initialization
+func init() {
+	browserOnce.Do(func() {
+		globalBrowser, browserErr = tools.NewBrowser()
+		//Log into Roblox account on startup
+		err := robloxLogin(globalBrowser.GetContext())
+		if err != nil {
+			log.Printf("Login failed: %v\n", err)
+		}
+
+		if err != nil || browserErr != nil {
+			log.Printf("Failed to initialize global browser: %v", browserErr)
+		} else {
+			log.Println("Global browser initialized and ready for use")
+		}
+	})
 }

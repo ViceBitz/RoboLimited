@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"robolimited/config"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -19,8 +20,8 @@ func NewBrowser() (*Browser, error) {
 	allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	ctx, cancel := chromedp.NewContext(allocCtx)
 
-	// Initialize with about:blank
-	err := chromedp.Run(ctx, chromedp.Navigate("about:blank"))
+	// Initialize with roblox homepage
+	err := chromedp.Run(ctx, chromedp.Navigate(config.RobloxHome))
 	if err != nil {
 		cancel()
 		allocCancel()
@@ -38,7 +39,7 @@ func NewBrowser() (*Browser, error) {
 
 // Reset navigates back to about:blank
 func (b *Browser) Reset() error {
-	return chromedp.Run(b.ctx, chromedp.Navigate("about:blank"))
+	return chromedp.Run(b.ctx, chromedp.Navigate(config.RobloxHome))
 }
 
 // GetContext returns the chromedp context
@@ -47,13 +48,13 @@ func (b *Browser) GetContext() context.Context {
 }
 
 // GetContextWithTimeout returns the chromedp context with a timeout
-// Always resets to about:blank when cancel() is called
+// Always resets to roblox homepage when cancel() is called
 func (b *Browser) GetContextWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
 	timeoutCtx, cancel := context.WithTimeout(b.ctx, timeout)
 
 	wrappedCancel := func() {
 		cancel()
-		b.Reset() //Reset to about:blank
+		b.Reset() //Reset to roblox homepage
 	}
 
 	return timeoutCtx, wrappedCancel

@@ -27,8 +27,8 @@ const (
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
 
 	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
-	StrictBuyCondition    = true  //Use standard deviations in buy checks
-	PopulateSalesData     = true  //Updates sales data for all items in data store
+	StrictBuyCondition    = true  //Use z-scores from standard deviations in buy checks
+	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS NECESSARY)
 
 	OutlierThreshold = 1  //Standard deviations to consider item as projected
 	DipThreshold     = -2 //Standard deviations to consider a dip in price (for z-score eval)
@@ -37,8 +37,9 @@ const (
 	LookbackPeriod = 90 //Past number of days to consider when scanning for projecteds
 	RefreshRate    = 5  //Re-extract RAP / Value off Rolimon's API after this many rounds
 
-	//Catalog page
+	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
+	RobloxHome           = "https://www.roblox.com/home"
 
 	//Files
 	ActionLogFile = "data/actions.log" //Log of all buy actions
