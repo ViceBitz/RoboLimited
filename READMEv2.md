@@ -17,32 +17,35 @@ Market participants use these indicators to infer a limited's worth and make a p
 ## 📌 Systems
 
 ### Price Sniper
-- Auto-buys limiteds within **1 second** of appearing at a low price.  
+- Auto-buys limiteds within **3 seconds** of appearing at a low price.  
 - Integrates directly with **Rolimons** and **Roblox APIs**
-- Formula-driven decisions (using margins and statistical z-scores)
+- Formula-driven decisions (using margins and statistical sampling)
 
 ### Limited Analyzer
-- Detects price manipulated items on RAP based on past sales data
-- Finds dips in prices for strict buy condition on sniper
+- **Identifies outliers** and **finds trends** in past sales data of items
+- Utilizes **caching and statistical z-scoring** to classify price points
+- Tracks **snapshot of general & select item market** for big-picture patterns
+
 
 ---
 
 ## 🚀 Key Features
 
 ### Deal Scanning  
-- **Efficient Monitoring** tracking market deals with automated price refresh and adjustment logic through HTTP GET requests to known API endpoints.
-- **Resilient Automation** with error handling and fault tolerance.
-- **Throttling** to sustain long-term operation and prevent rate-limiting.
-- **Console Messages** to provide constant status reports and information on current operation.
+- **Efficient Monitoring** tracks market deals through HTTP GET requests to API endpoints with automated price refresh and adjustment logic
+- **Auto Purchase** buys item when price dips below margin and z-score thresholds
+- **Flexible Automation** keeps system running through web errors and loss of connection.
+- **Throttling** to prevent rate-limiting and sustain long-term operation.
 
 ### Market Evaluation
 - **Rule-Based Filters**: Excludes manipulated assets based on sales data in past month.
 - **Demand-Aware Strategies**: Adjust thresholds based on popularity and liquidity signals.
 - **Spikes & Dips**: Finds abnormalities in sales data to guide buying, trading, selling
+- **Data Caching**: Precompute and store mean / standard deviation of past sales for fast retrieval and querying
 
 ### Execution Layer
-- **Signal Validation**: Confirms opportunities comparing expected to actual market listing.  
-- **Automated Transactions**: Executes purchases programmatically with safeguards against false data.  
+- **Signal Validation**: Confirms opportunities by comparing expected to actual market listing.  
+- **Automated Transactions**: Executes purchases with safeguards against false data.  
 - **Logging**: Every decision and action is tracked for post-trade analysis.
 
 

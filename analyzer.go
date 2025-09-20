@@ -8,6 +8,7 @@ import (
 	"math"
 	"robolimited/config"
 	"robolimited/tools"
+	"sync"
 	"time"
 
 	"github.com/chromedp/chromedp"
@@ -30,6 +31,8 @@ type SalesPoint struct {
 func findMeanSD(id string) (float64, float64) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
+
+	log.Println(err)
 
 	if err != nil {
 		return 0, 0
@@ -66,7 +69,10 @@ func findMeanSD(id string) (float64, float64) {
 
 // Calculates Z-score of price relative to past sales data
 func findZIndex(id string, price float64) float64 {
-	mean, std := findMeanSD(id)
+	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	if mean == 0.0 && std == 0.0 {
+		mean, std = findMeanSD(id)
+	}
 	z_score := (price - mean) / std
 
 	fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
@@ -144,14 +150,52 @@ func extractPriceSeries(url string) (*SalesData, error) {
 }
 
 func init() {
+	//Precompute mean & standard deviation for past sales data of all items
+	//Write to a .csv file to use for querying later
 	if config.PopulateSalesData {
 		itemDetails := GetLimitedData()
 		var sales_data []tools.StatsData
+		var mu sync.Mutex
+		var wg sync.WaitGroup
+
+		//Initialize global sales data map to check which values needed
+		tools.SalesData = tools.RetrieveSales()
+
+		//Multithread scan Rolimon's for sales data
+		maxThreads := 4
+		semaphore := make(chan struct{}, maxThreads)
+
 		for id, _ := range itemDetails.Items {
-			mean, SD := findMeanSD(id)
-			sales_data = append(sales_data, tools.StatsData{ID: id, Mean: mean, StdDev: SD})
+			wg.Add(1)
+			go func(itemID string) {
+				defer wg.Done()
+
+				semaphore <- struct{}{}        // Acquire thread
+				defer func() { <-semaphore }() // Release thread
+
+				mean, SD := 0.0, 0.0
+				if tools.SalesData[id].Mean != 0.0 {
+					mean, SD = tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+				} else {
+					mean, SD = findMeanSD(itemID)
+				}
+
+				//Check throttle to prevent excessive rate-limiting
+				if mean == 0.0 && SD == 0.0 {
+					time.Sleep(15 * time.Second)
+				}
+
+				mu.Lock()
+				sales_data = append(sales_data, tools.StatsData{ID: itemID, Mean: mean, StdDev: SD})
+				log.Println("(", len(sales_data), "/", len(itemDetails.Items), ")", "Reading sales data of", itemID, "| Mean:", mean, "| SD:", SD)
+				mu.Unlock()
+			}(id)
 		}
+
+		wg.Wait()
+		log.Println("Caching into sales data file..")
 		tools.StoreSales(sales_data)
 	}
+	//Initialize global sales data map
 	tools.SalesData = tools.RetrieveSales()
 }

@@ -41,8 +41,8 @@ const (
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
 
 	//Files
-	ActionLogFile = "data/actions.log"
-	SalesDataFile = "data/sales.csv"
+	ActionLogFile = "data/actions.log" //Log of all buy actions
+	SalesDataFile = "data/sales.csv"   //Mean & SD of past sales data of all items
 
 	//CSS Selectors
 	PriceSelector         = "span.text-robux-lg"                                           //Best Price

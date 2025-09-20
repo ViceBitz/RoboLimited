@@ -215,4 +215,5 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//monitorDeals(config.LiveMoney)
+	CheckDip("250395444", 1950)
 }
