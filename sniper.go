@@ -52,8 +52,8 @@ func robloxLogin(ctx context.Context) error {
 
 }
 
-// Orders purchase on an item given id, checks best price against presumed RAP / value and returns success
-func OrderPurchase(id string, expectedPrice int) bool {
+// Executes purchase on an item given id, checks best price against presumed RAP / value and returns success
+func ExecutePurchase(id string, expectedPrice int) bool {
 	url := config.RobloxCatalogBaseURL + id
 	priceSelector := config.PriceSelector
 	buySelector := config.BuyButtonSelector
@@ -96,6 +96,7 @@ func OrderPurchase(id string, expectedPrice int) bool {
 	}
 
 	//Click purchase
+	time.Sleep(250 * time.Millisecond) //Give webpage some time to load
 	err = chromedp.Run(ctx,
 		chromedp.WaitVisible(buySelector, chromedp.ByQuery),
 		chromedp.Click(buySelector, chromedp.NodeVisible, chromedp.ByQuery),

@@ -31,7 +31,7 @@ const (
 	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS NECESSARY)
 
 	OutlierThreshold = 1  //Standard deviations to consider item as projected
-	DipThreshold     = -2 //Standard deviations to consider a dip in price (for z-score eval)
+	DipThreshold     = -3 //Standard deviations to consider a dip in price (for z-score eval)
 
 	//Price manipulation analysis
 	LookbackPeriod = 90 //Past number of days to consider when scanning for projecteds

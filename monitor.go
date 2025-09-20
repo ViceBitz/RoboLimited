@@ -192,7 +192,7 @@ func monitorDeals(live_money bool) {
 								tradeSim.BuyItem(id, name, price)
 							} else {
 								tradeSim.BuyItem(id, name, price)
-								OrderPurchase(id, price)
+								ExecutePurchase(id, price)
 							}
 						}
 					}
