@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
@@ -214,5 +215,15 @@ func monitorDeals(live_money bool) {
 
 // Driver
 func main() {
+	//Log console output to file
+	f, err := os.OpenFile(config.ConsoleLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println("Error opening log file:", err)
+		return
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
+	//Start deal sniper
 	monitorDeals(config.LiveMoney)
 }

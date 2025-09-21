@@ -89,8 +89,8 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 	bestPrice, _ := strconv.Atoi(bestPrice_r)
 
 	log.Println("Comparing listed price", bestPrice_r, "to expected price", expectedPrice)
-	//Must be within 5 robux of price error
-	if math.Abs(float64(expectedPrice-bestPrice)) > 5 {
+	//Must be within 10 robux of price error
+	if math.Abs(float64(expectedPrice-bestPrice)) > 10 {
 		log.Println("Failed price validation! Canceling..")
 		return false
 	}
@@ -109,7 +109,7 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 	log.Println("Clicked buy button")
 
 	// Wait for purchase modal to appear (a bit of extra time for network)
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	err = chromedp.Run(ctx, //Confirm click
 		chromedp.WaitVisible(confirmSelector, chromedp.ByQuery),

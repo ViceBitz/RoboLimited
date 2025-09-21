@@ -27,7 +27,7 @@ const (
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1  //SD from mean to consider item as projected
-	DipThreshold     = -5 //SD from mean to consider a dip in price (for z-score eval)
+	DipThreshold     = -4 //SD from mean to consider a dip in price (for z-score eval)
 	SellThreshold    = 1  //SD from mean to list item for sale
 	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
 
@@ -40,8 +40,9 @@ const (
 	RobloxHome           = "https://www.roblox.com/home"
 
 	//Files
-	ActionLogFile = "data/actions.log" //Log of all buy actions
-	SalesDataFile = "data/sales.csv"   //Mean & SD of past sales data of all items
+	ActionLogFile  = "data/actions.log" //Log of all buy actions
+	ConsoleLogFile = "data/console.log" //Log of terminal output
+	SalesDataFile  = "data/sales.csv"   //Mean & SD of past sales data of all items
 
 	//CSS Selectors
 	PriceSelector         = "span.text-robux-lg"                                           //Best Price
