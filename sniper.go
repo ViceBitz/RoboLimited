@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"math"
+	"os"
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
@@ -54,6 +55,16 @@ func robloxLogin(ctx context.Context) error {
 
 // Executes purchase on an item given id, checks best price against presumed RAP / value and returns success
 func ExecutePurchase(id string, expectedPrice int) bool {
+	//Log console output to file
+	f, err := os.OpenFile(config.ConsoleLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Println("Error opening log file:", err)
+	} else {
+		log.SetOutput(f)
+	}
+	defer f.Close()
+
+	// Navigate to item page
 	url := config.RobloxCatalogBaseURL + id
 	priceSelector := config.PriceSelector
 	buySelector := config.BuyButtonSelector
@@ -62,10 +73,9 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 	ctx, cancel := globalBrowser.GetContextWithTimeout(15 * time.Second)
 	defer cancel()
 
-	// Navigate to item page
 	log.Println("Navigating to item page...")
 
-	err := chromedp.Run(ctx,
+	err = chromedp.Run(ctx,
 		chromedp.Navigate(url),
 	)
 	if err != nil {
@@ -130,6 +140,7 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 
 // Initialize global browser instance on package initialization
 func init() {
+	//Create global Chrome webpage for reuse
 	browserOnce.Do(func() {
 		globalBrowser, browserErr = tools.NewBrowser()
 		//Log into Roblox account on startup
