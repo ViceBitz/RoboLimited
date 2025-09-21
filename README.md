@@ -1,76 +1,72 @@
 # Roblox Limited Sniper & Analyzer
 
-A system for analyzing and sniping Roblox limiteds using **Rolimons** and the **Roblox API** that is built for automated trading, deal-sniping, and technical analysis of limited items. While intended for a digital collectibles marketplace, concepts map directly to broader financial technology systems such as market monitoring & algorithmic trading.
+RoboLimited buys and sells undervalued Roblox virtual items using **Rolimons** and **Roblox API**. The system automates trades, snipes deals, and analyzes price trends. Inteded for a digital collectibles marketplace, the methodology map directly to broader financial technology systems such as market monitoring & algorithmic trading.
+
+### 💡 Inspiration ###
+Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Growing up, Roblox was a part of my childhood, so many years later, I'm using its marketplace as the foundation for this project. The limited market space offers the perfect opportunity to practice building an efficient algorithmic trading system within a real, dynamic online economy.
+
+On the platform, players buy and trade limited accessories with each other, creating price fluctuations and intrinsic value much like shares of stock. Market activity revolves around several key metrics:
+- RAP (Recent Average Price): historical average based on recent trades.
+- Value: an adjusted Robux value, often set by third-party aggregators like Rolimons.
+- Best Price: the current lowest resale price available on the market.
+
+Market participants use these indicators to infer a limited's worth and make a profit by getting their hands on them before everyone else catches on. This Go application implements a low-latency acquisition and trading pipeline that detects underpriced listings, completes purchases quickly, and manages subsequent trades for profit.
 
 ---
 
-# 📌 Features
+## 📌 Systems
 
 ### Price Sniper
-- Auto-buys limiteds within **1 second** of appearing at a low price.  
+- Auto-buys limiteds within **3 seconds** of appearing at a low price.  
 - Integrates directly with **Rolimons** and **Roblox APIs**
-- Formula-driven decisions (using margins)
+- Formula-driven decisions (using margins and statistical sampling)
+- Fast purchase execution with **low-latency price checks** and **logged-in webpage**
+
+### Limited Analyzer
+- **Identifies outliers** and **finds trends** in past sales data of items
+- Utilizes **sales data caching** to classify price points quickly
+- Track item sales prices across time period for big-picture trends
+
+
+
 
 ---
 
-# 🛠 Workflow
+## 🚀 Key Features
 
-## Price Sniper
+### Deal Scanning  
+- **Efficient Monitoring** tracks market deals through HTTP GET requests to API endpoints with automated price refresh and adjustment logic
+- **Auto Purchase** buys item when price dips below margin and z-score thresholds
+- **Flexible Automation** keeps system running through web errors and loss of connection.
+- **Throttling** to prevent rate-limiting and sustain long-term operation.
 
-### Direct Sniping (suitable for few limiteds with high accuracy)
-1. **Precompute** all limited data (RAP, Value, Projected, IsDemand)   
-   - Fetch JSON from **Rolimon API**.
-   - Refresh every few cycles.
-3. Parse & filter items to target.  
-5. Scrape live best prices from **Rolimons website**:  
-   - Uses ChromeDB scraper objects with **mutexes**.  
-   - Renews context after every scrape.  
-   - CSS targeting of best-price element.  
-6. Process results with **batch + multithreading**.  
-   - Thread-safe dictionary to store best-price results.  
-   - Built-in delays to prevent rate limiting.
-7. *Do Common Steps...*  
+### Market Evaluation
+- **Spikes & Dips**: Finds trends and outliers in sales data to guide buying, trading, selling
+- **Market Metrics**: Tracks prices of item groups across time period for market insights  
+- **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
 
-### Deal Sniping (more efficient & broad)
-1. Monitor **Rolimons Deals API** for price updates.  
-   - `isRAP = 1` → refresh RAP for deal calculation.  
-   - `isRAP = 0` → update new best price.  
-2. Update RAP or best price in table
-3. *Do Common Steps...*
-
-#### Common Steps (in both methods):
- +  **Buy Decision:** buy or do nothing
-    - Simple Evaluation: if price is 25% below RAP or 35% below value
-    - Tapered Evaluation: interpolate margin from 40% to 20% (or 50% to 30% for value) on small limiteds (~100R) to big limiteds (3000-1000R)
-    - Demand Evaluation (preferred): lower margins (25%/35%) on high demand items compared to non-popular items (30%/35%)
- +  Confirm Buy Action on two conditions:
-    - Refresh RAP / Value via Rolimon’s item details API
-    - Real best price listed on Roblox website
- +  Execute Purchase
-    - Log in with Roblox Cookie (sensitive) and navigate to item page
-    - Final validation on shown best price against RAP / Value
-    - Click buy / confirm buttons on real-time Roblox site
- +  Track and log actions to a `.log` file.
- +  Loop every few seconds for near real-time sniping (and to prevent rate limit).
-
-*🎭 Both methods exclude projected (price-manipulated) limited items.<br>
-⚠️ Program handles all errors & exceptions (continues running even on failures).*
+### Execution Layer
+- **Signal Validation**: Confirms opportunities by comparing expected to actual market listing.
+- **Ready Webpage**: Maintains Chrome webpage logged into account to cut down navigation time.  
+- **Automated Transactions**: Executes purchases with safeguards against false data.  
+- **Logging**: Every decision and action is tracked for post-trade analysis.
 
 ---
 
-# ⚙️ Deployment
+## Deployment Strategies
 
-- Designed to run **24/7**.  
-- Logs trades, profit, and system actions.
-- Test strategy across long periods to confirm validity.  
+- Roblox incurs two taxes on financial actions
+    1. Selling Assets - 30% fee
+    2. Converting to USD - 75% tax
+- Avoid first fee by exchanging limiteds with other players for profit
+- Dodge second fee by keeping money in system, don't cash out until end
+- Snipe limiteds → analyze promising items → sell optimally OR trade for better items 
 
 ---
 
-# 🚧 Future Features
-- [ ] Add web dashboard for live tracking.  
-- [ ] Smarter buy strategy with ML-driven prediction.  
+## 🚧 Future Features  
 - [ ] Cloud deployment option.
-- [ ] **Limited Analyzer** - Predicts which limiteds will skyrocket in value; Incorporate past trades, buy/sell data, seasonal trends, standard stock market technical analysis.
+- [ ] **Sell-side algorithm** to liquidate owned assets optimally
 - [ ] **Auto-Trader** - Automatically sends trades for favorable items.
 
 ---
