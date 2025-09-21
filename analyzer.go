@@ -80,20 +80,26 @@ func findZIndex(id string, price float64) float64 {
 	return z_score
 }
 
-// Analyzes historical time series data to determine if an item is price manipulated
+// Determine if an item is price manipulated with RAP z-score
 func CheckProjected(id string, rap float64) bool {
 	fmt.Println("Projected Check | ID:", id)
 	z_score := findZIndex(id, rap)
 	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
 }
 
-// Uses Z-score of best price across past sales data to identify dip and make buy decision
+// Identify dip to support buy decision with price z-score
 func CheckDip(id string, bestPrice float64) bool {
 	fmt.Println("Dip Check | ID:", id)
 	z_score := findZIndex(id, bestPrice)
 	return z_score <= config.DipThreshold //z-score below threshold is dip
 }
 
+// Calculate optimal price listing for item sale from z-score
+func FindOptimalSell(id string) float64 {
+	fmt.Println("Optimal Sale | ID:", id)
+	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	return mean + std*config.SellThreshold
+}
 func extractPriceSeries(url string) (*SalesData, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
