@@ -16,7 +16,7 @@ const (
 	ValueDipND = 0.35 //Non-demand % below Value to buy
 
 	PriceRangeLow  = 300 //Price range of limiteds to consider
-	PriceRangeHigh = 1000
+	PriceRangeHigh = 600
 
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
@@ -27,7 +27,7 @@ const (
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1  //Standard deviations to consider item as projected
-	DipThreshold     = -3 //Standard deviations to consider a dip in price (for z-score eval)
+	DipThreshold     = -5 //Standard deviations to consider a dip in price (for z-score eval)
 	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
 
 	//Iteration Cycles

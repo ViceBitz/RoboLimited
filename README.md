@@ -23,7 +23,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Fast purchase execution with **low-latency price checks** and **logged-in webpage**
 
 ### Limited Analyzer
-- **Identifies outliers** and **finds trends** in past sales data of items
+- **Finds trends** and **identifies outliers** in past sales data
 - Utilizes **sales data caching** to classify price points quickly
 - Track item sales prices across time period for big-picture trends
 
@@ -34,26 +34,21 @@ Market participants use these indicators to infer a limited's worth and make a p
 
 ## 🚀 Key Features
 
-### Deal Scanning  
+### Deal Sniping  
 - **Efficient Monitoring** tracks market deals through HTTP GET requests to API endpoints with automated price refresh and adjustment logic
-- **Auto Purchase** buys item when price dips below margin and z-score thresholds
+- **Purchase Execution** buys item when price dips below adjustable margin and z-score thresholds
 - **Flexible Automation** keeps system running through web errors and loss of connection.
 - **Throttling** to prevent rate-limiting and sustain long-term operation.
+- **Logging**: Every decision and action is tracked for post-trade analysis.
 
 ### Market Evaluation
-- **Spikes & Dips**: Finds trends and outliers in sales data to guide buying, trading, selling
+- **Spikes & Dips**: Statistically analyzes sales data for trends to guide buying, trading, selling
 - **Market Metrics**: Tracks prices of item groups across time period for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
 
-### Execution Layer
-- **Signal Validation**: Confirms opportunities by comparing expected to actual market listing.
-- **Ready Webpage**: Maintains Chrome webpage logged into account to cut down navigation time.  
-- **Automated Transactions**: Executes purchases with safeguards against false data.  
-- **Logging**: Every decision and action is tracked for post-trade analysis.
-
 ---
 
-## Deployment Strategies
+## 🛠️ Deployment Strategies
 
 - Roblox incurs two taxes on financial actions
     1. Selling Assets - 30% fee
