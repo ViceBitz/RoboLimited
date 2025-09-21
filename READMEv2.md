@@ -1,6 +1,6 @@
 # Roblox Limited Sniper & Analyzer
 
-A system for analyzing and sniping Roblox limiteds using **Rolimons** and the **Roblox API** that is built for automated trading, deal-sniping, and technical analysis of limited items. While intended for a digital collectibles marketplace, concepts map directly to broader financial technology systems such as market monitoring & algorithmic trading.
+RoboLimited buys and sells undervalued Roblox virtual items using **Rolimons** and **Roblox API**. The system automates trades, snipes deals, and analyzes price trends. Inteded for a digital collectibles marketplace, the methodology map directly to broader financial technology systems such as market monitoring & algorithmic trading.
 
 ### 💡 Inspiration ###
 Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Growing up, Roblox was a part of my childhood, so many years later, I'm using its marketplace as the foundation for this project. The limited market space offers the perfect opportunity to practice building an efficient algorithmic trading system within a real, dynamic online economy.
@@ -41,8 +41,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 - **Throttling** to prevent rate-limiting and sustain long-term operation.
 
 ### Market Evaluation
-- **Spikes & Dips**: Finds abnormalities in sales data to guide buying, trading, selling
-- **Item Filtering**: Excludes manipulated assets based on sales data in past month.
+- **Spikes & Dips**: Finds trends and outliers in sales data to guide buying, trading, selling
 - **Market Metrics**: Tracks prices of item groups across time period for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
 
@@ -54,11 +53,20 @@ Market participants use these indicators to infer a limited's worth and make a p
 
 ---
 
-## 🚧 Future Features
-- [ ] Add web dashboard for live tracking.  
-- [ ] Smarter buy strategy with ML-driven prediction.  
+## Deployment Strategies
+
+- Roblox incurs two taxes on financial actions
+    1. Selling Assets - 30% fee
+    2. Converting to USD - 75% tax
+- Avoid first fee by exchanging limiteds with other players for profit
+- Dodge second fee by keeping money in system, don't cash out until end
+- Snipe limiteds → analyze promising items → sell optimally OR trade for better items 
+
+---
+
+## 🚧 Future Features  
 - [ ] Cloud deployment option.
-- [ ] **Limited Analyzer** - Predicts which limiteds will skyrocket in value; Incorporate past trades, buy/sell data, seasonal trends, standard stock market technical analysis.
+- [ ] **Sell-side algorithm** to liquidate owned assets optimally
 - [ ] **Auto-Trader** - Automatically sends trades for favorable items.
 
 ---

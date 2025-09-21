@@ -109,11 +109,10 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 	log.Println("Clicked buy button")
 
 	// Wait for purchase modal to appear (a bit of extra time for network)
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	err = chromedp.Run(ctx, //Confirm click
 		chromedp.WaitVisible(confirmSelector, chromedp.ByQuery),
-		chromedp.Sleep(250*time.Millisecond),
 		chromedp.Click(confirmSelector, chromedp.NodeVisible, chromedp.ByQuery),
 	)
 

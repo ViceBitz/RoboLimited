@@ -15,8 +15,8 @@ const (
 	RAPDipND   = 0.30 //Non-demand % below RAP to buy
 	ValueDipND = 0.35 //Non-demand % below Value to buy
 
-	PriceRangeLow  = 500 //Price range of limiteds to consider
-	PriceRangeHigh = 1500
+	PriceRangeLow  = 300 //Price range of limiteds to consider
+	PriceRangeHigh = 1000
 
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
