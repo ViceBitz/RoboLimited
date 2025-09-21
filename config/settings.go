@@ -3,39 +3,36 @@ package config
 
 // Roblox API base URLs
 const (
-	/**
-	[[SNIPER & MONITOR SETTINGS]]
-	*/
-
 	//Economy APIs
 	RolimonsAPI            = "https://www.rolimons.com/itemapi/itemdetails"
 	RobloxEconomyDetailsV2 = "https://economy.roblox.com/v2/assets/"
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
-	//Limited Sniper Constraints (for margin eval)
+	//Evaluation Constraints (margin)
 	RAPDipD    = 0.25 //Demand % below RAP to buy
 	ValueDipD  = 0.35 //Demand % below Value to buy
 	RAPDipND   = 0.30 //Non-demand % below RAP to buy
 	ValueDipND = 0.35 //Non-demand % below Value to buy
 
-	/* DEPRECATED SellMargin = 1000 //0.1 //% return on investment */
-
 	PriceRangeLow  = 500 //Price range of limiteds to consider
 	PriceRangeHigh = 1500
 
+	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
 
 	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
 	StrictBuyCondition    = true  //Use z-scores from standard deviations in buy checks
 	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS NECESSARY)
 
+	//Statistcal Z-score settings
 	OutlierThreshold = 1  //Standard deviations to consider item as projected
 	DipThreshold     = -3 //Standard deviations to consider a dip in price (for z-score eval)
+	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
 
-	//Price manipulation analysis
-	LookbackPeriod = 90 //Past number of days to consider when scanning for projecteds
-	RefreshRate    = 5  //Re-extract RAP / Value off Rolimon's API after this many rounds
+	//Iteration Cycles
+	RefreshRate     = 5      //Re-extract RAP / Value off Rolimon's API after this many rounds
+	TotalIterations = 100000 //Amount of cycles to run
 
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"

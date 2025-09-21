@@ -126,7 +126,7 @@ func monitorDeals(live_money bool) {
 
 	RAP_map := map[string]int{}
 
-	for i := range 10000 {
+	for i := range config.TotalIterations {
 		log.Println("____________________________________________________")
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
