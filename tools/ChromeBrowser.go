@@ -37,7 +37,7 @@ func NewBrowser() (*Browser, error) {
 	}, nil
 }
 
-// Reset navigates back to about:blank
+// Reset navigates back to homepage
 func (b *Browser) Reset() error {
 	return chromedp.Run(b.ctx, chromedp.Navigate(config.RobloxHome))
 }
@@ -53,8 +53,8 @@ func (b *Browser) GetContextWithTimeout(timeout time.Duration) (context.Context,
 	timeoutCtx, cancel := context.WithTimeout(b.ctx, timeout)
 
 	wrappedCancel := func() {
-		cancel()
 		b.Reset() //Reset to roblox homepage
+		cancel()
 	}
 
 	return timeoutCtx, wrappedCancel

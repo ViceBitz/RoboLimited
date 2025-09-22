@@ -63,6 +63,8 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 		log.SetOutput(f)
 	}
 	defer f.Close()
+	defer f.Sync()
+	defer log.SetOutput(os.Stderr)
 
 	// Navigate to item page
 	url := config.RobloxCatalogBaseURL + id

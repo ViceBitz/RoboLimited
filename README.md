@@ -28,8 +28,6 @@ Market participants use these indicators to infer a limited's worth and make a p
 - Track item sales prices across time period for big-picture trends
 
 
-
-
 ---
 
 ## 🚀 Key Features
@@ -42,7 +40,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 - **Logging**: Every decision and action is tracked for post-trade analysis.
 
 ### Market Evaluation
-- **Spikes & Dips**: Uses mean, SD, z-score, %CV to identify trends in sales data and guide buying, trading, selling
+- **Spikes & Dips**: Uses statistics (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Tracks prices of item groups across time period for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
 

@@ -10,13 +10,13 @@ const (
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
 
 	//Evaluation Constraints (margin)
-	RAPDipD    = 0.25 //Demand % below RAP to buy
-	ValueDipD  = 0.35 //Demand % below Value to buy
-	RAPDipND   = 0.30 //Non-demand % below RAP to buy
-	ValueDipND = 0.35 //Non-demand % below Value to buy
+	RAPDipD    = 0.25 //Demand: margin below RAP to buy
+	ValueDipD  = 0.35 //Demand: margin below Value to buy
+	RAPDipND   = 100  //0.30 //Non-demand: margin below RAP to buy
+	ValueDipND = 100  //0.35 //Non-demand: margin below Value to buy
 
-	PriceRangeLow  = 300 //Price range of limiteds to consider
-	PriceRangeHigh = 600
+	PriceRangeLow  = 10 //Price range of limiteds to consider
+	PriceRangeHigh = 200
 
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
@@ -32,8 +32,8 @@ const (
 	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
 
 	//Iteration Cycles
-	RefreshRate     = 5      //Re-extract RAP / Value off Rolimon's API after this many rounds
-	TotalIterations = 100000 //Amount of cycles to run
+	RefreshRate     = 5       //Re-extract RAP / Value off Rolimon's API after this many rounds
+	TotalIterations = 1000000 //Amount of cycles to run
 
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
