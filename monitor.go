@@ -215,6 +215,5 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//Start deal sniper
-	//monitorDeals(config.LiveMoney)
-	ExecutePurchase("21070012", 100)
+	monitorDeals(config.LiveMoney)
 }

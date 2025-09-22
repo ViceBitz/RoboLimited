@@ -133,7 +133,7 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 
 	log.Println("Executed buy order on:", id)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(1 * time.Second)
 
 	return true
 }

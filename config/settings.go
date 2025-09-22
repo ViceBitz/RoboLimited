@@ -27,7 +27,7 @@ const (
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1  //SD from mean to consider item as projected
-	DipThreshold     = -4 //SD from mean to consider a dip in price (for z-score eval)
+	DipThreshold     = 2  //SD from break even point (-0.3 / CoV) to consider a dip in price
 	SellThreshold    = 1  //SD from mean to list item for sale
 	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
 

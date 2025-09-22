@@ -80,6 +80,17 @@ func findZIndex(id string, price float64) float64 {
 	return z_score
 }
 
+// Calculates coefficient of variation of past sales data
+func findCV(id string) float64 {
+	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	if mean == 0.0 && std == 0.0 {
+		mean, std = findMeanSD(id)
+	}
+	cv := std / mean
+	fmt.Println("%CV : ", cv)
+	return cv
+}
+
 // Determine if an item is price manipulated with RAP z-score
 func CheckProjected(id string, rap float64) bool {
 	fmt.Println("Projected Check | ID:", id)
@@ -91,7 +102,10 @@ func CheckProjected(id string, rap float64) bool {
 func CheckDip(id string, bestPrice float64) bool {
 	fmt.Println("Dip Check | ID:", id)
 	z_score := findZIndex(id, bestPrice)
-	return z_score <= config.DipThreshold //z-score below threshold is dip
+	cv := findCV(id)
+	cutoff := -0.3/cv - config.DipThreshold //z-score below -0.3/%CV - threshold is dip
+	fmt.Println("Z-Score Cutoff: ", cutoff)
+	return z_score <= cutoff
 }
 
 // Calculate optimal price listing for item sale from z-score
