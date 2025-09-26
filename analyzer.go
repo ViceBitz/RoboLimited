@@ -68,14 +68,16 @@ func findMeanSD(id string) (float64, float64) {
 }
 
 // Calculates Z-score of price relative to past sales data
-func findZIndex(id string, price float64) float64 {
+func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
 	if mean == 0.0 && std == 0.0 {
 		mean, std = findMeanSD(id)
 	}
 	z_score := (price - mean) / std
 
-	fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
+	if logStats {
+		fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
+	}
 
 	return z_score
 }
@@ -94,14 +96,14 @@ func findCV(id string) float64 {
 // Determine if an item is price manipulated with RAP z-score
 func CheckProjected(id string, rap float64) bool {
 	fmt.Println("Projected Check | ID:", id)
-	z_score := findZIndex(id, rap)
+	z_score := findZScore(id, rap, true)
 	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
 }
 
 // Identify dip to support buy decision with price z-score
 func CheckDip(id string, bestPrice float64) bool {
 	fmt.Println("Dip Check | ID:", id)
-	z_score := findZIndex(id, bestPrice)
+	z_score := findZScore(id, bestPrice, true)
 	cv := findCV(id)
 	cutoff := -0.3/cv - config.DipThreshold //z-score below -0.3/%CV - threshold is dip
 	fmt.Println("Z-Score Cutoff: ", cutoff)
@@ -114,6 +116,26 @@ func FindOptimalSell(id string) float64 {
 	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
 	return mean + std*config.SellThreshold
 }
+
+// Scans for items with falling prices under z-score threshold, within price range, and at demand level
+func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64, isDemand bool) []string {
+	itemDetails := GetLimitedData()
+	var fallingItems []string
+	for id, _ := range itemDetails.Items {
+		name := itemDetails.Items[id][0]
+		rap := itemDetails.Items[id][2].(float64)
+		value := itemDetails.Items[id][3].(float64)
+		demand := int(itemDetails.Items[id][5].(float64))
+		price := math.Max(rap, value)
+		z_score := findZScore(id, price, false)
+		if z_score < z_threshold && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+			fallingItems = append(fallingItems, id)
+			log.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)
+		}
+	}
+	return fallingItems
+}
+
 func extractPriceSeries(url string) (*SalesData, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

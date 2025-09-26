@@ -140,8 +140,8 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 	return true
 }
 
-// Initialize global browser instance on package initialization
-func init() {
+// Initialize global browser instance during trade automation
+func InitializeBrowser() {
 	//Create global Chrome webpage for reuse
 	browserOnce.Do(func() {
 		globalBrowser, browserErr = tools.NewBrowser()

@@ -12,8 +12,8 @@ const (
 	//Evaluation Constraints (margin)
 	RAPDipD    = 0.25 //Demand: margin below RAP to buy
 	ValueDipD  = 0.35 //Demand: margin below Value to buy
-	RAPDipND   = 100  //0.30 //Non-demand: margin below RAP to buy
-	ValueDipND = 100  //0.35 //Non-demand: margin below Value to buy
+	RAPDipND   = 0.30 //Non-demand: margin below RAP to buy
+	ValueDipND = 0.35 //Non-demand: margin below Value to buy
 
 	PriceRangeLow  = 10 //Price range of limiteds to consider
 	PriceRangeHigh = 200
@@ -26,10 +26,10 @@ const (
 	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS NECESSARY)
 
 	//Statistcal Z-score settings
-	OutlierThreshold = 1  //SD from mean to consider item as projected
-	DipThreshold     = 2  //SD from break even point (-0.3 / CoV) to consider a dip in price
-	SellThreshold    = 1  //SD from mean to list item for sale
-	LookbackPeriod   = 90 //Past number of days to consider when scanning for projecteds
+	OutlierThreshold = 1   //SD from mean to consider item as projected
+	DipThreshold     = 1   //SD from break even point (-0.3 / CoV) to consider a dip in price
+	SellThreshold    = 0.2 //SD from mean to list item for sale
+	LookbackPeriod   = 90  //Past number of days to consider when scanning for projecteds
 
 	//Iteration Cycles
 	RefreshRate     = 5       //Re-extract RAP / Value off Rolimon's API after this many rounds

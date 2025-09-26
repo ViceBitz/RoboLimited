@@ -119,6 +119,8 @@ func GetDealsData() *DealDetails {
 
 // Monitor limited deals via Rolimon's deals page
 func monitorDeals(live_money bool) {
+	InitializeBrowser() //Start logged-in global webpage browser
+
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
@@ -215,5 +217,9 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//Start deal sniper
-	monitorDeals(config.LiveMoney)
+	//monitorDeals(config.LiveMoney)
+
+	//Analyzer Methods
+	SearchFallingItems(-0.5, 7000, 9000, true) //Finds price-lowering items in market
+	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
 }
