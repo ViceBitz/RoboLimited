@@ -119,7 +119,7 @@ func FindOptimalSell(id string) float64 {
 
 // Scans for items with falling prices under z-score threshold, within price range, and at demand level
 func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64, isDemand bool) []string {
-	itemDetails := GetLimitedData()
+	itemDetails := tools.GetLimitedData()
 	var fallingItems []string
 	for id, _ := range itemDetails.Items {
 		name := itemDetails.Items[id][0]
@@ -147,7 +147,7 @@ func extractPriceSeries(url string) (*SalesData, error) {
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("disable-dev-shm-usage", true),
-		chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+		chromedp.UserAgent(config.UserAgent),
 	)
 
 	allocCtx, cancel2 := chromedp.NewExecAllocator(ctx, opts...)
@@ -195,7 +195,7 @@ func init() {
 	//Precompute mean & standard deviation for past sales data of all items
 	//Write to a .csv file to use for querying later
 	if config.PopulateSalesData {
-		itemDetails := GetLimitedData()
+		itemDetails := tools.GetLimitedData()
 		var sales_data []tools.StatsData
 		var mu sync.Mutex
 		var wg sync.WaitGroup

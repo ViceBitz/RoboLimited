@@ -5,6 +5,8 @@ Stores list of ChromeDP flags for browser window tailored to different situation
 */
 
 import (
+	"robolimited/config"
+
 	"github.com/chromedp/chromedp"
 )
 
@@ -55,7 +57,7 @@ func FastFlags() []chromedp.ExecAllocatorOption {
 		chromedp.Flag("log-level", "3"), // Only fatal errors
 
 		// User agent
-		chromedp.Flag("user-agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"),
+		chromedp.Flag("user-agent", config.UserAgent),
 	)
 
 	return opts

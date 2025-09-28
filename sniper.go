@@ -1,160 +1,121 @@
 package main
 
 import (
-	"context"
 	"log"
 	"math"
-	"os"
 	"robolimited/config"
 	"robolimited/tools"
-	"strconv"
 	"strings"
-	"sync"
-	"time"
-
-	"github.com/chromedp/cdproto/network"
-	"github.com/chromedp/chromedp"
+	"net/http"
+	"fmt"
+	"encoding/json"
+	"errors"
+	"bytes"
+	"io"
 )
 
-// Global Chrome browser for fast page navigation
-var (
-	globalBrowser *tools.Browser
-	browserOnce   sync.Once
-	browserErr    error
-)
 
-// Logs into Roblox account
-func robloxLogin(ctx context.Context) error {
-	log.Println("Logging into Roblox account...")
-	return chromedp.Run(ctx,
-		// First navigate to Roblox
-		chromedp.Navigate("https://www.roblox.com"),
 
-		// Set the authentication cookie
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			return network.SetCookies([]*network.CookieParam{
-				{
-					Name:     ".ROBLOSECURITY",
-					Value:    config.RobloxCookie,
-					Domain:   ".roblox.com",
-					Path:     "/",
-					Secure:   true,
-					HTTPOnly: true,
-				},
-			}).Do(ctx)
-		}),
 
-		// Reload to apply the cookie
-		chromedp.Reload(),
-
-		// Wait for logged-in state (user avatar or menu)
-		chromedp.WaitVisible(".avatar", chromedp.ByQuery),
-	)
-
+type PurchasePayload struct {
+    ExpectedCurrency int   `json:"expectedCurrency"`
+    ExpectedPrice    int64 `json:"expectedPrice"`
+    ExpectedSellerId int64 `json:"expectedSellerId"`
 }
 
-// Executes purchase on an item given id, checks best price against presumed RAP / value and returns success
+func purchaseItem(assetId string, cookie string, payload PurchasePayload) error {
+    url := fmt.Sprintf("https://economy.roblox.com/v1/purchases/products/%s", assetId)
+
+    client := &http.Client{}
+
+    bodyData, err := json.Marshal(payload)
+    if err != nil {
+        return err
+    }
+
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
+    if err != nil {
+        return err
+    }
+
+    req.Header.Set("Content-Type", "application/json")
+    req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
+    req.Header.Set("User-Agent", config.UserAgent)
+
+    resp, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    // Handle CSRF token protection
+    if resp.StatusCode == 403 {
+        // Get CSRF Token from headers
+        csrfToken := resp.Header.Get("x-csrf-token")
+        if csrfToken == "" {
+            return errors.New("no CSRF token found in 403 response")
+        }
+
+        // Retry with token
+        req, err = http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
+        if err != nil {
+            return err
+        }
+        req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
+		req.Header.Set("User-Agent", config.UserAgent)
+        req.Header.Set("X-CSRF-TOKEN", csrfToken)
+
+        resp, err = client.Do(req)
+        if err != nil {
+            return err
+        }
+        defer resp.Body.Close()
+    }
+
+    respBody, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return err
+    }
+
+    if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		log.Printf("Purchase failed: status %d, response %s \n", resp.StatusCode, string(respBody))
+        return err
+    }
+
+    if strings.Contains(string(respBody), "errors") {
+		log.Printf("Purchase API error: %s \n", string(respBody))
+        return err
+    }
+
+    log.Println("Purchase request executed:", string(respBody))
+    return nil
+}
+
+// Executes purchase on an item via API call to economy endpoint
 func ExecutePurchase(id string, expectedPrice int) bool {
-	//Log console output to file
-	f, err := os.OpenFile(config.ConsoleLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+    cookie := config.RobloxCookie
+	sellers, err := tools.GetResellers(id)
 	if err != nil {
-		log.Println("Error opening log file:", err)
-	} else {
-		log.SetOutput(f)
-	}
-	defer f.Close()
-	defer f.Sync()
-	defer log.SetOutput(os.Stderr)
-
-	// Navigate to item page
-	url := config.RobloxCatalogBaseURL + id
-	priceSelector := config.PriceSelector
-	buySelector := config.BuyButtonSelector
-	confirmSelector := config.ConfirmButtonSelector
-
-	ctx, cancel := globalBrowser.GetContextWithTimeout(15 * time.Second)
-	defer cancel()
-
-	log.Println("Navigating to item page...")
-
-	err = chromedp.Run(ctx,
-		chromedp.Navigate(url),
-	)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
+		log.Println("Could not get reseller data:", err)
 		return false
 	}
+	topSeller := sellers[0]
 
-	//Final validation on best price against RAP / Value and projected status
-	log.Println("Validating best price...")
-	var bestPrice_r string
-	err = chromedp.Run(ctx,
-		chromedp.WaitVisible(priceSelector, chromedp.ByQuery),
-		chromedp.Text(priceSelector, &bestPrice_r, chromedp.ByQuery),
-	)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
+	//Validate actual price with expected
+	if math.Abs(float64(topSeller.Price - expectedPrice)) < 10 {
+		//Request purchase using HTTP POST with payload
+		payload := PurchasePayload{
+			ExpectedCurrency: 1,
+			ExpectedPrice:    int64(topSeller.Price),
+			ExpectedSellerId: topSeller.Person.SellerId,
+		}
+		err := purchaseItem(id, cookie, payload)
+		if err != nil {
+			log.Println("Error making purchase:", err)
+			return false
+		}
 	}
-
-	bestPrice_r = strings.ReplaceAll(bestPrice_r, ",", "")
-	bestPrice, _ := strconv.Atoi(bestPrice_r)
-
-	log.Println("Comparing listed price", bestPrice_r, "to expected price", expectedPrice)
-	//Must be within 10 robux of price error
-	if math.Abs(float64(expectedPrice-bestPrice)) > 10 {
-		log.Println("Failed price validation! Canceling..")
-		return false
-	}
-
-	//Click purchase
-	time.Sleep(250 * time.Millisecond) //Give webpage some time to load
-	err = chromedp.Run(ctx,
-		chromedp.WaitVisible(buySelector, chromedp.ByQuery),
-		chromedp.Click(buySelector, chromedp.NodeVisible, chromedp.ByQuery),
-	)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-
-	log.Println("Clicked buy button")
-
-	// Wait for purchase modal to appear (a bit of extra time for network)
-	time.Sleep(500 * time.Millisecond)
-
-	err = chromedp.Run(ctx, //Confirm click
-		chromedp.WaitVisible(confirmSelector, chromedp.ByQuery),
-		chromedp.Click(confirmSelector, chromedp.NodeVisible, chromedp.ByQuery),
-	)
-
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return false
-	}
-
-	log.Println("Executed buy order on:", id)
-
-	time.Sleep(1 * time.Second)
 
 	return true
-}
-
-// Initialize global browser instance during trade automation
-func InitializeBrowser() {
-	//Create global Chrome webpage for reuse
-	browserOnce.Do(func() {
-		globalBrowser, browserErr = tools.NewBrowser()
-		//Log into Roblox account on startup
-		err := robloxLogin(globalBrowser.GetContext())
-		if err != nil {
-			log.Printf("Login failed: %v\n", err)
-		}
-
-		if err != nil || browserErr != nil {
-			log.Printf("Failed to initialize global browser: %v", browserErr)
-		} else {
-			log.Println("Global browser initialized and ready for use")
-		}
-	})
 }

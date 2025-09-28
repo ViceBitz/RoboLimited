@@ -1,28 +1,13 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"math"
-	"net/http"
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
 	"time"
 )
-
-// ItemDetails JSON structure
-type ItemDetails struct {
-	ItemCount int                      `json:"item_count"`
-	Items     map[string][]interface{} `json:"items"`
-}
-
-// DealDetails JSON structure
-type DealDetails struct {
-	Success    bool            `json:"success"`
-	Activities [][]interface{} `json:"activities"`
-}
 
 // Evaluates if margins are good enough to buy
 func BuyF(rap_margin float64, value_margin float64, hasValue bool, isDemand bool) bool {
@@ -57,74 +42,13 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	}
 }
 
-func GetLimitedData() *ItemDetails {
-	//Rolimons API endpoint for item details
-	apiURL := config.RolimonsAPI
-
-	//Make a GET request to the Rolimons API
-	resp, err := http.Get(apiURL)
-	if err != nil {
-		log.Printf("Error making HTTP request: %v", err)
-		return nil
-	}
-	defer resp.Body.Close()
-
-	//Read response body
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Error reading response body: %v", err)
-		return nil
-	}
-
-	//Unmarshal JSON response into the ItemDetails struct
-	var itemDetails ItemDetails
-	err = json.Unmarshal(body, &itemDetails)
-	if err != nil {
-		log.Printf("Error unmarshalling JSON: %v", err)
-		return nil
-	}
-
-	return &itemDetails
-}
-
-func GetDealsData() *DealDetails {
-	//Rolimons API for deal data
-	dealURL := config.RolimonsDeals
-
-	//Make a GET request to API
-	resp, err := http.Get(dealURL)
-	if err != nil {
-		log.Printf("Error making HTTP request: %v", err)
-		return nil
-	}
-	defer resp.Body.Close()
-
-	//Read response body
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Error reading response body: %v", err)
-		return nil
-	}
-
-	//Unmarshal JSON response into DealDetails struct
-	var dealDetails DealDetails
-	err = json.Unmarshal(body, &dealDetails)
-	if err != nil {
-		log.Printf("Error unmarshalling JSON: %v", err)
-		return nil
-	}
-
-	return &dealDetails
-}
-
 // Monitor limited deals via Rolimon's deals page
 func monitorDeals(live_money bool) {
-	InitializeBrowser() //Start logged-in global webpage browser
 
 	var tradeSim *tools.TradeSimulator = tools.NewTradeSimulator()
 
 	//id -> [item_name, acronym, rap, value, default_value, demand, trend, projected, hyped, rare]
-	itemDetails := GetLimitedData()
+	itemDetails := tools.GetLimitedData()
 
 	RAP_map := map[string]int{}
 
@@ -132,7 +56,7 @@ func monitorDeals(live_money bool) {
 		log.Println("____________________________________________________")
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
-			itemDetailsNew := GetLimitedData()
+			itemDetailsNew := tools.GetLimitedData()
 			if itemDetailsNew == nil {
 				//Mark errors in updating
 				log.Println("Could not refresh item details..")
@@ -142,7 +66,7 @@ func monitorDeals(live_money bool) {
 		}
 
 		//[[timestamp, isRAP, id, bestPrice / RAP]]
-		dealDetails := GetDealsData()
+		dealDetails := tools.GetDealsData()
 		if dealDetails == nil {
 			continue
 		} //Catch error, wait for resolution
@@ -217,9 +141,9 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//Start deal sniper
-	//monitorDeals(config.LiveMoney)
+	monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
-	SearchFallingItems(-0.5, 7000, 9000, true) //Finds price-lowering items in market
+	//SearchFallingItems(-0.5, 2000, 2400, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
 }
