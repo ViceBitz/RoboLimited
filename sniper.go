@@ -115,7 +115,8 @@ func ExecutePurchase(id string, expectedPrice int) bool {
 			log.Println("Error making purchase:", err)
 			return false
 		}
+		return true
 	}
 
-	return true
+	return false
 }
