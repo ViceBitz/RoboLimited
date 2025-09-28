@@ -142,11 +142,9 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//Start deal sniper
-	//monitorDeals(config.LiveMoney)
+	monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
 	//SearchFallingItems(-0.5, 2000, 2400, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
-
-	log.Println(ExecutePurchase("20573078", 1600))
 }
