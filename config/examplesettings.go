@@ -24,7 +24,7 @@ const (
 
 	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
 	StrictBuyCondition    = true  //Use z-scores from standard deviations in buy checks
-	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS NECESSARY)
+	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1   //SD from mean to consider item as projected
