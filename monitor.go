@@ -119,7 +119,7 @@ func monitorDeals(live_money bool) {
 								tradeSim.BuyItem(id, name, price)
 							} else {
 								tradeSim.BuyItem(id, name, price)
-								ExecutePurchase(id)
+								ExecutePurchase(id, false)
 							}
 						}
 					}
@@ -132,9 +132,7 @@ func monitorDeals(live_money bool) {
 
 				log.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
 			}
-
 		}
-
 		time.Sleep(time.Millisecond * 1000)
 	}
 }
@@ -145,9 +143,9 @@ func main() {
 	monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
-	//SearchFallingItems(-0.5, 2000, 2400, false) //Finds price-lowering items in market
+	//SearchFallingItems(-1.5, 0, 10000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
 
 	//Order executor test
-	//ExecutePurchase("20573078")
+	//ExecutePurchase("20573078", false)
 }

@@ -34,7 +34,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 
 ### Deal Sniping  
 - **Efficient Monitoring** tracks market deals through HTTP GET requests to API endpoints with automated price refresh and adjustment logic
-- **Purchase Execution** buys item with call to economy API endpoint when price dips below z-score threshold
+- **Purchase Execution** sends request to purchase API endpoint when price dips below z-score threshold
 - **Flexible Automation** keeps system running through web errors and loss of connection.
 - **Throttling** to prevent rate-limiting and sustain long-term operation.
 - **Logging**: Every decision and action is tracked for post-trade analysis.

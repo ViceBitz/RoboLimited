@@ -31,9 +31,47 @@ type PurchasePayload struct {
     IdempotencyKey            string  `json:"idempotencyKey"`
 }
 
+//Retrieves CSRF token for later use
+func getCSRFToken(collectibleItemId string, cookie string, payload PurchasePayload) error {
+    url := fmt.Sprintf(config.PurchaseAPI, collectibleItemId)
+    client := tools.GlobalClient
+
+    bodyData, err := json.Marshal(payload)
+    if err != nil {
+        return err
+    }
+
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
+    if err != nil {
+        return err
+    }
+
+    req.Header.Set("Content-Type", "application/json; charset=utf-8")
+    req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
+    req.Header.Set("User-Agent", config.UserAgent)
+
+    resp, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    // Handle CSRF token protection
+    if resp.StatusCode == 403 {
+        // Get CSRF Token from headers
+        CSRFToken = resp.Header.Get("x-csrf-token")
+        if CSRFToken == "" {
+            return errors.New("no CSRF token found in 403 response")
+        }
+    }
+    
+    return nil
+}
+
+//Purchases item by making request to API endpoint
 func purchaseItem(collectibleItemId string, cookie string, payload PurchasePayload) error {
     url := fmt.Sprintf(config.PurchaseAPI, collectibleItemId)
-    client := &http.Client{}
+    client := tools.GlobalClient
 
     //Write to console file
     logFile, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -46,35 +84,12 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
         return err
     }
 
-    //Get X-CSRF token if not yet
+    // Generate X-CSRF token if not already
     if CSRFToken == "" {
-        req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
-        if err != nil {
-            return err
-        }
-
-        req.Header.Set("Content-Type", "application/json; charset=utf-8")
-        req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
-        req.Header.Set("User-Agent", config.UserAgent)
-
-        resp, err := client.Do(req)
-        if err != nil {
-            return err
-        }
-        defer resp.Body.Close()
-
-        // Handle CSRF token protection
-        if resp.StatusCode == 403 {
-            // Get CSRF Token from headers
-            CSRFToken = resp.Header.Get("x-csrf-token")
-            if CSRFToken == "" {
-                return errors.New("no CSRF token found in 403 response")
-            }
-        }
-
+        getCSRFToken(collectibleItemId, cookie, payload)
     }
-    
-    // Make POST request with token
+
+     // Make POST request with token
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
     if err != nil {
         return err
@@ -110,7 +125,7 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
 }
 
 // Executes purchase on an item via API call to economy endpoint
-func ExecutePurchase(id string) bool {
+func ExecutePurchase(id string, bypass bool) bool {
     cookie := config.RobloxCookie
 	sellers, err := tools.GetResellers(id)
     collectibleItemId, _ := tools.GetCollectibleId(id)
@@ -122,7 +137,7 @@ func ExecutePurchase(id string) bool {
 	topSeller := sellers[0]
 
 	//Validate actual price with expected
-	if CheckDip(id, float64(topSeller.Price)) {
+	if bypass || CheckDip(id, float64(topSeller.Price)) {
 		//Request purchase using HTTP POST with payload
 		payload := PurchasePayload{
             CollectibleItemId: collectibleItemId,
@@ -145,4 +160,10 @@ func ExecutePurchase(id string) bool {
 	}
 
 	return false
+}
+
+//Initialize tokens
+func init() {
+    //Make dummy purchase for X-CSRF token
+    ExecutePurchase("21070012", true)
 }

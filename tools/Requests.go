@@ -14,6 +14,8 @@ Handles all API requests to Roblox & Rolimons endpoints retrieving item details,
 resellers, prices, and most recent deals
 */
 
+var GlobalClient = &http.Client{}
+
 // ItemDetails JSON structure
 type ItemDetails struct {
 	ItemCount int                      `json:"item_count"`
@@ -114,8 +116,6 @@ type collectibleResponse struct {
 //Retrieves collectible and product id of limited from its asset id
 func GetCollectibleId(assetId string) (string, error) {
 	url := fmt.Sprintf("https://catalog.roblox.com/v1/catalog/items/%s/details?itemType=Asset", assetId)
-	client := &http.Client{}
-
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
@@ -123,6 +123,7 @@ func GetCollectibleId(assetId string) (string, error) {
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
 	req.Header.Set("User-Agent", config.UserAgent)
 	
+	client := GlobalClient
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
@@ -150,9 +151,7 @@ func GetResellers(assetId string) ([]ResellerResponse, error) {
 	if (err != nil) {
 		log.Println(err);
 	}
-	url := fmt.Sprintf("https://apis.roblox.com/marketplace-sales/v1/item/%s/resellers?limit=100", collectibleId)
-	client := &http.Client{}
-
+	url := fmt.Sprintf("https://apis.roblox.com/marketplace-sales/v1/item/%s/resellers?limit=1", collectibleId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -160,6 +159,7 @@ func GetResellers(assetId string) ([]ResellerResponse, error) {
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
 	req.Header.Set("User-Agent", config.UserAgent)
 
+	client := GlobalClient
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -176,11 +176,5 @@ func GetResellers(assetId string) ([]ResellerResponse, error) {
 	if err != nil {
 		log.Println(err)
 	}
-
-	resellers := make([]ResellerResponse, 0, len(data.Data))
-	for _, r := range data.Data {
-		resellers = append(resellers, r)
-	}
-
-	return resellers, nil
+	return data.Data, nil
 }
