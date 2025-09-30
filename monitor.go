@@ -119,7 +119,7 @@ func monitorDeals(live_money bool) {
 								tradeSim.BuyItem(id, name, price)
 							} else {
 								tradeSim.BuyItem(id, name, price)
-								ExecutePurchase(id, price)
+								ExecutePurchase(id)
 							}
 						}
 					}
@@ -147,4 +147,7 @@ func main() {
 	//Analyzer Methods
 	//SearchFallingItems(-0.5, 2000, 2400, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
+
+	//Order executor test
+	//ExecutePurchase("20573078")
 }

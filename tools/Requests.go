@@ -95,7 +95,7 @@ type ResellerResponse struct {
 	CollectibleItemInstanceID string
 	Seller                    Seller
 	Price                     int
-	SerialNumber              *string
+	SerialNumber              int64
 	ErrorMessage              *string
 }
 
@@ -106,55 +106,47 @@ type Seller struct {
 	Name             string
 }
 
-type SellerInfo struct {
-	Person Seller
-	Price int
-	CollectibleItemInstanceId string
-}
-
-
 type collectibleResponse struct {
 	CollectibleItemId string
 	ProductId int64
 }
 
 //Retrieves collectible and product id of limited from its asset id
-func GetAllIds(assetId string) (string, int64, error) {
+func GetCollectibleId(assetId string) (string, error) {
 	url := fmt.Sprintf("https://catalog.roblox.com/v1/catalog/items/%s/details?itemType=Asset", assetId)
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return "", 0, err
+		return "", err
 	}
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
 	req.Header.Set("User-Agent", config.UserAgent)
-
+	
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", 0, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		io.ReadAll(resp.Body)
-		return "", 0, err
+		return "", err
 	}
-
 	var res collectibleResponse
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
-		return "", 0, err
+		return "", err
 	}
 
 	if res.CollectibleItemId == "" {
-		return "", 0, err
+		return "", err
 	}
-	return res.CollectibleItemId, res.ProductId, nil
+	return res.CollectibleItemId, nil
 }
 
 //Gets all resellers of an item
-func GetResellers(assetId string) ([]SellerInfo, error) {
-	collectibleId, _, err := GetAllIds(assetId)
+func GetResellers(assetId string) ([]ResellerResponse, error) {
+	collectibleId, err := GetCollectibleId(assetId)
 	if (err != nil) {
 		log.Println(err);
 	}
@@ -179,16 +171,15 @@ func GetResellers(assetId string) ([]SellerInfo, error) {
 		return nil, fmt.Errorf("failed to get resellers: status %d, response %s", resp.StatusCode, string(body))
 	}
 	body, _ := io.ReadAll(resp.Body)
-
 	var data ResellerData
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		log.Println(err)
 	}
 
-	resellers := make([]SellerInfo, 0, len(data.Data))
+	resellers := make([]ResellerResponse, 0, len(data.Data))
 	for _, r := range data.Data {
-		resellers = append(resellers, SellerInfo{r.Seller, r.Price, r.CollectibleItemInstanceID})
+		resellers = append(resellers, r)
 	}
 
 	return resellers, nil

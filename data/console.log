@@ -45,3 +45,45 @@
 2025/09/23 01:34:29 Validating best price...
 2025/09/23 01:34:29 Comparing listed price 3499 to expected price 1
 2025/09/23 01:34:29 Failed price validation! Canceling..
+2025/09/29 19:26:16 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":20573078,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":-276,"balanceAfterSale":276,"expectedPrice":1567,"currency":1,"price":0,"assetId":167306073}
+2025/09/29 21:53:35 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:24:54 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:25:34 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:25:41 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:25:54 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:25:55 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:26:56 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:27:00 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:27:01 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:27:02 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:50:58 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 22:53:47 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":8174013246773349,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 22:55:17 Purchase failed: status 404, response {"errors":[{"code":0,"message":"NotFound"}]} 
+2025/09/29 23:02:03 Purchase failed: status 400, response {"errors":[{"code":5,"message":"The asset id is invalid."}]} 
+2025/09/29 23:02:44 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":1213472762,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":23999,"currency":1,"price":0,"assetId":7760515130}
+2025/09/29 23:04:11 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":1213472762,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":23999,"currency":1,"price":0,"assetId":7760515130}
+2025/09/29 23:04:26 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":1213472762,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":23999,"currency":1,"price":0,"assetId":7760515130}
+2025/09/29 23:04:50 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":1213472762,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":23999,"currency":1,"price":0,"assetId":7760515130}
+2025/09/29 23:05:30 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":119040562647325,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:09:40 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":561756446580281,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:10:35 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":561756446580281,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:23:57 Purchase failed: status 403, response {"code":0,"message":"Token Validation Failed"} 
+2025/09/29 23:24:48 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":561756446580281,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:26:47 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:27:10 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:27:25 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:32:27 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:35:28 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:36:48 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:40:59 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/09/29 23:41:48 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":8416730629522156,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:43:28 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":20573078,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":1600,"currency":1,"price":0,"assetId":167306073}
+2025/09/29 23:44:34 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":9254254,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":10000,"currency":1,"price":0,"assetId":53453784}
+2025/09/29 23:46:17 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":119040562647325,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:50:19 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":119040562647325,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/29 23:53:01 Purchase request executed: {"purchased":false,"reason":"InsufficientFunds","productId":1213472762,"statusCode":500,"title":"Not Enough Robux","errorMsg":"You do not have enough Robux to purchase this item.","showDivId":"InsufficientFundsView","shortfallPrice":0,"balanceAfterSale":0,"expectedPrice":24999,"currency":1,"price":0,"assetId":7760515130}
+2025/09/29 23:53:14 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":119040562647325,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/30 00:03:00 Purchase request executed: {"purchased":false,"reason":"InvalidArguments","productId":0,"statusCode":500,"title":"Invalid Parameter","errorMsg":"Invalid arguments.","showDivId":"TransactionFailureView"}
+2025/09/30 00:46:43 Purchase failed: status 400, response "Invalid request." 
+2025/09/30 00:48:15 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 01:09:46 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
