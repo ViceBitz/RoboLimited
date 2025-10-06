@@ -1,2 +1,4 @@
 config/settings.go
 README_FULL.md
+sniper.go
+tools/Requests.go
