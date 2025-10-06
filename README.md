@@ -20,15 +20,15 @@ Market participants use these indicators to infer a limited's worth and make a p
 ## 📌 Systems
 
 ### Price Sniper
-- Auto-buys limiteds within **3 seconds** of appearing at a low price.  
+- Auto-buys limiteds within seconds of appearing at a low price.  
 - Integrates directly with **Rolimons** and **Roblox APIs**
 - Formula-driven decisions (using margins and statistical sampling)
-- Fast purchase execution with **low-latency price checks** and **logged-in webpage**
+- Fast purchase execution with **direct backend API calls**
 
 ### Limited Analyzer
 - **Finds trends** and **identifies outliers** in past sales data
+- **Informs trading decisions** with z-score and margin analysis
 - Utilizes **sales data caching** to classify price points quickly
-- Track item sales prices across time period for big-picture trends
 
 
 ---
@@ -36,35 +36,15 @@ Market participants use these indicators to infer a limited's worth and make a p
 ## 🚀 Key Features
 
 ### Deal Sniping  
-- **Efficient Monitoring** tracks market deals through HTTP GET requests to API endpoints with automated price refresh and adjustment logic
-- **Purchase Execution** sends request to purchase API endpoint when price dips below z-score threshold
+- **Efficient Monitoring** tracks market deals through GET requests with automated price refresh
+- **Purchase Execution** sends request to purchase API endpoint when price below threshold
 - **Flexible Automation** keeps system running through web errors and loss of connection.
 - **Throttling** to prevent rate-limiting and sustain long-term operation.
-- **Logging**: Every decision and action is tracked for post-trade analysis.
+- **Logging**: Every decision and action is tracked for further reference.
 
 ### Market Evaluation
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
-
----
-
-## 🛠️ Deployment Strategies
-
-- Roblox incurs two taxes on financial actions
-    1. Selling Assets - 30% fee
-    2. Converting to USD - 75% tax
-- Avoid first fee by exchanging limiteds with other players for profit
-- Dodge second fee by keeping money in system, don't cash out until end
-- Snipe limiteds → analyze promising items → sell optimally OR trade for better items 
-
----
-
-## 🚧 Future Features  
-- [ ] Cloud deployment option.
-- [ ] **Sell-side algorithm** to liquidate owned assets optimally
-- [ ] **Auto-Trader** - Automatically sends trades for favorable items.
-
----
 
 #
