@@ -56,9 +56,8 @@ func getCSRFToken(collectibleItemId string, cookie string, payload PurchasePaylo
     }
     defer resp.Body.Close()
 
-    // Handle CSRF token protection
+    //Handle CSRF token protection
     if resp.StatusCode == 403 {
-        // Get CSRF Token from headers
         CSRFToken = resp.Header.Get("x-csrf-token")
         if CSRFToken == "" {
             return errors.New("no CSRF token found in 403 response")
@@ -78,12 +77,12 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
         return err
     }
 
-    // Generate X-CSRF token if not already
+    //Generate X-CSRF token if not already
     if CSRFToken == "" {
         getCSRFToken(collectibleItemId, cookie, payload)
     }
 
-     // Make POST request with token
+    //Make POST request with token
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
     if err != nil {
         return err
@@ -118,7 +117,7 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
     return nil
 }
 
-// Executes purchase on an item via API call to economy endpoint
+//Executes purchase on an item via API call to economy endpoint
 func ExecutePurchase(id string, bypass bool) bool {
     cookie := config.RobloxCookie
     collectibleItemId, _ := tools.GetCollectibleId(id)

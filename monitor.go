@@ -137,9 +137,9 @@ func monitorDeals(live_money bool) {
 	}
 }
 
-// Driver
+//Driver
 func main() {
-	//Start deal sniper
+	//Start deal sniper process
 	monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
