@@ -2,7 +2,7 @@
 
 RoboLimited is a proof-of-concept trading system that applies algorithmic strategies to identify and analyze undervalued virtual assets in Roblox’s online marketplace using data from Rolimons and the Roblox API. It automates deal detection, price analysis, and trades by weighing demand, volatility, and recent sales data, a framework comparable to statistical arbitrage. While centered on digital collectibles, the system’s design maps to broader principles of financial technology such as real-time market monitoring, data analysis, and automated trading logic.
 
-**⚠️ DISCLAIMER**:
+**⚠️ CLARIFICATION**:
 This project is a proof-of-concept to explore algorithmic approaches to virtual economies. While it includes code capable of interacting with live platforms, RoboLimited was developed solely for educational and research purposes, not for full-scale deployment or ToS-violating use. All testing was conducted responsibly and with respect for platform integrity.
 
 ### 💡 Inspiration ###
