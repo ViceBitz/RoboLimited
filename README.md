@@ -20,15 +20,15 @@ Market participants use these indicators to infer a limited's worth and make a p
 ## 📌 Systems
 
 ### Price Sniper
-- Auto-buys limiteds within seconds of appearing at a low price.  
-- Integrates directly with **Rolimons** and **Roblox APIs**
 - Formula-driven decisions (using margins and statistical sampling)
-- Fast purchase execution with **direct backend API calls**
+- Integrates directly with Rolimons and Roblox APIs.
+- Buys items within seconds of price drops.
+- Fast purchase execution with direct API calls.
 
 ### Limited Analyzer
-- **Finds trends** and **identifies outliers** in past sales data
-- **Informs trading decisions** with z-score and margin analysis
-- Utilizes **sales data caching** to classify price points quickly
+- Finds trends and identifies outliers in past sales data
+- Informs trading decisions with z-score and margin analysis
+- Utilizes data caching to classify price points quickly
 
 
 ---
