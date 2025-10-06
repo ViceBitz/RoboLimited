@@ -146,11 +146,7 @@ func GetCollectibleId(assetId string) (string, error) {
 }
 
 //Gets all resellers of an item
-func GetResellers(assetId string) ([]ResellerResponse, error) {
-	collectibleId, err := GetCollectibleId(assetId)
-	if (err != nil) {
-		log.Println(err);
-	}
+func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	url := fmt.Sprintf("https://apis.roblox.com/marketplace-sales/v1/item/%s/resellers?limit=1", collectibleId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

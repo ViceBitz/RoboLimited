@@ -98,3 +98,27 @@
 2025/09/30 11:04:28 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
 2025/09/30 11:08:40 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
 2025/09/30 11:09:00 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 11:34:09 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 11:35:59 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 11:36:57 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 11:41:17 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 12:53:03 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/09/30 14:10:24 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/01 20:45:33 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/01 20:45:42 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/01 20:47:59 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/01 21:06:14 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 02:00:21 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 02:05:51 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 02:54:26 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:33:48 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:35:23 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:36:56 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:36:56 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:38:37 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:38:37 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:39:40 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 11:41:49 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/02 14:03:00 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/03 02:55:11 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/03 02:56:31 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}

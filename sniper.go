@@ -27,7 +27,7 @@ type PurchasePayload struct {
     ExpectedPurchaserId       int64   `json:"expectedPurchaserId"`
     ExpectedPurchaserType     string  `json:"expectedPurchaserType"`
     ExpectedSellerId          int64   `json:"expectedSellerId"`
-    ExpectedSellerType        *string `json:"expectedSellerType"`
+    ExpectedSellerType        string `json:"expectedSellerType"`
     IdempotencyKey            string  `json:"idempotencyKey"`
 }
 
@@ -72,12 +72,6 @@ func getCSRFToken(collectibleItemId string, cookie string, payload PurchasePaylo
 func purchaseItem(collectibleItemId string, cookie string, payload PurchasePayload) error {
     url := fmt.Sprintf(config.PurchaseAPI, collectibleItemId)
     client := tools.GlobalClient
-
-    //Write to console file
-    logFile, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    log.SetOutput(logFile)
-    defer logFile.Close()
-    defer log.SetOutput(os.Stderr)
 
     bodyData, err := json.Marshal(payload)
     if err != nil {
@@ -127,8 +121,14 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
 // Executes purchase on an item via API call to economy endpoint
 func ExecutePurchase(id string, bypass bool) bool {
     cookie := config.RobloxCookie
-	sellers, err := tools.GetResellers(id)
     collectibleItemId, _ := tools.GetCollectibleId(id)
+	sellers, err := tools.GetResellers(collectibleItemId)
+
+    //Write to console file
+    logFile, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    log.SetOutput(logFile)
+    defer logFile.Close()
+    defer log.SetOutput(os.Stderr)
 
 	if err != nil {
 		log.Println("Could not get reseller data:", err)
@@ -147,8 +147,8 @@ func ExecutePurchase(id string, bypass bool) bool {
 			ExpectedPrice:    int64(topSeller.Price),
             ExpectedPurchaserId: config.RobloxId,
             ExpectedPurchaserType: "User",
-            ExpectedSellerId: 1,
-			ExpectedSellerType: nil,
+            ExpectedSellerId: topSeller.Seller.SellerId,
+			ExpectedSellerType: "User",
             IdempotencyKey: uuid.New().String(),
 		}
 		err := purchaseItem(collectibleItemId, cookie, payload)
@@ -157,7 +157,9 @@ func ExecutePurchase(id string, bypass bool) bool {
 			return false
 		}
 		return true
-	}
+	} else {
+        log.Println("Price of", topSeller.Price, "does not match.")
+    }
 
 	return false
 }

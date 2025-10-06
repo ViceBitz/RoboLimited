@@ -1,6 +1,9 @@
 # Roblox Limited Sniper & Analyzer
 
-RoboLimited is a trading algorithm that buys and sells undervalued Roblox virtual items using Rolimons and the Roblox API. It automates trades, snipes deals, and analyzes price trends using custom functions that weigh demand and pricing against recent sales activity. While designed for digital collectibles, the methodology maps to broader financial technology systems such as market monitoring and algorithmic trading.
+RoboLimited is a trading algorithm that buys and sells undervalued Roblox virtual items using Rolimons and the Roblox API, comparable to statistical arbitrage. It automates trades, snipes deals, and analyzes price trends using custom functions that weigh demand and pricing against recent sales activity. While designed for digital collectibles, the methodology maps to broader financial technology systems such as market monitoring and algorithmic trading.
+
+**⚠️ DISCLAIMER**:
+This project was created as a proof-of-concept to explore algorithmic trading concepts within virtual economies. While it includes code capable of interacting with live platforms, it was developed solely for educational and research purposes, not for full-scale deployment or ToS-violating use. All testing was conducted responsibly and with respect for platform integrity.
 
 ### 💡 Inspiration ###
 Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Growing up, Roblox was a part of my childhood, so many years later, I'm using its marketplace as the foundation for this project. The limited market space offers the perfect opportunity to practice building an efficient algorithmic trading system within a real, dynamic online economy.
