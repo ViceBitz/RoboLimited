@@ -47,4 +47,24 @@ Market participants use these indicators to infer a limited's worth and make a p
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights  
 - **Data Caching**: Precompute and store mean / standard deviation of past sales for fast querying
 
+---
+
+## 🛠️ Deployment Strategies
+
+- Roblox incurs two taxes on financial actions
+    1. Selling Assets - 30% fee
+    2. Converting to USD - 75% tax
+- Avoid first fee by exchanging limiteds with other players for profit
+- Dodge second fee by keeping money in system, don't cash out until end
+- Snipe limiteds → analyze promising items → sell optimally OR trade for better items 
+
+---
+
+## 🚧 Future Features  
+- [ ] Cloud deployment option.
+- [ ] **Sell-side algorithm** to liquidate owned assets optimally
+- [ ] **Auto-Trader** - Automatically sends trades for favorable items.
+
+---
+
 #
