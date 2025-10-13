@@ -20,6 +20,9 @@ const (
 	PriceRangeLow  = 10 //Price range of limiteds to consider
 	PriceRangeHigh = 90
 
+	RAPRangeLow = 200 //RAP range of limiteds to consider
+	RAPRangeHigh = 1000000
+
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
 

@@ -108,6 +108,11 @@ func monitorDeals(live_money bool) {
 				RAP_map[id] = int(itemDetails.Items[id][2].(float64))
 			}
 
+			//Exclude items out of RAP range
+			if !(config.RAPRangeLow <= RAP_map[id] && RAP_map[id] <= config.RAPRangeHigh) {
+				continue
+			}
+			
 			if isRAP == 0 { //Updating best price
 				//Make decision to buy/sell
 
