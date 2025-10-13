@@ -89,24 +89,32 @@ func findCV(id string) float64 {
 		mean, std = findMeanSD(id)
 	}
 	cv := std / mean
-	fmt.Println("%CV : ", cv)
+	if config.LogConsole {
+		fmt.Println("%CV : ", cv)
+	}
 	return cv
 }
 
 // Determine if an item is price manipulated with RAP z-score
 func CheckProjected(id string, rap float64) bool {
-	fmt.Println("Projected Check | ID:", id)
-	z_score := findZScore(id, rap, true)
+	if (config.LogConsole) {
+		fmt.Println("Projected Check | ID:", id)
+	}
+	z_score := findZScore(id, rap, config.LogConsole)
 	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
 }
 
 // Identify dip to support buy decision with price z-score
 func CheckDip(id string, bestPrice float64) bool {
-	fmt.Println("Dip Check | ID:", id)
-	z_score := findZScore(id, bestPrice, true)
+	if (config.LogConsole) {
+		fmt.Println("Dip Check | ID:", id)
+	}
+	z_score := findZScore(id, bestPrice, config.LogConsole)
 	cv := findCV(id)
 	cutoff := -0.3/cv - config.DipThreshold //z-score below -0.3/%CV - threshold is dip
-	fmt.Println("Z-Score Cutoff: ", cutoff)
+	if (config.LogConsole) {
+		fmt.Println("Z-Score Cutoff: ", cutoff)
+	}
 	return z_score <= cutoff
 }
 
@@ -127,7 +135,7 @@ func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64
 		value := itemDetails.Items[id][3].(float64)
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := math.Max(rap, value)
-		z_score := findZScore(id, price, false)
+		z_score := findZScore(id, price, config.LogConsole)
 		if z_score < z_threshold && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
 			fallingItems = append(fallingItems, id)
 			log.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)

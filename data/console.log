@@ -165,3 +165,6 @@
 2025/10/13 10:48:13 Price of 240 does not match.
 2025/10/13 10:48:14 Price of 240 does not match.
 2025/10/13 11:22:11 Purchase request executed: {"purchaseResult":"Purchase transaction success.","purchased":true,"pending":false,"errorMessage":null}
+2025/10/13 14:18:36 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/13 14:19:09 Could not get reseller data: Get "https://apis.roblox.com/marketplace-sales/v1/item/36ab1e53-cd46-4a19-8182-55baca28936d/resellers?limit=1": EOF
+2025/10/13 14:19:35 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
