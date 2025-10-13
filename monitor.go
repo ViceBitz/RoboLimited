@@ -54,7 +54,10 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range config.TotalIterations {
-		log.Println("____________________________________________________")
+		if (config.LogConsole) {
+			log.Println("____________________________________________________")
+		}
+		
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetailsNew := tools.GetLimitedData()
@@ -125,12 +128,16 @@ func monitorDeals(live_money bool) {
 					}
 				}
 
-				log.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
+				if config.LogConsole {
+					log.Println("Scanned", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price, "| Deal: ", math.Round(float64(max(RAP_map[id], value)-price)/float64(max(RAP_map[id], value))*1000.0)/10.0, "%")
+				}
 
 			} else { //Updating RAP
 				RAP_map[id] = price
 
-				log.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				if config.LogConsole {
+					log.Println("Updated", name, "|", "RAP:", RAP_map[id], "| Value:", value, "| Price: ", price)
+				}
 			}
 		}
 		time.Sleep(time.Millisecond * 1000)

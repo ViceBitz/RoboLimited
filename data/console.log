@@ -122,3 +122,46 @@
 2025/10/02 14:03:00 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
 2025/10/03 02:55:11 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
 2025/10/03 02:56:31 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/09 14:45:12 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/09 14:47:14 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/10 01:59:18 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/10 03:14:29 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/10 06:06:59 Price ofe 2798 does not match.
+2025/10/10 06:07:00 Price of 2798 does not match.
+2025/10/10 06:07:01 Price of 2798 does not match.
+2025/10/10 06:07:02 Price of 2798 does not match.
+2025/10/13 01:02:09 Purchase failed: status 403, response {"errors":[{"code":0,"message":"Challenge is required to authorize the request"}]} 
+2025/10/13 01:02:54 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/13 01:29:15 Price of 300 does not match.
+2025/10/13 01:29:17 Price of 300 does not match.
+2025/10/13 01:29:24 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+ 
+2025/10/13 01:29:26 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+ 
+2025/10/13 01:29:27 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+ 
+2025/10/13 01:29:28 Price of 220 does not match.
+2025/10/13 01:29:29 Price of 220 does not match.
+2025/10/13 01:29:31 Price of 220 does not match.
+2025/10/13 01:29:32 Price of 220 does not match.
+2025/10/13 01:29:33 Price of 265 does not match.
+2025/10/13 01:29:34 Price of 265 does not match.
+2025/10/13 01:29:40 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+ 
+2025/10/13 01:29:41 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+ 
+2025/10/13 01:29:43 Price of 200 does not match.
+2025/10/13 01:29:44 Price of 200 does not match.
+2025/10/13 01:29:45 Price of 200 does not match.
+2025/10/13 01:29:46 Price of 200 does not match.
+2025/10/13 01:29:50 Price of 281 does not match.
+2025/10/13 01:29:51 Price of 281 does not match.
+2025/10/13 05:50:45 Price of 660 does not match.
+2025/10/13 05:50:46 Price of 660 does not match.
+2025/10/13 10:43:55 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/13 10:48:09 Purchase request executed: {"purchaseResult":"Purchase transaction success.","purchased":true,"pending":false,"errorMessage":null}
+2025/10/13 10:48:10 Price of 240 does not match.
+2025/10/13 10:48:11 Price of 240 does not match.
+2025/10/13 10:48:13 Price of 240 does not match.
+2025/10/13 10:48:14 Price of 240 does not match.
+2025/10/13 11:22:11 Purchase request executed: {"purchaseResult":"Purchase transaction success.","purchased":true,"pending":false,"errorMessage":null}

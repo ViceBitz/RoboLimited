@@ -78,9 +78,7 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
     }
 
     //Generate X-CSRF token if not already
-    if CSRFToken == "" {
-        getCSRFToken(collectibleItemId, cookie, payload)
-    }
+    getCSRFToken(collectibleItemId, cookie, payload)
 
     //Make POST request with token
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))

@@ -9,7 +9,7 @@ const (
 	RobloxEconomyDetailsV2 = "https://economy.roblox.com/v2/assets/"
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
-	PurchaseAPI = "CENSORED"
+	PurchaseAPI = "url-to-purchase-api"
 
 	//Evaluation Constraints (margin)
 	RAPDipD    = 0.25 //Demand: margin below RAP to buy
@@ -54,7 +54,11 @@ const (
 	//Private Cookies
 	RobloxCookie = ""
 	RobloxId = 132153132
+
 	//Web Agents
 	UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+
+	//Logging
+	LogConsole = false
 )
 */
