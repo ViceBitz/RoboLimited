@@ -174,3 +174,8 @@
 2025/10/13 15:05:35 Price of 198 does not match.
 2025/10/13 15:05:37 Price of 198 does not match.
 2025/10/13 15:05:38 Price of 198 does not match.
+2025/10/13 15:27:42 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/13 15:45:40 Price of 239 does not match.
+2025/10/13 16:15:42 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}2025/10/13 16:18:01 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/13 16:18:01 Purchase failed: status 403, response {"errors":[{"code":0,"message":"XSRF token invalid"}]}
+2025/10/13 16:18:35 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}

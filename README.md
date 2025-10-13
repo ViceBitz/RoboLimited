@@ -28,7 +28,7 @@ Market participants use these indicators to infer a limited's worth and make a p
 ### Limited Analyzer
 - Finds trends and identifies outliers in past sales data
 - Informs trading decisions with z-score and margin analysis
-- Utilizes data caching to classify price points quickly
+- Cache sales data to classify price points quickly
 
 
 ---

@@ -17,6 +17,7 @@ import (
 
 
 var CSRFToken string = ""
+var consoleLog *os.File
 
 type PurchasePayload struct {
     CollectibleItemId         string  `json:"collectibleItemId"`
@@ -77,10 +78,7 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
         return err
     }
 
-    //Generate X-CSRF token if not already
-    getCSRFToken(collectibleItemId, cookie, payload)
-
-    //Make POST request with token
+    //Make POST request with current token
     req, err := http.NewRequest("POST", url, bytes.NewBuffer(bodyData))
     if err != nil {
         return err
@@ -99,6 +97,12 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
     respBody, err := io.ReadAll(resp.Body)
     if err != nil {
         return err
+    }
+
+    //Generate new X-CSRF token if invalid
+    if resp.StatusCode == 403 {
+        getCSRFToken(collectibleItemId, cookie, payload)
+        return purchaseItem(collectibleItemId, cookie, payload)
     }
 
     if resp.StatusCode != 200 && resp.StatusCode != 201 {
@@ -120,12 +124,6 @@ func ExecutePurchase(id string, bypass bool) bool {
     cookie := config.RobloxCookie
     collectibleItemId, _ := tools.GetCollectibleId(id)
 	sellers, err := tools.GetResellers(collectibleItemId)
-
-    //Write to console file
-    logFile, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    log.SetOutput(logFile)
-    defer logFile.Close()
-    defer log.SetOutput(os.Stderr)
 
 	if err != nil {
 		log.Println("Could not get reseller data:", err)
@@ -163,6 +161,10 @@ func ExecutePurchase(id string, bypass bool) bool {
 
 //Initialize tokens
 func init() {
+    //Set log to file
+    consoleLog, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    log.SetOutput(consoleLog)
+    
     //Make dummy purchase for X-CSRF token
     ExecutePurchase("21070012", true)
 }
