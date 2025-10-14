@@ -133,6 +133,10 @@ func ExecutePurchase(id string, bypass bool) bool {
     collectibleItemId, _ := tools.GetCollectibleId(id)
 	sellers, err := tools.GetResellers(collectibleItemId)
 
+    //Write status to log file
+    log.SetOutput(consoleLog)
+    defer log.SetOutput(os.Stderr)
+    
 	if err != nil {
 		log.Println("Could not get reseller data:", err)
 		return false

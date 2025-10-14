@@ -115,7 +115,7 @@ type collectibleResponse struct {
 
 //Retrieves collectible and product id of limited from its asset id
 func GetCollectibleId(assetId string) (string, error) {
-	url := fmt.Sprintf("https://catalog.roblox.com/v1/catalog/items/%s/details?itemType=Asset", assetId)
+	url := fmt.Sprintf(config.AssetAPI, assetId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
@@ -147,7 +147,7 @@ func GetCollectibleId(assetId string) (string, error) {
 
 //Gets all resellers of an item
 func GetResellers(collectibleId string) ([]ResellerResponse, error) {
-	url := fmt.Sprintf("https://apis.roblox.com/marketplace-sales/v1/item/%s/resellers?limit=1", collectibleId)
+	url := fmt.Sprintf(config.ResellerAPI, collectibleId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

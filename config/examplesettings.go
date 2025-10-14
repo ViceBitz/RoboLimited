@@ -9,7 +9,12 @@ const (
 	RobloxEconomyDetailsV2 = "https://economy.roblox.com/v2/assets/"
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
-	PurchaseAPI = "url-to-purchase-api"
+
+	//Redacted for privacy, security, and ToS
+	PurchaseAPI = "url-to-purchase-endpoint"
+	AssetAPI = "url-to-asset-endpoint"
+	ResellerAPI = "url-to-reseller-endpoint"
+	
 
 	//Evaluation Constraints (margin)
 	RAPDipD    = 0.25 //Demand: margin below RAP to buy
