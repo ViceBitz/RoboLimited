@@ -69,7 +69,11 @@ func getCSRFToken(collectibleItemId string, cookie string, payload PurchasePaylo
 }
 
 //Purchases item by making request to API endpoint
-func purchaseItem(collectibleItemId string, cookie string, payload PurchasePayload) error {
+func purchaseItem(collectibleItemId string, cookie string, payload PurchasePayload, retry bool) error {
+    //Write status to log file
+    log.SetOutput(consoleLog)
+    defer log.SetOutput(os.Stderr)
+
     url := fmt.Sprintf(config.PurchaseAPI, collectibleItemId)
     client := tools.GlobalClient
 
@@ -102,7 +106,11 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
     //Generate new X-CSRF token if invalid
     if resp.StatusCode == 403 {
         getCSRFToken(collectibleItemId, cookie, payload)
-        return purchaseItem(collectibleItemId, cookie, payload)
+        if !retry {
+            log.Println("Could not get X-CSRF token.")
+            return err
+        }
+        return purchaseItem(collectibleItemId, cookie, payload, false)
     }
 
     if resp.StatusCode != 200 && resp.StatusCode != 201 {
@@ -146,7 +154,7 @@ func ExecutePurchase(id string, bypass bool) bool {
 			ExpectedSellerType: "User",
             IdempotencyKey: uuid.New().String(),
 		}
-		err := purchaseItem(collectibleItemId, cookie, payload)
+		err := purchaseItem(collectibleItemId, cookie, payload, true)
 		if err != nil {
 			log.Println("Error making purchase:", err)
 			return false
@@ -162,9 +170,8 @@ func ExecutePurchase(id string, bypass bool) bool {
 //Initialize tokens
 func init() {
     //Set log to file
-    consoleLog, _ := os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    log.SetOutput(consoleLog)
+    consoleLog, _ = os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     
     //Make dummy purchase for X-CSRF token
-    ExecutePurchase("21070012", true)
+    ExecutePurchase("494291269", true)
 }
