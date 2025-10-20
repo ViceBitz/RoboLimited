@@ -36,8 +36,8 @@ Players use these indicators to infer a limited's worth. This Go application imp
 ## 🚀 Key Features
 
 ### Deal Sniping  
-- **Efficient Monitoring** tracks market deals through GET requests with automated price refresh
-- **Purchase Execution** sends request to purchase API endpoint when price below threshold
+- **Efficient Monitoring** tracks market deals through Rolimon API requests
+- **Purchase Execution** sends buy orders to endpoints when price below threshold
 - **Flexible Automation** keeps system running through web and connection errors
 - **Throttling** to prevent rate-limiting and sustain long-term operation
 - **Logging** to track decisions for further reference
