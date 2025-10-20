@@ -155,10 +155,10 @@ func monitorDeals(live_money bool) {
 func main() {
 	//Start deal sniper process
 	monitorDeals(config.LiveMoney)
-
+	
 	//Analyzer Methods
 	//SearchFallingItems(-0.5, 1700, 1900, false) //Finds price-lowering items in market
-	//log.Println(FindOptimalSell("1301384400")) //Calculates optimal selling price
+	//log.Println(FindOptimalSell("398673908")) //Pinpoints optimal selling price
 
 	//Order executor test
 	//ExecutePurchase("331486631", true)

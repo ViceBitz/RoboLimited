@@ -33,7 +33,9 @@ const (
 
 	DeepManipulationCheck = false //Run complex projected check (unnecessary if StrictBuyCondition true)
 	StrictBuyCondition    = true  //Use z-score analysis for buy decisions
-	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
+
+	//Data Caching (back up old file!)
+	PopulateSalesData     = false //Updates all sales data (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1   //SD from mean to consider item as projected
