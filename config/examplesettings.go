@@ -31,8 +31,8 @@ const (
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
 
-	DeepManipulationCheck = false //Whether to run complex projected check before buy orders
-	StrictBuyCondition    = true  //Use z-scores from standard deviations in buy checks
+	DeepManipulationCheck = false //Run complex projected check (unnecessary if StrictBuyCondition true)
+	StrictBuyCondition    = true  //Use z-score analysis for buy decisions
 	PopulateSalesData     = false //Updates sales data for all items in data store (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
 
 	//Statistcal Z-score settings

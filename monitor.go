@@ -54,6 +54,9 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range config.TotalIterations {
+		//Throttle first to always yield
+		time.Sleep(time.Millisecond * 1000)
+
 		if (config.LogConsole) {
 			log.Println("____________________________________________________")
 		}
@@ -145,7 +148,6 @@ func monitorDeals(live_money bool) {
 				}
 			}
 		}
-		time.Sleep(time.Millisecond * 1000)
 	}
 }
 
