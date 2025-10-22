@@ -17,10 +17,6 @@ Players use these indicators to infer a limited's worth. This Go application imp
 
 ---
 
-## 📊 Results
-During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs between Robux and USD.
-
-
 ## 📌 Systems
 
 Two key processes drive the entire system. One acts as the hand, monitoring prices on the live market and executing trades through API requests, and the other serves as the brain, analyzing sales data to make the correct call on whether to buy, sell, or pass.
@@ -52,6 +48,12 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights  
 - **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
+
+---
+
+
+## 📊 Results
+During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs between Robux and USD.
 
 ---
 
