@@ -53,7 +53,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 
 
 ## 📊 Results
-During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs between Robux and USD.
+During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
 
 ---
 
