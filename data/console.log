@@ -104,3 +104,17 @@
 2025/10/20 18:54:16 Price of 400 does not match.
 2025/10/20 18:54:18 Price of 400 does not match.
 2025/10/20 18:54:19 Price of 400 does not match.
+2025/10/20 19:48:43 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/20 22:58:12 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/21 01:06:42 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/21 02:33:53 Purchase request executed: {"purchaseResult":"Purchase transaction success.","purchased":true,"pending":false,"errorMessage":null}
+2025/10/21 02:45:46 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/21 02:45:47 Price of 250 does not match.
+2025/10/21 02:45:48 Price of 250 does not match.
+2025/10/21 02:45:50 Price of 250 does not match.
+2025/10/21 02:45:51 Price of 250 does not match.
+2025/10/21 08:59:32 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/21 08:59:33 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/21 08:59:35 Price of 250 does not match.
+2025/10/21 08:59:36 Price of 250 does not match.
+2025/10/21 08:59:37 Price of 250 does not match.

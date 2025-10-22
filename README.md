@@ -17,7 +17,13 @@ Players use these indicators to infer a limited's worth. This Go application imp
 
 ---
 
+## 📊 Results
+- Traded over 20 virtual assets in live markets in one-month period
+- Achieved 30% ROI after internal marketplace fees, before currency conversion costs
+
 ## 📌 Systems
+
+Two key processes drive the entire system. One acts as the hand, monitoring prices on the live market and executing trades through API requests, and the other serves as the brain, analyzing sales data to make the correct call on whether to buy, sell, or pass.
 
 ### Price Sniper
 - Formula-driven decisions (using margins and statistical sampling)
