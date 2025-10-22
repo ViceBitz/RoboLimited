@@ -19,7 +19,7 @@ Players use these indicators to infer a limited's worth. This Go application imp
 
 ## 📌 Systems
 
-Two key processes drive the entire system. One acts as the hand, monitoring prices on the live market and executing trades through API requests. The other serves as the brain, analyzing trends in sales data to make the correct call.
+Two key processes drive the entire system. One acts as the hand, monitoring prices on the live market and executing trades through API requests. The other serves as the brain, analyzing trends in sales data to guide the correct call.
 
 ### Price Sniper
 - Formula-driven decisions (using margins and statistical sampling)
