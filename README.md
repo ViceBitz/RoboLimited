@@ -18,7 +18,7 @@ Players use these indicators to infer a limited's worth. This Go application imp
 ---
 
 ## 📊 Results
-During experimental tests, the program traded over 20 virtual assets in live markets in one-month period. Actions performed by the algorithm netted 30% return on investment after internal marketplace fees but before currency conversion costs between Robux and USD.
+During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs between Robux and USD.
 
 
 ## 📌 Systems
