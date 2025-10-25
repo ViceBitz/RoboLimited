@@ -39,12 +39,12 @@ const (
 
 	//Statistcal Z-score settings
 	OutlierThreshold = 1   //SD from mean to consider item as projected
-	DipThreshold     = 1.5   //SD from break even point (-0.3 / CoV) to consider a dip in price
+	DipThreshold     = 0.75   //SD from break even point (-0.3 / CoV) to consider a dip in price
 	SellThreshold    = 0.2 //SD from mean to list item for sale
-	LookbackPeriod   = 90  //Past number of days to consider when scanning for projecteds
+	LookbackPeriod   = 90  //Past number of days to consider for trend analysis
 
 	//Iteration Cycles
-	RefreshRate     = 5       //Re-extract RAP / Value off Rolimon's API after this many rounds
+	RefreshRate     = 1000       //Re-extract RAP / Value off Rolimon's API after this many rounds
 	TotalIterations = 1000000 //Amount of cycles to run
 
 	//Roblox pages
@@ -54,7 +54,8 @@ const (
 	//Files
 	ActionLogFile  = "data/actions.log" //Log of all buy actions
 	ConsoleLogFile = "data/console.log" //Log of terminal output
-	SalesDataFile  = "data/sales.csv"   //Mean & SD of past sales data of all items
+	SalesStatsFile  = "data/sales_stats.csv"   //Mean & SD of past sales data of all items
+	SalesDataFile = "data/sales_data.json" //Raw time-series sales data of all times
 
 	//CSS Selectors
 	PriceSelector         = "span.text-robux-lg"                                           //Best Price
