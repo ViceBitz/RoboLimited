@@ -1,2 +1,0 @@
-*.json filter=lfs diff=lfs merge=lfs -text
-data/sales_data.json filter=lfs diff=lfs merge=lfs -text
