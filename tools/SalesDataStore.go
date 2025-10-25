@@ -128,7 +128,7 @@ func RetrieveSalesStats() map[string]Stats {
 
 //Stores raw sales data to JSON file
 func StoreSalesData(data map[string]*Sales) {
-	jsonData, err := json.MarshalIndent(data, "", "  ")
+	jsonData, err := json.Marshal(data)
 	if (err != nil) {
 		log.Println("Error marshalling sales data:", err)
 		return
