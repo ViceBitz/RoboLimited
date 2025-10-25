@@ -5,31 +5,48 @@ Stores mean and standard deviation of items' past sales data for quick querying
 */
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"os"
 	"robolimited/config"
 	"strconv"
+	"time"
+	"log"
 )
 
-// Represents the mean and standard deviation for an item
-type StatsData struct {
+//Mean and standard deviation for an asset's sales
+type StatsPoint struct {
 	ID     string
 	Mean   float64
 	StdDev float64
 }
-
-// Represents mean and standard deviation values
 type Stats struct {
 	Mean   float64
 	StdDev float64
 }
 
-// Global map to store sales data
-var SalesData = make(map[string]Stats)
+//Raw time-series sales data for an asset
+type Sales struct {
+	NumPoints          int     `json:"num_points"`
+	Timestamp          []int64 `json:"timestamp"`
+	AvgDailySalesPrice []int   `json:"avg_daily_sales_price"`
+	SalesVolume        []int   `json:"sales_volume"`
+}
 
-// Store sales statistics data to a CSV file
-func StoreSales(data []StatsData) {
-	file, err := os.Create(config.SalesDataFile)
+type SalesPoint struct {
+	Date               time.Time
+	AvgDailySalesPrice int
+	SalesVolume        int
+}
+
+//Global map for condensed sales stats
+var SalesStats = make(map[string]Stats)
+//Global map for raw sales data
+var SalesData = make(map[string]*Sales)
+
+//Store sales statistics data to a CSV file
+func StoreSalesStats(data []StatsPoint) {
+	file, err := os.Create(config.SalesStatsFile)
 	if err != nil {
 		fmt.Printf("Failed to create CSV file")
 		return
@@ -39,14 +56,14 @@ func StoreSales(data []StatsData) {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Write header
+	//Write header
 	header := []string{"ID", "Mean", "SD"}
 	if err := writer.Write(header); err != nil {
 		fmt.Println("Failed to write header")
 		return
 	}
 
-	// Write data rows
+	//Write data rows
 	for _, stat := range data {
 		record := []string{
 			stat.ID,
@@ -60,11 +77,11 @@ func StoreSales(data []StatsData) {
 	}
 }
 
-// Retrieves statistics data for a specific ID from CSV file
-func RetrieveSales() map[string]Stats {
-	file, err := os.Open(config.SalesDataFile)
+//Retrieves statistics data of specific ID from CSV file
+func RetrieveSalesStats() map[string]Stats {
+	file, err := os.Open(config.SalesStatsFile)
 	if err != nil {
-		fmt.Println("failed to open CSV file")
+		log.Println("Failed to open CSV file")
 		return nil
 	}
 	defer file.Close()
@@ -72,32 +89,32 @@ func RetrieveSales() map[string]Stats {
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		fmt.Println("failed to read CSV file")
+		log.Println("Failed to read CSV file")
 		return nil
 	}
 
 	if len(records) == 0 {
-		fmt.Println("CSV file is empty")
+		log.Println("CSV file is empty")
 		return nil
 	}
 
-	// Add all ids and data to rows
+	//Add all ids and data to rows
 	result := make(map[string]Stats)
 	for i := 1; i < len(records); i++ {
 		record := records[i]
 		if len(record) != 3 {
-			continue // Skip malformed rows
+			continue
 		}
 		id := record[0]
 		mean, err := strconv.ParseFloat(record[1], 64)
 		if err != nil {
-			fmt.Println("Failed to parse mean for ID", id)
+			log.Println("Failed to parse mean for ID", id)
 			return nil
 		}
 
 		stdDev, err := strconv.ParseFloat(record[2], 64)
 		if err != nil {
-			fmt.Println("failed to parse standard deviation for ID", id)
+			log.Println("failed to parse standard deviation for ID", id)
 			return nil
 		}
 
@@ -107,4 +124,35 @@ func RetrieveSales() map[string]Stats {
 		}
 	}
 	return result
+}
+
+//Stores raw sales data to JSON file
+func StoreSalesData(data map[string]*Sales) {
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if (err != nil) {
+		log.Println("Error marshalling sales data:", err)
+		return
+	}
+	err = os.WriteFile(config.SalesDataFile, jsonData, 0644)
+	if (err != nil) {
+		log.Println("Error writing sales data to file:", err)
+		return
+	}
+	log.Println("Successfully wrote sales data to json")
+}
+//Retrieves raw sales data of specific ID from JSON file
+func RetrieveSalesData() (map[string] *Sales) {
+	bytes, err := os.ReadFile(config.SalesDataFile)
+	var data map[string]*Sales
+	if (err != nil) {
+		log.Println("Error reading from json file:", err)
+		return data
+	}
+	
+	err = json.Unmarshal(bytes, &data)
+	if (err != nil) {
+		log.Println("Error unmarshaling sales data from json:", err)
+		return data
+	}
+	return data
 }
