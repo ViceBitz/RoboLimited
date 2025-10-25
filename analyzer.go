@@ -14,28 +14,13 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-type SalesData struct {
-	NumPoints          int     `json:"num_points"`
-	Timestamp          []int64 `json:"timestamp"`
-	AvgDailySalesPrice []int   `json:"avg_daily_sales_price"`
-	SalesVolume        []int   `json:"sales_volume"`
-}
-
-type SalesPoint struct {
-	Date               time.Time
-	AvgDailySalesPrice int
-	SalesVolume        int
-}
-
-// Calculates mean and SD of past sales data
-func findMeanSD(id string) (float64, float64) {
+//Extracts past sales data and calculates mean and SD
+func analyzeSales(id string) (float64, float64, *tools.Sales) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
 
-	log.Println(err)
-
 	if err != nil {
-		return 0, 0
+		return 0, 0, historyData
 	}
 
 	// Find segment of time series to consider
@@ -64,14 +49,14 @@ func findMeanSD(id string) (float64, float64) {
 	}
 	std = math.Sqrt(std / (N - 1))
 
-	return mean, std
+	return mean, std, historyData
 }
 
-// Calculates Z-score of price relative to past sales data
+//Calculates Z-score of price relative to past sales data
 func findZScore(id string, price float64, logStats bool) float64 {
-	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 	if mean == 0.0 && std == 0.0 {
-		mean, std = findMeanSD(id)
+		mean, std, _ = analyzeSales(id)
 	}
 	z_score := (price - mean) / std
 
@@ -82,11 +67,11 @@ func findZScore(id string, price float64, logStats bool) float64 {
 	return z_score
 }
 
-// Calculates coefficient of variation of past sales data
+//Calculates coefficient of variation of past sales data
 func findCV(id string) float64 {
-	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 	if mean == 0.0 && std == 0.0 {
-		mean, std = findMeanSD(id)
+		mean, std, _ = analyzeSales(id)
 	}
 	cv := std / mean
 	if config.LogConsole {
@@ -95,7 +80,7 @@ func findCV(id string) float64 {
 	return cv
 }
 
-// Determine if an item is price manipulated with RAP z-score
+//Determine if an item is price manipulated with RAP z-score
 func CheckProjected(id string, rap float64) bool {
 	if (config.LogConsole) {
 		fmt.Println("Projected Check | ID:", id)
@@ -104,7 +89,7 @@ func CheckProjected(id string, rap float64) bool {
 	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
 }
 
-// Identify dip to support buy decision with price z-score
+//Identify dip to support buy decision with price z-score
 func CheckDip(id string, bestPrice float64) bool {
 	if (config.LogConsole) {
 		fmt.Println("Dip Check | ID:", id)
@@ -118,14 +103,14 @@ func CheckDip(id string, bestPrice float64) bool {
 	return z_score <= cutoff
 }
 
-// Calculate optimal price listing for item sale from z-score
+//Calculate optimal price listing for item sale from z-score
 func FindOptimalSell(id string) float64 {
 	fmt.Println("Optimal Sale | ID:", id)
-	mean, std := tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 	return mean + std*config.SellThreshold
 }
 
-// Scans for items with falling prices under z-score threshold, within price range, and at demand level
+//Scans for items with falling prices under z-score threshold, within price range, and at demand level
 func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
 	var fallingItems []string
@@ -144,7 +129,8 @@ func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64
 	return fallingItems
 }
 
-func extractPriceSeries(url string) (*SalesData, error) {
+//Extracts time-series sales data from Rolimon's asset URL
+func extractPriceSeries(url string) (*tools.Sales, error) {
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -185,7 +171,7 @@ func extractPriceSeries(url string) (*SalesData, error) {
 	fmt.Printf("Extracted JSON data (%d characters)\n", len(salesDataJSON))
 
 	// Parse the actual sales data
-	var salesData SalesData
+	var salesData tools.Sales
 	err = json.Unmarshal([]byte(salesDataJSON), &salesData)
 	if err != nil {
 		// Show first part of JSON for debugging
@@ -204,12 +190,16 @@ func init() {
 	//Write to a .csv file to use for querying later
 	if config.PopulateSalesData {
 		itemDetails := tools.GetLimitedData()
-		var sales_data []tools.StatsData
+
+		var sales_stats []tools.StatsPoint
+		sales_data := make(map[string]*tools.Sales)
+
 		var mu sync.Mutex
 		var wg sync.WaitGroup
 
-		//Initialize global sales data map to check which values needed
-		tools.SalesData = tools.RetrieveSales()
+		//Initialize global sales maps to check which values needed
+		tools.SalesStats = tools.RetrieveSalesStats()
+		tools.SalesData = tools.RetrieveSalesData()
 
 		//Multithread scan Rolimon's for sales data
 		maxThreads := 4
@@ -223,11 +213,14 @@ func init() {
 				semaphore <- struct{}{}        // Acquire thread
 				defer func() { <-semaphore }() // Release thread
 
+				var historyData *tools.Sales
+
 				mean, SD := 0.0, 0.0
-				if tools.SalesData[id].Mean != 0.0 {
-					mean, SD = tools.SalesData[id].Mean, tools.SalesData[id].StdDev
+				if tools.SalesStats[id].Mean != 0.0 {
+					mean, SD = tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
+					historyData = tools.SalesData[id];
 				} else {
-					mean, SD = findMeanSD(itemID)
+					mean, SD, historyData = analyzeSales(itemID)
 				}
 
 				//Check throttle to prevent excessive rate-limiting
@@ -236,16 +229,25 @@ func init() {
 				}
 
 				mu.Lock()
-				sales_data = append(sales_data, tools.StatsData{ID: itemID, Mean: mean, StdDev: SD})
-				log.Println("(", len(sales_data), "/", len(itemDetails.Items), ")", "Reading sales data of", itemID, "| Mean:", mean, "| SD:", SD)
+
+				sales_stats = append(sales_stats, tools.StatsPoint{ID: itemID, Mean: mean, StdDev: SD})
+				log.Println("(", len(sales_stats), "/", len(itemDetails.Items), ")", "Reading sales stats of", itemID, "| Mean:", mean, "| SD:", SD)
+				
+				if (historyData != nil) {
+					sales_data[itemID] = historyData
+					log.Println("Reading sales data. Length: ", len(historyData.AvgDailySalesPrice))
+				}
+
 				mu.Unlock()
 			}(id)
 		}
 
 		wg.Wait()
-		log.Println("Caching into sales data file..")
-		tools.StoreSales(sales_data)
+		log.Println("Caching stats and data into files..")
+		tools.StoreSalesStats(sales_stats)
+		tools.StoreSalesData(sales_data)
 	}
-	//Initialize global sales data map
-	tools.SalesData = tools.RetrieveSales()
+	//Initialize global sales maps
+	tools.SalesStats = tools.RetrieveSalesStats()
+	tools.SalesData = tools.RetrieveSalesData()
 }
