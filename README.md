@@ -6,7 +6,7 @@ RoboLimited is an algorithmic trading system that buys and sells undervalued vir
 This project was created as a proof-of-concept to explore algorithmic approaches to virtual economies. RoboLimited is solely for educational and demonstrative purposes, not for full-scale deployment or ToS-violating use. All testing was conducted responsibly and with respect for platform integrity.
 
 ### 💡 Inspiration ###
-Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Being part of my own childhood, I built this project around Roblox's marketplace because of its simplicity, low stakes, and unique functionalities. Limiteds offers a real, dynamic online economy for this algorithmic trading experiment.
+Roblox, while best known as a gaming platform for kids, also hosts one of the largest marketplaces for collectible virtual items, known as Limiteds, which function in many ways like NFTs. Being part of my own childhood, I built this project around Roblox's marketplace because of its simplicity, low stakes, and unique features. Limiteds offer a real and dynamic online economy for this experiment.
 
 On the platform, players buy and trade limited accessories with each other, creating price fluctuations and intrinsic value much like shares of stock. Market activity primarily revolves around:
 - RAP (Recent Average Price): historical average based on recent trades.
