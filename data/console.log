@@ -125,3 +125,15 @@
 2025/10/25 01:16:20 Could not get X-CSRF token.
 2025/10/25 01:16:53 Could not get X-CSRF token.
 2025/10/25 02:07:55 Could not get X-CSRF token.
+2025/10/28 19:50:04 Could not get X-CSRF token.
+2025/10/28 19:51:28 Could not get X-CSRF token.
+2025/10/29 15:25:01 Could not get X-CSRF token.
+2025/10/29 15:34:34 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/29 15:56:10 Price of 430 does not match.
+2025/10/29 15:56:12 Price of 430 does not match.
+2025/10/29 15:56:13 Price of 430 does not match.
+2025/10/29 15:56:14 Price of 430 does not match.
+2025/10/29 15:56:16 Price of 430 does not match.
+2025/10/29 15:56:17 Price of 430 does not match.
+2025/10/29 17:20:21 Price of 248 does not match.
+2025/10/29 17:20:23 Price of 248 does not match.
