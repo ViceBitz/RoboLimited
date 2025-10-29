@@ -127,11 +127,9 @@ func monitorDeals(live_money bool) {
 						if !config.StrictBuyCondition || CheckDip(id, float64(price)) {
 							//BUY
 							if !live_money {
-								tradeSim.BuyItem(id, name, price)
-							} else {
-								tradeSim.BuyItem(id, name, price)
 								ExecutePurchase(id, false)
 							}
+							tradeSim.BuyItem(id, name, price)
 						}
 					}
 				}
@@ -157,7 +155,7 @@ func main() {
 	monitorDeals(config.LiveMoney)
 	
 	//Analyzer Methods
-	//SearchFallingItems(-0.5, 1700, 1900, false) //Finds price-lowering items in market
+	//SearchFallingItems(-0.5, 1800, 2500, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("398673908")) //Pinpoints optimal selling price
 
 	//Order executor test
