@@ -126,7 +126,7 @@ func monitorDeals(live_money bool) {
 						//Final dip check (if strict buy conditions)
 						if !config.StrictBuyCondition || CheckDip(id, float64(price)) {
 							//BUY
-							if !live_money {
+							if live_money {
 								ExecutePurchase(id, false)
 							}
 							tradeSim.BuyItem(id, name, price)
