@@ -137,3 +137,13 @@
 2025/10/29 15:56:17 Price of 430 does not match.
 2025/10/29 17:20:21 Price of 248 does not match.
 2025/10/29 17:20:23 Price of 248 does not match.
+2025/10/29 17:26:13 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/29 18:55:17 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/29 20:38:59 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/10/29 21:12:30 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/01 16:02:00 Could not get X-CSRF token.
+2025/11/01 18:55:53 Could not get X-CSRF token.
+2025/11/02 12:51:56 Could not get X-CSRF token.
+2025/11/02 12:52:20 Could not get X-CSRF token.
+2025/11/02 12:53:20 Could not get X-CSRF token.
+2025/11/02 12:53:31 Could not get X-CSRF token.
