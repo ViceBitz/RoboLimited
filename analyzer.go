@@ -117,9 +117,8 @@ func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64
 	for id, _ := range itemDetails.Items {
 		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
-		value := itemDetails.Items[id][3].(float64)
 		demand := int(itemDetails.Items[id][5].(float64))
-		price := math.Max(rap, value)
+		price := rap
 		z_score := findZScore(id, price, config.LogConsole)
 		if z_score < z_threshold && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
 			fallingItems = append(fallingItems, id)
