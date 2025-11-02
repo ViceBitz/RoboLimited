@@ -155,8 +155,9 @@ func main() {
 	monitorDeals(config.LiveMoney)
 	
 	//Analyzer Methods
-	//SearchFallingItems(-0.5, 1800, 2500, false) //Finds price-lowering items in market
-	//log.Println(FindOptimalSell("398673908")) //Pinpoints optimal selling price
+	//SearchFallingItems(-0.5, 11000, 13000, false) //Finds price-lowering items in market
+	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
+	//log.Println(findZScore("76233968067050", 22000, false)) //Check an item's current trend
 
 	//Order executor test
 	//ExecutePurchase("331486631", true)
