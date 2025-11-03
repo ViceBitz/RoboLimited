@@ -74,12 +74,15 @@ func GetDealsData() *DealDetails {
 	dealURL := config.RolimonsDeals
 
 	//Send request through cycled proxies
-	proxyURL := proxies[proxyIndex]
-	proxyIndex = (proxyIndex + 1) % len(proxies)
+	client := GlobalClient
+	if (config.RotateProxies) {
+		proxyURL := proxies[proxyIndex]
+		proxyIndex = (proxyIndex + 1) % len(proxies)
 
-	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
-	client := &http.Client{Transport: transport, Timeout: 15 * time.Second}
-
+		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+		client = &http.Client{Transport: transport, Timeout: 15 * time.Second}
+	}
+	
 	//Build GET request with random user agent
 	req, err := http.NewRequest("GET", dealURL, nil)
 	if err != nil {
