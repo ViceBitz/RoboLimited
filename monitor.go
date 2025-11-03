@@ -60,7 +60,7 @@ func monitorDeals(live_money bool) {
 
 	for i := range config.TotalIterations {
 		//Throttle with random jitters
-		throttleDur := time.Duration(config.MonitorThrottle + rand.Intn(config.MonitorThrottle / 3)) * time.Millisecond
+		throttleDur := time.Duration(config.MonitorThrottle + rand.Intn(config.MonitorThrottle / 10)) * time.Millisecond
 		time.Sleep(throttleDur)
 
 		if (config.LogConsole) {
