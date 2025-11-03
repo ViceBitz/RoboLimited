@@ -46,12 +46,13 @@ const (
 	//Iteration Cycles
 	RefreshRate     = 1000       //Re-extract RAP / Value off Rolimon's API after this many rounds
 	TotalIterations = 1000000 //Amount of cycles to run
+	MonitorThrottle = 1000 //Milliseconds to yield per monitor update
 
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
 	RobloxHome           = "https://www.roblox.com/home"
 
-	//Files
+	//Data Files
 	ActionLogFile  = "data/actions.log" //Log of all buy actions
 	ConsoleLogFile = "data/console.log" //Log of terminal output
 	SalesStatsFile  = "data/sales_stats.csv"   //Mean & SD of past sales data of all items
@@ -68,6 +69,8 @@ const (
 
 	//Web Agents
 	UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+	ProxyFile = "data/proxies.txt" //Stores user & pass and proxy ports
+	AgentsFile = "web/agents.txt" //Stores different user agents for requests
 
 	//Logging
 	LogConsole = false //Toggle print for processes & stats during execution
