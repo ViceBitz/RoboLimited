@@ -6,9 +6,14 @@ import (
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
+	"math/rand"
 	"time"
 )
 
+/*
+Monitors economy for price anomalies and market fluctuations through API requests.
+Integrates the analyzer and sniper to detect dips and execute purchases.
+*/
 
 // Evaluates if margins are good enough to buy
 func BuyF(rap_margin float64, value_margin float64, hasValue bool, isDemand bool) bool {
@@ -54,8 +59,9 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range config.TotalIterations {
-		//Throttle first to always yield
-		time.Sleep(time.Millisecond * 1000)
+		//Throttle with random jitters
+		throttleDur := time.Duration(config.MonitorThrottle + rand.Intn(config.MonitorThrottle / 3)) * time.Millisecond
+		time.Sleep(throttleDur)
 
 		if (config.LogConsole) {
 			log.Println("____________________________________________________")
@@ -157,7 +163,7 @@ func main() {
 	//Analyzer Methods
 	//SearchFallingItems(-0.5, 11000, 13000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
-	//log.Println(findZScore("76233968067050", 22000, false)) //Check an item's current trend
+	//log.Println(findZScore("1428418448", 12748, false)) //Check an item's current trend
 
 	//Order executor test
 	//ExecutePurchase("331486631", true)
