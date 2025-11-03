@@ -1,2 +1,2 @@
 config/settings.go
-proxies.txt
+web/proxies.txt
