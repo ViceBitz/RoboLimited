@@ -71,7 +71,8 @@ const (
 	UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 	ProxyFile = "data/proxies.txt" //Stores user & pass and proxy ports
 	AgentsFile = "web/agents.txt" //Stores different user agents for requests
-
+	RotateProxies = false //Use cycled proxies during deal requests
+	
 	//Logging
 	LogConsole = false //Toggle print for processes & stats during execution
 )
