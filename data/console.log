@@ -147,3 +147,21 @@
 2025/11/02 12:52:20 Could not get X-CSRF token.
 2025/11/02 12:53:20 Could not get X-CSRF token.
 2025/11/02 12:53:31 Could not get X-CSRF token.
+2025/11/02 12:57:20 Could not get X-CSRF token.
+2025/11/02 14:11:31 Could not get X-CSRF token.
+2025/11/02 14:11:47 Could not get X-CSRF token.
+2025/11/03 02:55:59 Could not get X-CSRF token.
+2025/11/03 02:56:48 Could not get X-CSRF token.
+2025/11/03 02:57:53 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 03:07:06 Price of 27250 does not match.
+2025/11/03 03:07:07 Price of 27250 does not match.
+2025/11/03 12:11:48 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:29:42 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:31:15 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:32:08 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:32:28 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:32:48 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:39:52 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:48:10 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 12:53:44 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
+2025/11/03 13:07:17 Purchase request executed: {"purchaseResult":"Purchase transaction is failed.","purchased":false,"pending":false,"errorMessage":"InsufficientBalance"}
