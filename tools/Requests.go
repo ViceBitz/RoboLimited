@@ -22,10 +22,14 @@ resellers, prices, and most recent deals
 //HTTP client for non-urgent API requests
 var GlobalClient = &http.Client{} 
 
-//Proxies and headers for market monitoring
+//Proxies, headers, and endpoints for market monitoring
 var proxies []*url.URL 
 var proxyIndex int
+
 var userAgents []string
+
+var dealEndpoints []string
+var dealURLIndex int
 
 // ItemDetails JSON structure
 type ItemDetails struct {
@@ -72,6 +76,12 @@ func GetLimitedData() *ItemDetails {
 func GetDealsData() *DealDetails {
 	//Rolimons API for deal data
 	dealURL := config.RolimonsDeals
+
+	if config.RotateEndpoints {
+		//Rotate deal endpoint URLs
+		dealURL = dealEndpoints[dealURLIndex]
+		dealURLIndex = (dealURLIndex + 1) % len(dealEndpoints)
+	}
 
 	//Send request through cycled proxies
 	client := GlobalClient
@@ -216,6 +226,18 @@ func init() {
 	scanner := bufio.NewScanner(headerFile)
 	for scanner.Scan() {
 		userAgents = append(userAgents, scanner.Text())
+	}
+
+	//Initialize deal endpoints
+	dealFile, err := os.Open(config.DealEndpointsFile)
+	if err != nil {
+		log.Println("Unable to open agent file: ", err)
+	}
+	defer dealFile.Close()
+	
+	scanner = bufio.NewScanner(dealFile)
+	for scanner.Scan() {
+		userAgents = append(dealEndpoints, scanner.Text())
 	}
 
 	//Initialize proxy URLs
