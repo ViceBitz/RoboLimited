@@ -1,0 +1,6 @@
+https://api.rolimons.com/market/v1/dealactivity
+https://api.rolimons.com/market/v1/dealactivity/
+https://api.rolimons.com/market/v1/Dealactivity
+https://api.rolimons.com/market/v1/dEalactivity
+https://api.rolimons.com/market/v1/deAlactivity
+https://api.rolimons.com/market/v1/deaLactivity
