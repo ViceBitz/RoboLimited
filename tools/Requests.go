@@ -1,17 +1,17 @@
 package tools
 
 import (
-    "fmt"
-    "io"
-    "net/http"
-	"net/url"
-	"robolimited/config"
-	"encoding/json"
-	"time"
-	"math/rand"
-	"log"
-	"os"
 	"bufio"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"math/rand"
+	"net/http"
+	"net/url"
+	"os"
+	"robolimited/config"
+	"time"
 )
 
 /*
@@ -19,17 +19,14 @@ Handles all API requests to Roblox & Rolimons endpoints retrieving item details,
 resellers, prices, and most recent deals
 */
 
-//HTTP client for non-urgent API requests
-var GlobalClient = &http.Client{} 
+// HTTP client for non-urgent API requests
+var GlobalClient = &http.Client{}
 
-//Proxies, headers, and endpoints for market monitoring
-var proxies []*url.URL 
+// Proxies, headers, and endpoints for market monitoring
+var proxies []*url.URL
 var proxyIndex int
 
 var userAgents []string
-
-var dealEndpoints []string
-var dealURLIndex int
 
 // ItemDetails JSON structure
 type ItemDetails struct {
@@ -77,22 +74,16 @@ func GetDealsData() *DealDetails {
 	//Rolimons API for deal data
 	dealURL := config.RolimonsDeals
 
-	if config.RotateEndpoints {
-		//Rotate deal endpoint URLs
-		dealURL = dealEndpoints[dealURLIndex]
-		dealURLIndex = (dealURLIndex + 1) % len(dealEndpoints)
-	}
-
 	//Send request through cycled proxies
 	client := GlobalClient
-	if (config.RotateProxies) {
+	if config.RotateProxies {
 		proxyURL := proxies[proxyIndex]
 		proxyIndex = (proxyIndex + 1) % len(proxies)
 
 		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
 		client = &http.Client{Transport: transport, Timeout: 15 * time.Second}
 	}
-	
+
 	//Build GET request with random user agent
 	req, err := http.NewRequest("GET", dealURL, nil)
 	if err != nil {
@@ -133,7 +124,7 @@ type ResellerData struct {
 }
 
 type ResellerResponse struct {
-	CollectibleProductID     string 
+	CollectibleProductID      string
 	CollectibleItemInstanceID string
 	Seller                    Seller
 	Price                     int
@@ -150,10 +141,10 @@ type Seller struct {
 
 type collectibleResponse struct {
 	CollectibleItemId string
-	ProductId int64
+	ProductId         int64
 }
 
-//Retrieves collectible and product id of limited from its asset id
+// Retrieves collectible and product id of limited from its asset id
 func GetCollectibleId(assetId string) (string, error) {
 	url := fmt.Sprintf(config.AssetAPI, assetId)
 	req, err := http.NewRequest("GET", url, nil)
@@ -162,7 +153,7 @@ func GetCollectibleId(assetId string) (string, error) {
 	}
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
 	req.Header.Set("User-Agent", config.UserAgent)
-	
+
 	client := GlobalClient
 	resp, err := client.Do(req)
 	if err != nil {
@@ -185,7 +176,7 @@ func GetCollectibleId(assetId string) (string, error) {
 	return res.CollectibleItemId, nil
 }
 
-//Gets all resellers of an item
+// Gets all resellers of an item
 func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	url := fmt.Sprintf(config.ResellerAPI, collectibleId)
 	req, err := http.NewRequest("GET", url, nil)
@@ -222,23 +213,12 @@ func init() {
 		log.Println("Unable to open agent file: ", err)
 	}
 	defer headerFile.Close()
-	
+
 	scanner := bufio.NewScanner(headerFile)
 	for scanner.Scan() {
 		userAgents = append(userAgents, scanner.Text())
 	}
 
-	//Initialize deal endpoints
-	dealFile, err := os.Open(config.DealEndpointsFile)
-	if err != nil {
-		log.Println("Unable to open agent file: ", err)
-	}
-	defer dealFile.Close()
-	
-	scanner = bufio.NewScanner(dealFile)
-	for scanner.Scan() {
-		dealEndpoints = append(dealEndpoints, scanner.Text())
-	}
 
 	//Initialize proxy URLs
 	proxyFile, err := os.Open(config.ProxyFile)
