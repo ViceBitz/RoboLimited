@@ -237,7 +237,7 @@ func init() {
 	
 	scanner = bufio.NewScanner(dealFile)
 	for scanner.Scan() {
-		userAgents = append(dealEndpoints, scanner.Text())
+		dealEndpoints = append(dealEndpoints, scanner.Text())
 	}
 
 	//Initialize proxy URLs
