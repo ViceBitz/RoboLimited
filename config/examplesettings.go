@@ -69,9 +69,12 @@ const (
 
 	//Web Agents
 	UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-	ProxyFile = "data/proxies.txt" //Stores user & pass and proxy ports
+	ProxyFile = "web/proxies.txt" //Stores IP credentials and proxy ports
 	AgentsFile = "web/agents.txt" //Stores different user agents for requests
+	DealEndpointsFile = "web/deal_endpoints.txt" //Stores different deal endpoints
 	RotateProxies = false //Use cycled proxies during deal requests
+	RotateEndpoints = true //Use cycled variations of endpoints
+
 	
 	//Logging
 	LogConsole = false //Toggle print for processes & stats during execution
