@@ -47,9 +47,10 @@ func getCSRFToken(collectibleItemId string, cookie string, payload PurchasePaylo
         return err
     }
 
+    tools.FastHeaders(req)
     req.Header.Set("Content-Type", "application/json; charset=utf-8")
     req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
-    req.Header.Set("User-Agent", config.UserAgent)
+    
 
     resp, err := client.Do(req)
     if err != nil {
@@ -87,9 +88,10 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
     if err != nil {
         return err
     }
+
+    tools.FastHeaders(req)
     req.Header.Set("Content-Type", "application/json; charset=utf-8")
     req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", cookie))
-    req.Header.Set("User-Agent", config.UserAgent)
     req.Header.Set("X-CSRF-TOKEN", CSRFToken)
 
     resp, err := client.Do(req)
