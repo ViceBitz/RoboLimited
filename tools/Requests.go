@@ -40,6 +40,18 @@ type DealDetails struct {
 	Activities [][]interface{} `json:"activities"`
 }
 
+//Sets headers for fast HTTP requests
+func FastHeaders(req *http.Request) {
+	req.Header.Set("User-Agent", userAgents[rand.Intn(len(userAgents))])
+	req.Header.Set("Accept", "application/json, text/plain, */*")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("User-Agent", "Go-http-client/2.0")
+}
+
 func GetLimitedData() *ItemDetails {
 	//Rolimons API endpoint for item details
 	apiURL := config.RolimonsAPI
@@ -89,9 +101,7 @@ func GetDealsData() *DealDetails {
 	if err != nil {
 		log.Println("Error building GET request: ", err)
 	}
-	req.Header.Set("User-Agent", userAgents[rand.Intn(len(userAgents))])
-	req.Header.Set("Accept", "application/json, text/plain, */*")
-	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	FastHeaders(req)
 
 	//Make GET request to API
 	resp, err := client.Do(req)
@@ -152,7 +162,7 @@ func GetCollectibleId(assetId string) (string, error) {
 		return "", err
 	}
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
-	req.Header.Set("User-Agent", config.UserAgent)
+	FastHeaders(req)
 
 	client := GlobalClient
 	resp, err := client.Do(req)
@@ -183,8 +193,8 @@ func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	FastHeaders(req)
 	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
-	req.Header.Set("User-Agent", config.UserAgent)
 
 	client := GlobalClient
 	resp, err := client.Do(req)
