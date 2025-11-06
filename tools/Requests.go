@@ -49,7 +49,6 @@ func FastHeaders(req *http.Request) {
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Pragma", "no-cache")
 	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("User-Agent", "Go-http-client/2.0")
 }
 
 func GetLimitedData() *ItemDetails {
