@@ -156,12 +156,12 @@ type collectibleResponse struct {
 // Retrieves collectible and product id of limited from its asset id
 func GetCollectibleId(assetId string) (string, error) {
 	url := fmt.Sprintf(config.AssetAPI, assetId)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
 	FastHeaders(req)
+	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s;", config.RobloxCookie))
 
 	client := GlobalClient
 	resp, err := client.Do(req)
@@ -170,10 +170,16 @@ func GetCollectibleId(assetId string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		io.ReadAll(resp.Body)
-		return "", err
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		snippet := string(body)
+		if len(snippet) > 200 {
+			snippet = snippet[:200] + "..."
+		}
+		return "", fmt.Errorf("asset API returned %d: %s", resp.StatusCode, snippet)
 	}
+
+	//Retrieve collectibleId from catalog endpoint
 	var res collectibleResponse
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return "", err
@@ -188,12 +194,12 @@ func GetCollectibleId(assetId string) (string, error) {
 // Gets all resellers of an item
 func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	url := fmt.Sprintf(config.ResellerAPI, collectibleId)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 	FastHeaders(req)
-	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s", config.RobloxCookie))
+	req.Header.Set("Cookie", fmt.Sprintf(".ROBLOSECURITY=%s;", config.RobloxCookie))
 
 	client := GlobalClient
 	resp, err := client.Do(req)
@@ -202,11 +208,19 @@ func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		body, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("failed to get resellers: status %d, response %s", resp.StatusCode, string(body))
+	//Read reseller listings and handle errors
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading body: %w", err)
 	}
-	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		snippet := string(body)
+		if len(snippet) > 200 {
+			snippet = snippet[:200] + "..."
+		}
+		return nil, fmt.Errorf("failed to get resellers: status %d, body %s", resp.StatusCode, snippet)
+	}
+
 	var data ResellerData
 	err = json.Unmarshal(body, &data)
 	if err != nil {
