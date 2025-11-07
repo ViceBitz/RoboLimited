@@ -127,16 +127,13 @@ func monitorDeals(live_money bool) {
 
 				//Check buys
 				if BuyCheck(price, RAP_map[id], value, demand != -1) {
-					//Final price manipulation check
-					if !(config.DeepManipulationCheck && CheckProjected(id, float64(RAP_map[id]))) {
-						//Final dip check (if strict buy conditions)
-						if !config.StrictBuyCondition || CheckDip(id, float64(price)) {
-							//BUY
-							if live_money {
-								ExecutePurchase(id, false)
-							}
-							tradeSim.BuyItem(id, name, price)
+					//Price anomaly dip check using z-score
+					if CheckDip(id, float64(price), demand != -1) {
+						//BUY
+						if live_money {
+							ExecutePurchase(id, false, demand != -1)
 						}
+						tradeSim.BuyItem(id, name, price)
 					}
 				}
 
@@ -161,7 +158,7 @@ func main() {
 	monitorDeals(config.LiveMoney)
 	
 	//Analyzer Methods
-	//SearchFallingItems(-0.5, 11000, 13000, false) //Finds price-lowering items in market
+	//SearchFallingItems(-0.5, 5000, 13000, true) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
 	//log.Println(findZScore("1428418448", 12748, false)) //Check an item's current trend
 

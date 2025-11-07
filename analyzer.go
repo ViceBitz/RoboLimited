@@ -80,23 +80,22 @@ func findCV(id string) float64 {
 	return cv
 }
 
-//Determine if an item is price manipulated with RAP z-score
-func CheckProjected(id string, rap float64) bool {
-	if (config.LogConsole) {
-		fmt.Println("Projected Check | ID:", id)
-	}
-	z_score := findZScore(id, rap, config.LogConsole)
-	return z_score >= config.OutlierThreshold //z-score above certain threshold is outlier
-}
-
 //Identify dip to support buy decision with price z-score
-func CheckDip(id string, bestPrice float64) bool {
+func CheckDip(id string, bestPrice float64, isDemand bool) bool {
 	if (config.LogConsole) {
 		fmt.Println("Dip Check | ID:", id)
 	}
+	
+	//Different thresholds depending on item demand type
+	threshold := config.DipThresholdND
+	if isDemand {
+		threshold = config.DipThresholdD
+	}
+
+	//Calculate z-score diff in comparison to break-even score
 	z_score := findZScore(id, bestPrice, config.LogConsole)
 	cv := findCV(id)
-	cutoff := -0.3/cv - config.DipThreshold //z-score below -0.3/%CV - threshold is dip
+	cutoff := -0.3/cv - threshold //z-score below -0.3/%CV - threshold is dip
 	if (config.LogConsole) {
 		fmt.Println("Z-Score Cutoff: ", cutoff)
 	}

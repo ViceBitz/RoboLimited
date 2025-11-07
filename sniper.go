@@ -130,7 +130,7 @@ func purchaseItem(collectibleItemId string, cookie string, payload PurchasePaylo
 }
 
 //Executes purchase on an item via API call to economy endpoint
-func ExecutePurchase(id string, bypass bool) bool {
+func ExecutePurchase(id string, bypass bool, isDemand bool) bool {
     cookie := config.RobloxCookie
     collectibleItemId, _ := tools.GetCollectibleId(id)
 	sellers, err := tools.GetResellers(collectibleItemId)
@@ -146,7 +146,7 @@ func ExecutePurchase(id string, bypass bool) bool {
 	topSeller := sellers[0]
 
 	//Validate actual price with expected
-	if bypass || CheckDip(id, float64(topSeller.Price)) {
+	if bypass || CheckDip(id, float64(topSeller.Price), isDemand) {
 		//Request purchase using HTTP POST with payload
 		payload := PurchasePayload{
             CollectibleItemId: collectibleItemId,
@@ -179,5 +179,5 @@ func init() {
     consoleLog, _ = os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     
     //Make dummy purchase for X-CSRF token
-    ExecutePurchase("21070012", true)
+    ExecutePurchase("21070012", true, false)
 }
