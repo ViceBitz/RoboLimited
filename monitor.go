@@ -123,9 +123,9 @@ func monitorDeals(live_money bool) {
 			}
 			
 			if isRAP == 0 { //Updating best price
-				//Make decision to buy/sell
+				//Make decision to purchase item
 
-				//Check buys
+				//Quick % price filter to eliminate obvious non-anomalies
 				if BuyCheck(price, RAP_map[id], value, demand != -1) {
 					//Price anomaly dip check using z-score
 					if CheckDip(id, float64(price), demand != -1) {
