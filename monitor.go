@@ -97,7 +97,7 @@ func monitorDeals(live_money bool) {
 				continue
 			}
 
-			demand := int(itemDetails.Items[id][5].(float64))
+			isDemand := int(itemDetails.Items[id][5].(float64)) != -1
 			projected := int(itemDetails.Items[id][7].(float64))
 
 			//Exclude projected items
@@ -126,12 +126,12 @@ func monitorDeals(live_money bool) {
 				//Make decision to purchase item
 
 				//Quick % price filter to eliminate obvious non-anomalies
-				if BuyCheck(price, RAP_map[id], value, demand != -1) {
+				if BuyCheck(price, RAP_map[id], value, isDemand) {
 					//Price anomaly dip check using z-score
-					if CheckDip(id, float64(price), demand != -1) {
+					if CheckDip(id, float64(price), isDemand) {
 						//BUY
 						if live_money {
-							ExecutePurchase(id, false, demand != -1)
+							ExecutePurchase(id, false, isDemand)
 						}
 						tradeSim.BuyItem(id, name, price)
 					}
