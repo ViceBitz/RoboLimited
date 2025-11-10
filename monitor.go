@@ -59,9 +59,11 @@ func monitorDeals(live_money bool) {
 
 	for i := range config.TotalIterations {
 		//Sync throttle to unix offset for staggered scheduling
-		unixTime := time.Now().UnixMilli()
-		yieldTime := config.ClockOffset - unixTime % config.MonitorThrottle;
-		time.Sleep(time.Duration(yieldTime))
+		var interval int64 = config.MonitorThrottle
+		offset := time.Now().UnixMilli() % interval
+		yieldTime := ((config.ClockOffset - offset) + interval) % interval;
+		yieldTime = max(config.MinThrottle, yieldTime) //throttle time floor
+		time.Sleep(time.Duration(yieldTime) * time.Millisecond)
 
 		if (config.LogConsole) {
 			log.Println("____________________________________________________")
