@@ -6,7 +6,6 @@ import (
 	"robolimited/config"
 	"robolimited/tools"
 	"strconv"
-	"math/rand"
 	"time"
 )
 
@@ -59,9 +58,10 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range config.TotalIterations {
-		//Throttle with random jitters
-		throttleDur := time.Duration(config.MonitorThrottle + rand.Intn(config.MonitorThrottle / 10)) * time.Millisecond
-		time.Sleep(throttleDur)
+		//Sync throttle to unix offset for staggered scheduling
+		unixTime := time.Now().UnixMilli()
+		yieldTime := config.ClockOffset - unixTime % config.MonitorThrottle;
+		time.Sleep(time.Duration(yieldTime))
 
 		if (config.LogConsole) {
 			log.Println("____________________________________________________")
