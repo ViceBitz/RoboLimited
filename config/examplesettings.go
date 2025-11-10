@@ -44,7 +44,10 @@ const (
 	//Iteration Cycles
 	RefreshRate     = 1000    //Re-extract RAP / Value off Rolimon's API after this many rounds
 	TotalIterations = 1000000 //Amount of cycles to run
+
+	//Scheduling & Throttling
 	MonitorThrottle = 1000    //Milliseconds to yield per monitor update
+	ClockOffset     = 0       //Offset from time.Now() for staggered scheduling across devices
 
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
