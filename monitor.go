@@ -47,6 +47,20 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 	}
 }
 
+// Throttles deal polling to avoid rate limit
+func throttleMonitor() {
+	//Sync throttle to unix offset for staggered scheduling
+	var interval int64 = config.MonitorThrottle
+	offset := time.Now().UnixMilli() % interval
+	yieldTime := ((config.ClockOffset - offset) + interval) % interval
+
+	//Ensure yield time does not drop below min
+	if yieldTime < config.MinThrottle {
+		yieldTime += interval
+	}
+	time.Sleep(time.Duration(yieldTime) * time.Millisecond)
+}
+
 // Monitor limited deals via Rolimon's deals page
 func monitorDeals(live_money bool) {
 
@@ -58,17 +72,15 @@ func monitorDeals(live_money bool) {
 	RAP_map := map[string]int{}
 
 	for i := range config.TotalIterations {
-		//Sync throttle to unix offset for staggered scheduling
-		var interval int64 = config.MonitorThrottle
-		offset := time.Now().UnixMilli() % interval
-		yieldTime := ((config.ClockOffset - offset) + interval) % interval;
-		yieldTime = max(config.MinThrottle, yieldTime) //throttle time floor
-		time.Sleep(time.Duration(yieldTime) * time.Millisecond)
 
-		if (config.LogConsole) {
+		//Throttle twice to ensure sync with offset timemark
+		throttleMonitor()
+		throttleMonitor()
+
+		if config.LogConsole {
 			log.Println("____________________________________________________")
 		}
-		
+
 		if i%config.RefreshRate == 0 {
 			//Recalculate RAP / Value and limited data from Rolimon API
 			itemDetailsNew := tools.GetLimitedData()
@@ -123,7 +135,7 @@ func monitorDeals(live_money bool) {
 			if !(config.RAPRangeLow <= RAP_map[id] && RAP_map[id] <= config.RAPRangeHigh) {
 				continue
 			}
-			
+
 			if isRAP == 0 { //Updating best price
 				//Make decision to purchase item
 
@@ -154,11 +166,11 @@ func monitorDeals(live_money bool) {
 	}
 }
 
-//Driver
+// Driver
 func main() {
 	//Start deal sniper process
 	monitorDeals(config.LiveMoney)
-	
+
 	//Analyzer Methods
 	//SearchFallingItems(-0.5, 5000, 13000, true) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
