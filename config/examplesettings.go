@@ -48,7 +48,8 @@ const (
 	//Scheduling & Throttling
 	MonitorThrottle = 1000    //Milliseconds to yield per monitor update
 	ClockOffset     = 0       //Offset from time.Now() for staggered scheduling across devices
-
+	MinThrottle = 500 //Minimum ms to yield before next timemark
+	
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
 	RobloxHome           = "https://www.roblox.com/home"
