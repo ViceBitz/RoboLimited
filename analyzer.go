@@ -55,7 +55,7 @@ func analyzeSales(id string) (float64, float64, *tools.Sales) {
 //Calculates Z-score of price relative to past sales data
 func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
-	if mean == 0.0 && std == 0.0 {
+	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
 		mean, std, _ = analyzeSales(id)
 	}
 	z_score := (price - mean) / std
@@ -81,7 +81,7 @@ func findCV(id string) float64 {
 }
 
 //Identify dip to support buy decision with price z-score
-func CheckDip(id string, bestPrice float64, isDemand bool) bool {
+func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	if (config.LogConsole) {
 		fmt.Println("Dip Check | ID:", id)
 	}
@@ -94,12 +94,20 @@ func CheckDip(id string, bestPrice float64, isDemand bool) bool {
 
 	//Calculate z-score diff in comparison to break-even score
 	z_score := findZScore(id, bestPrice, config.LogConsole)
-	cv := findCV(id)
-	cutoff := -0.3/cv - threshold //z-score below -0.3/%CV - threshold is dip
+	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
+
+	worth := mean //Extrinsic value of item (avg. price or value)
+	if value != -1 { worth = value }
+
+	margin := config.MarginND //Discount margin below worth
+	if isDemand { margin = config.MarginD }
+
+	cutoff := (worth * (1 - margin) - mean)/std - threshold //z-score below break-even pt
+
 	if (config.LogConsole) {
 		fmt.Println("Z-Score Cutoff: ", cutoff)
 	}
-	return z_score <= cutoff
+	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 
 //Calculate optimal price listing for item sale from z-score
@@ -109,22 +117,27 @@ func FindOptimalSell(id string) float64 {
 	return mean + std*config.SellThreshold
 }
 
-//Scans for items with falling prices under z-score threshold, within price range, and at demand level
-func SearchFallingItems(z_threshold float64, priceLow float64, priceHigh float64, isDemand bool) []string {
+//Scans items within z-score range within price range and at demand level
+func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
-	var fallingItems []string
+	var itemsWithin []string
 	for id, _ := range itemDetails.Items {
 		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
+
 		z_score := findZScore(id, price, config.LogConsole)
-		if z_score < z_threshold && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			fallingItems = append(fallingItems, id)
+		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+			itemsWithin = append(itemsWithin, id)
 			log.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)
 		}
 	}
-	return fallingItems
+	return itemsWithin
+}
+//Scans items under z-score threshold within price range and at demand level
+func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
+	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
 }
 
 //Extracts time-series sales data from Rolimon's asset URL
