@@ -167,13 +167,11 @@ func monitorDeals(live_money bool) {
 // Driver
 func main() {
 	//Start deal sniper process
-	monitorDeals(config.LiveMoney)
+	//monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
+	AnalyzeInventory()
 	//SearchFallingItems(-0.5, 1000, 2000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
 	//log.Println(findZScore("1428418448", 12748, false)) //Check an item's current trend
-
-	//Order executor test
-	//ExecutePurchase("331486631", true)
 }
