@@ -127,29 +127,21 @@ func AnalyzeInventory() {
 	var tot_z float64 //Total z-score
 	var weighted_z float64 //Weighted z-score
 	var tot_rap float64 //Total RAP
-	var tot_value float64 //Total value
 	var itemsProcessed int //# of items successfully processed
 	fmt.Println("____________________________________________________")
 	for _, id := range assetIds {
 		if len(itemDetails.Items[id]) == 0 { continue }
 		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
-		value := itemDetails.Items[id][3].(float64)
 		z_score := findZScore(id, rap, config.LogConsole)
 		fmt.Println(name, "| Z-Score:", z_score)
 		tot_z += z_score
 		weighted_z += rap * z_score
 		itemsProcessed += 1
 		tot_rap += rap
-		if (value != -1) {
-			tot_value += value
-		} else {
-			tot_value += rap
-		}
 	}
 	fmt.Println()
 	fmt.Println("Avg. Z-Score: ", (tot_z / float64(itemsProcessed)), " | ", "Weighted Z-Score: ", (weighted_z / float64(tot_rap)))
-	fmt.Println("Net RAP: ", tot_rap, " | ", "Net Value: ", tot_value)
 	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed) + "/" + fmt.Sprintf("%d",len(assetIds)))
 	fmt.Println("____________________________________________________")
 }
