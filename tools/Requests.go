@@ -229,6 +229,50 @@ func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	return data.Data, nil
 }
 
+//Player inventory JSON structure
+type InventoryResponse struct {
+	NextPageCursor string        `json:"nextPageCursor"`
+	Data           []LimitedItem `json:"data"`
+}
+
+//Simplified limited item JSON structure
+type LimitedItem struct {
+	AssetID int64  `json:"assetId"`
+	Name    string `json:"name"`
+}
+
+// Get all limited item ids in player inventory
+func GetInventory(playerId string) ([]string) {
+	//Roblox API endpoint for player inventory
+	apiURL := fmt.Sprintf(config.InventoryAPI, playerId)
+
+	//Make a GET request to the Rolimons API
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		log.Printf("Error making HTTP request: %v", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	//Read response body
+	var data InventoryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		log.Printf("Error decoding JSON: %v", err)
+		return nil
+	}
+
+	assetIDs := make(map[string]bool)
+	for _, item := range data.Data {
+		assetIDs[string(item.AssetID)] = true
+	}
+
+	idList := make([]string, 0, len(assetIDs))
+	for id := range assetIDs {
+		idList = append(idList, id)
+	}
+	return idList
+}
+
 func init() {
 	//Initialize user agents
 	headerFile, err := os.Open(config.AgentsFile)
