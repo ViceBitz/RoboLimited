@@ -263,7 +263,7 @@ func GetInventory(playerId string) ([]string) {
 
 	assetIDs := make(map[string]bool)
 	for _, item := range data.Data {
-		assetIDs[string(item.AssetID)] = true
+		assetIDs[fmt.Sprintf("%d", item.AssetID)] = true
 	}
 
 	idList := make([]string, 0, len(assetIDs))

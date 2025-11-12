@@ -110,7 +110,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		z_score := findZScore(id, price, config.LogConsole)
 		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
 			itemsWithin = append(itemsWithin, id)
-			log.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)
+			fmt.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)
 		}
 	}
 	return itemsWithin
@@ -122,14 +122,36 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 
 //Analyzes the z-scores of inventory items and prints list of metrics
 func AnalyzeInventory() {
-	assetIds := tools.GetInventory(string(config.RobloxId))
+	assetIds := tools.GetInventory(fmt.Sprintf("%d", config.RobloxId))
 	itemDetails := tools.GetLimitedData()
+	var tot_z float64 //Total z-score
+	var weighted_z float64 //Weighted z-score
+	var tot_rap float64 //Total RAP
+	var tot_value float64 //Total value
+	var itemsProcessed int //# of items successfully processed
+	fmt.Println("____________________________________________________")
 	for _, id := range assetIds {
+		if len(itemDetails.Items[id]) == 0 { continue }
 		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
+		value := itemDetails.Items[id][3].(float64)
 		z_score := findZScore(id, rap, config.LogConsole)
-		log.Println(name, "| Z-Score:", z_score)
+		fmt.Println(name, "| Z-Score:", z_score)
+		tot_z += z_score
+		weighted_z += rap * z_score
+		itemsProcessed += 1
+		tot_rap += rap
+		if (value != -1) {
+			tot_value += value
+		} else {
+			tot_value += rap
+		}
 	}
+	fmt.Println()
+	fmt.Println("Avg. Z-Score: ", (tot_z / float64(itemsProcessed)), " | ", "Weighted Z-Score: ", (weighted_z / float64(tot_rap)))
+	fmt.Println("Net RAP: ", tot_rap, " | ", "Net Value: ", tot_value)
+	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed) + "/" + fmt.Sprintf("%d",len(assetIds)))
+	fmt.Println("____________________________________________________")
 }
 
 //Extracts time-series sales data from Rolimon's asset URL

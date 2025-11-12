@@ -170,6 +170,7 @@ func main() {
 	//monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
+	//log.Println(len(tools.GetInventory("132153132")))
 	AnalyzeInventory()
 	//SearchFallingItems(-0.5, 1000, 2000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
