@@ -67,19 +67,6 @@ func findZScore(id string, price float64, logStats bool) float64 {
 	return z_score
 }
 
-//Calculates coefficient of variation of past sales data
-func findCV(id string) float64 {
-	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
-	if mean == 0.0 && std == 0.0 {
-		mean, std, _ = analyzeSales(id)
-	}
-	cv := std / mean
-	if config.LogConsole {
-		fmt.Println("%CV : ", cv)
-	}
-	return cv
-}
-
 //Identify dip to support buy decision with price z-score
 func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	if (config.LogConsole) {
@@ -110,13 +97,6 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 
-//Calculate optimal price listing for item sale from z-score
-func FindOptimalSell(id string) float64 {
-	fmt.Println("Optimal Sale | ID:", id)
-	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
-	return mean + std*config.SellThreshold
-}
-
 //Scans items within z-score range within price range and at demand level
 func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
@@ -138,6 +118,18 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 //Scans items under z-score threshold within price range and at demand level
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
+}
+
+//Analyzes the z-scores of inventory items and prints list of metrics
+func AnalyzeInventory() {
+	assetIds := tools.GetInventory(string(config.RobloxId))
+	itemDetails := tools.GetLimitedData()
+	for _, id := range assetIds {
+		name := itemDetails.Items[id][0]
+		rap := itemDetails.Items[id][2].(float64)
+		z_score := findZScore(id, rap, config.LogConsole)
+		log.Println(name, "| Z-Score:", z_score)
+	}
 }
 
 //Extracts time-series sales data from Rolimon's asset URL
