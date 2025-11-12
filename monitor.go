@@ -14,6 +14,7 @@ Monitors economy for price anomalies and market fluctuations through API request
 Integrates the analyzer and sniper to detect dips and execute purchases.
 */
 
+/* DEPRECATED
 // Evaluates if margins are good enough to buy
 func BuyF(rap_margin float64, value_margin float64, hasValue bool, isDemand bool) bool {
 	//Implement demand evaluation (higher demand items have lower margin standards)
@@ -46,6 +47,7 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 		return BuyF((RAP-bpF)/RAP, (value-bpF)/value, true, isDemand)
 	}
 }
+*/
 
 // Throttles deal polling to avoid rate limit
 func throttleMonitor() {
@@ -73,8 +75,7 @@ func monitorDeals(live_money bool) {
 
 	for i := range config.TotalIterations {
 
-		//Throttle twice to ensure sync with offset timemark
-		throttleMonitor()
+		//Bind throttle to unix timemark
 		throttleMonitor()
 
 		if config.LogConsole {
@@ -139,16 +140,13 @@ func monitorDeals(live_money bool) {
 			if isRAP == 0 { //Updating best price
 				//Make decision to purchase item
 
-				//Quick % price filter to eliminate obvious non-anomalies
-				if BuyCheck(price, RAP_map[id], value, isDemand) {
-					//Price anomaly dip check using z-score
-					if CheckDip(id, float64(price), isDemand) {
-						//BUY
-						if live_money {
-							ExecutePurchase(id, false, isDemand)
-						}
-						tradeSim.BuyItem(id, name, price)
+				//Price anomaly dip check using z-score below % margins
+				if CheckDip(id, float64(price), float64(value), isDemand) {
+					//BUY
+					if live_money {
+						ExecutePurchase(id, false, float64(value), isDemand)
 					}
+					tradeSim.BuyItem(id, name, price)
 				}
 
 				if config.LogConsole {
@@ -172,7 +170,7 @@ func main() {
 	monitorDeals(config.LiveMoney)
 
 	//Analyzer Methods
-	//SearchFallingItems(-0.5, 5000, 13000, true) //Finds price-lowering items in market
+	//SearchFallingItems(-0.5, 1000, 2000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
 	//log.Println(findZScore("1428418448", 12748, false)) //Check an item's current trend
 
