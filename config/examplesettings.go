@@ -9,46 +9,46 @@ const (
 	RobloxEconomyDetailsV2 = "https://economy.roblox.com/v2/assets/"
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
-
+	InventoryAPI           = "https://inventory.roblox.com/v1/users/%s/assets/collectibles?limit=100&sortOrder=Asc"
+	
 	//Redacted for privacy, security, and ToS
 	PurchaseAPI = "url-to-purchase-endpoint"
 	AssetAPI = "url-to-asset-endpoint"
 	ResellerAPI = "url-to-reseller-endpoint"
 	
 
-	//Evaluation Constraints (margin)
-	RAPDipD    = 0.25 //Demand: margin below RAP to buy
-	ValueDipD  = 0.35 //Demand: margin below Value to buy
-	RAPDipND   = 0.30 //Non-demand: margin below RAP to buy
-	ValueDipND = 0.35 //Non-demand: margin below Value to buy
-
+	//Evaluation Filters
 	PriceRangeLow  = 0 //Price range of limiteds to consider
-	PriceRangeHigh = 4000
+	PriceRangeHigh = 400
 
-	RAPRangeLow  = 500 //RAP range of limiteds to consider
+	RAPRangeLow  = 0 //RAP range of limiteds to consider
 	RAPRangeHigh = 1000000
 
 	//Operation Modes
 	LiveMoney = true //Run with real money (true) or simulated costs (false)
-	
+
 	//Data Caching (back up old file!)
 	PopulateSalesData = false //Updates all sales data (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
 
-	//Statistical Z-score settings
-	DipThresholdND   = 0.75 //SD from break even point (-0.3 / CoV) to consider a dip in price
-	DipThresholdD    = 0.25 //SD from break even point to consider for demand item
-	SellThreshold    = 0.2  //SD from mean to list item for sale
+	//Purchase Margins
+	MarginD  = 0.25 //Demand: margin below RAP/Value to buy
+	MarginND = 0.30 //Non-demand: margin below RAP/Value to buy
 
-	LookbackPeriod   = 90   //Past number of days to consider for trend analysis
+	//Statistical Z-score settings
+	DipThresholdND = 0.5 //-SD from break even point to consider a dip in price
+	DipThresholdD  = 0.25 //-SD from break even point for demand item
+	DipUpperBound  = -0.5 //Z-score must be below bound to be considered outlier
+
+	LookbackPeriod = 90 //Past number of days to consider for trend analysis
 
 	//Iteration Cycles
 	RefreshRate     = 1000    //Re-extract RAP / Value off Rolimon's API after this many rounds
 	TotalIterations = 1000000 //Amount of cycles to run
 
 	//Scheduling & Throttling
-	MonitorThrottle = 1000    //Milliseconds to yield per monitor update
-	ClockOffset     = 0       //Offset from time.Now() for staggered scheduling across devices
-	MinThrottle = 500 //Minimum ms to yield before next timemark
+	MonitorThrottle = 1000 //Milliseconds to yield per monitor update
+	ClockOffset     = 0    //Offset from time.Now() for staggered scheduling across devices
+	MinThrottle     = 250  //Minimum ms to yield before next timemark
 	
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
