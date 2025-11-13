@@ -94,6 +94,7 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	if (config.LogConsole) {
 		fmt.Println("Z-Score Cutoff: ", cutoff)
 	}
+	//Margin cutoff + upper bound to protect against price manipulation
 	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 

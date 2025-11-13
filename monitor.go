@@ -171,8 +171,8 @@ func main() {
 
 	//Analyzer Methods
 	//log.Println(len(tools.GetInventory("132153132")))
-	AnalyzeInventory()
+	//AnalyzeInventory()
 	//SearchFallingItems(-0.5, 1000, 2000, false) //Finds price-lowering items in market
 	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
-	//log.Println(findZScore("1428418448", 12748, false)) //Check an item's current trend
+	//log.Println(findZScore("135470884", 4000, false)) //Check an item's current trend
 }
