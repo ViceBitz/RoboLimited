@@ -33,7 +33,7 @@ func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64
 		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*daysLower {
 			break //Exclude points before (today - daysLower)
 		}
-		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*daysUpper {
+		if timestamps[len(timestamps)-1]-timestamps[i] < 24*60*60*daysUpper {
 			continue //Don't scan points after (today - daysUpper)
 		}
 		pricePoints = append(pricePoints, pricePointsAll[i])

@@ -180,6 +180,6 @@ func main() {
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 	
-	//Identify promising seasonal cycles and future growth potential
-	log.Println(findDatedZScore("2620478831", 2000, 360, 330, false))
+	//Pinpoint seasonal cycles to forecast growth potential
+	log.Println(findDatedZScore("1309918", 1899, 360, 330, true))
 }
