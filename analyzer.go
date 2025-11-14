@@ -58,9 +58,9 @@ func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64
 
 //Calculates Z-score of price relative to past sales data
 func findZScore(id string, price float64, logStats bool) float64 {
-	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
+	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
 	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
-		mean, std, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from last 90 days
+		mean, std, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from lookback period
 	}
 	z_score := (price - mean) / std
 
@@ -68,6 +68,17 @@ func findZScore(id string, price float64, logStats bool) float64 {
 		fmt.Println("Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
 	}
 
+	return z_score
+}
+
+//Calculates Z-score of price relative to past sales data within date range [today-daysLower, today-daysUpper]
+func findDatedZScore(id string, price float64, daysLower int64, daysUpper int64, logStats bool) float64 {
+	//**Does not read from sales data cache, use "findZScore" for that
+	mean, std, _ := analyzeSales(id, daysLower, daysUpper) //Get data from date range
+	z_score := (price - mean) / std
+	if logStats {
+		fmt.Println("Dated Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
+	}
 	return z_score
 }
 
@@ -102,8 +113,8 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 
-//Scans z-scores of items within price range and at demand level
-func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
+//Scans z-scores of items within price range, demand level, and date range
+func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysLower int64, daysUpper int64, isDemand bool) []string {
 	type Item struct {
 		id string
 		z_score float64
@@ -116,7 +127,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
 
-		z_score := findZScore(id, price, config.LogConsole)
+		z_score := findDatedZScore(id, price, daysLower, daysUpper, config.LogConsole)
 		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
 			itemsWithin = append(itemsWithin, Item{id, z_score})
 		}
@@ -134,9 +145,9 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 
 	return onlyItems
 }
-//Scans items under z-score threshold within price range and at demand level
+//Scans items under z-score threshold within price range and demand level in lookback period
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
-	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
+	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, config.LookbackPeriod, 0, isDemand)
 }
 
 //Analyzes the z-scores of inventory items and prints list of metrics
@@ -256,7 +267,7 @@ func init() {
 					mean, SD = tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 					historyData = tools.SalesData[id];
 				} else {
-					//Get data from last 90 days
+					//Get data from lookback period
 					mean, SD, historyData = analyzeSales(itemID, config.LookbackPeriod, 0)
 				}
 
