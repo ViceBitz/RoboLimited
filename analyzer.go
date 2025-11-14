@@ -114,7 +114,7 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 }
 
 //Scans z-scores of items within price range, demand level, and date range
-func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysLower int64, daysUpper int64, isDemand bool) []string {
+func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	type Item struct {
 		id string
 		z_score float64
@@ -127,7 +127,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
 
-		z_score := findDatedZScore(id, price, daysLower, daysUpper, config.LogConsole)
+		z_score := findZScore(id, price, config.LogConsole)
 		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
 			itemsWithin = append(itemsWithin, Item{id, z_score})
 		}
@@ -147,7 +147,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 }
 //Scans items under z-score threshold within price range and demand level in lookback period
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
-	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, config.LookbackPeriod, 0, isDemand)
+	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
 }
 
 //Analyzes the z-scores of inventory items and prints list of metrics
