@@ -10,6 +10,7 @@ import (
 	"robolimited/tools"
 	"sync"
 	"time"
+	"sort"
 
 	"github.com/chromedp/chromedp"
 )
@@ -100,21 +101,35 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 
 //Scans items within z-score range within price range and at demand level
 func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
+	type Item struct {
+		id string
+		z_score float64
+	}
+
 	itemDetails := tools.GetLimitedData()
-	var itemsWithin []string
+	var itemsWithin []Item
 	for id, _ := range itemDetails.Items {
-		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
 
 		z_score := findZScore(id, price, config.LogConsole)
 		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			itemsWithin = append(itemsWithin, id)
-			fmt.Println("Found item", name, "| ID:", id, "| Z-Score:", z_score)
+			itemsWithin = append(itemsWithin, Item{id, z_score})
 		}
 	}
-	return itemsWithin
+	//Sort by ascending z-score
+	sort.Slice(itemsWithin, func(i, j int) bool {
+		return itemsWithin[i].z_score < itemsWithin[j].z_score
+	})
+	var onlyItems []string
+	for _, m := range itemsWithin {
+		name := itemDetails.Items[m.id][0]
+		onlyItems = append(onlyItems, m.id)
+		fmt.Println("Found item", name, "| ID:", m.id, "| Z-Score:", m.z_score)
+	}
+	
+	return onlyItems
 }
 //Scans items under z-score threshold within price range and at demand level
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
