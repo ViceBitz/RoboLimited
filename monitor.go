@@ -115,8 +115,8 @@ func monitorDeals(live_money bool) {
 			isDemand := int(itemDetails.Items[id][5].(float64)) != -1
 			projected := int(itemDetails.Items[id][7].(float64))
 
-			//Exclude projected items
-			if projected != -1 {
+			//Exclude projected items and erroneous listings
+			if projected != -1 || price < 1 {
 				continue
 			}
 			//Exclude items out of price range
@@ -169,10 +169,17 @@ func main() {
 	//Start deal sniper process
 	//monitorDeals(config.LiveMoney)
 
-	//Analyzer Methods
-	//log.Println(len(tools.GetInventory("132153132")))
+	//===Analyzer Methods===\\
+
+	//Displays player inventory metrics
 	//AnalyzeInventory()
-	//SearchFallingItems(-0.5, 1000, 2000, false) //Finds price-lowering items in market
-	//log.Println(FindOptimalSell("21070090")) //Pinpoints optimal selling price
-	//log.Println(findZScore("135470884", 4000, false)) //Check an item's current trend
+
+	//Finds current price-lowering items in market
+	//SearchFallingItems(-0.5, 1500, 1800, false) 
+
+	//Check singular item's price trend with z-score
+	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
+	
+	//Identify promising seasonal cycles and future growth potential
+	log.Println(findDatedZScore("2620478831", 2000, 360, 330, false))
 }
