@@ -143,6 +143,11 @@ func ExecutePurchase(id string, bypass bool, value float64, isDemand bool) bool 
 		log.Println("Could not get reseller data:", err)
 		return false
 	}
+    if len(sellers) == 0 {
+        log.Println("No available sellers found.")
+        return false
+    }
+    
 	topSeller := sellers[0]
 
 	//Validate actual price with expected
