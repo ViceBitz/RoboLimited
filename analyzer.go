@@ -151,7 +151,7 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 }
 
 //Analyzes the z-scores of inventory items and prints list of metrics
-func AnalyzeInventory() {
+func AnalyzeInventory(forecastPrices bool) {
 	assetIds := tools.GetInventory(fmt.Sprintf("%d", config.RobloxId))
 	itemDetails := tools.GetLimitedData()
 	var tot_z float64 //Total z-score
@@ -172,8 +172,28 @@ func AnalyzeInventory() {
 	}
 	fmt.Println()
 	fmt.Println("Avg. Z-Score: ", (tot_z / float64(itemsProcessed)), " | ", "Weighted Z-Score: ", (weighted_z / float64(tot_rap)))
-	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed) + "/" + fmt.Sprintf("%d",len(assetIds)))
 	fmt.Println("____________________________________________________")
+
+	//Use previous year's prices to forecast future ones -> seasonal cycles
+	if (forecastPrices) {
+		var tot_past_z float64 //Total forecasted z-scores
+		var weighted_past_z float64 //Weighted forecasted z-scores
+		fmt.Println("Forecasts:")
+		for _,id := range assetIds {
+			if len(itemDetails.Items[id]) == 0 { continue }
+			name := itemDetails.Items[id][0]
+			rap := itemDetails.Items[id][2].(float64)
+			//Look at z-score from 2 months exactly last year
+			past_z_score := -findDatedZScore(id, rap, 360, 300, config.LogConsole) //Negative because current -> future is eq. to -(future -> current z-score))
+			tot_past_z += past_z_score
+			weighted_past_z += rap * past_z_score
+			fmt.Println(name, "| Forecast Z-Score:", past_z_score)
+		}
+		fmt.Println()
+		fmt.Println("Avg. Forecast Z-Score: ", (tot_past_z / float64(itemsProcessed)), " | ", "Weighted Forecast Z-Score: ", (weighted_past_z / float64(tot_rap)))
+		fmt.Println("____________________________________________________")
+	}
+	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed) + "/" + fmt.Sprintf("%d",len(assetIds)))
 }
 
 //Extracts time-series sales data from Rolimon's asset URL
@@ -215,7 +235,9 @@ func extractPriceSeries(url string) (*tools.Sales, error) {
 		return nil, fmt.Errorf("chrome automation failed: %v", err)
 	}
 
-	fmt.Printf("Extracted JSON data (%d characters)\n", len(salesDataJSON))
+	if (config.LogConsole) {
+		fmt.Printf("Extracted JSON data (%d characters)\n", len(salesDataJSON))
+	}
 
 	// Parse the actual sales data
 	var salesData tools.Sales

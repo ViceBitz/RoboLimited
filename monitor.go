@@ -172,7 +172,7 @@ func main() {
 	//===Analyzer Methods===\\
 
 	//Displays player inventory metrics
-	//AnalyzeInventory()
+	AnalyzeInventory(true)
 
 	//Finds current price-lowering items in market
 	//SearchFallingItems(-0.5, 1500, 1800, false) 
@@ -181,5 +181,5 @@ func main() {
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 	
 	//Pinpoint seasonal cycles to forecast growth potential
-	log.Println(findDatedZScore("1309918", 1899, 360, 330, true))
+	//log.Println(-findDatedZScore("1309918", 1899, 360, 330, true))
 }
