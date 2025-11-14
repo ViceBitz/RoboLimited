@@ -14,20 +14,19 @@ Monitors economy for price anomalies and market fluctuations through API request
 Integrates the analyzer and sniper to detect dips and execute purchases.
 */
 
-/* DEPRECATED
 // Evaluates if margins are good enough to buy
 func BuyF(rap_margin float64, value_margin float64, hasValue bool, isDemand bool) bool {
 	//Implement demand evaluation (higher demand items have lower margin standards)
 	if isDemand {
 		if hasValue {
-			return value_margin >= config.ValueDipD
+			return value_margin >= config.MarginD
 		}
-		return rap_margin >= config.RAPDipD
+		return rap_margin >= config.MarginD
 	} else {
 		if hasValue {
-			return value_margin >= config.ValueDipND
+			return value_margin >= config.MarginND
 		}
-		return rap_margin >= config.RAPDipND
+		return rap_margin >= config.MarginND
 	}
 }
 
@@ -47,7 +46,6 @@ func BuyCheck(bestPrice int, RAP_r int, value_r int, isDemand bool) bool {
 		return BuyF((RAP-bpF)/RAP, (value-bpF)/value, true, isDemand)
 	}
 }
-*/
 
 // Throttles deal polling to avoid rate limit
 func throttleMonitor() {
@@ -140,7 +138,12 @@ func monitorDeals(live_money bool) {
 			if isRAP == 0 { //Updating best price
 				//Make decision to purchase item
 
-				//Price anomaly dip check using z-score below % margins
+				//Initial % margin filter of current price and RAP
+				if !BuyCheck(price, RAP_map[id], value, isDemand) {
+					continue
+				}
+
+				//Deeper price anomaly dip check using z-score below % margins
 				if CheckDip(id, float64(price), float64(value), isDemand) {
 					//BUY
 					if live_money {
@@ -174,13 +177,14 @@ func main() {
 	//Displays player inventory metrics
 	//AnalyzeInventory(true)
 
-	//Finds current price-lowering items in market
-	SearchFallingItems(-0.5, 5000, 13000, true) 
-
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 	
+	//Finds current price-lowering items in market
+	//SearchFallingItems(-0.5, 5000, 13000, true) 
+
 	//Pinpoint seasonal cycles of items to forecast growth potential
+	/*
 	forecastItems := []string{"362081769", "136803077", "9255011", "2569005011"}
 	for _,id := range(forecastItems) {
 		itemDetails := tools.GetLimitedData()
@@ -188,5 +192,6 @@ func main() {
 		rap := itemDetails.Items[id][2].(float64)
 		log.Println(name, ":", -findDatedZScore(id, rap, 360, 300, false))
 	}
+	*/
 	
 }
