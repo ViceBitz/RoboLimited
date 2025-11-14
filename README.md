@@ -28,9 +28,10 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Fast purchase execution with direct API integration
 
 ### Limited Analyzer
-- Finds trends and identifies outliers in past sales data
-- Informs trading decisions with z-score and margin analysis
+- Informs immediate purchase decisions with z-score and margin analysis
 - Cache sales data to classify price points quickly
+- Finds trends and identifies outliers in past sales data
+- Pinpoints seasonal cycles and forecasts future prices to guide long-term trading
 
 
 ---
