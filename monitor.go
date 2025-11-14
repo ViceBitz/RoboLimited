@@ -172,14 +172,21 @@ func main() {
 	//===Analyzer Methods===\\
 
 	//Displays player inventory metrics
-	AnalyzeInventory(true)
+	//AnalyzeInventory(true)
 
 	//Finds current price-lowering items in market
-	//SearchFallingItems(-0.5, 1500, 1800, false) 
+	SearchFallingItems(-0.5, 5000, 13000, true) 
 
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 	
-	//Pinpoint seasonal cycles to forecast growth potential
-	//log.Println(-findDatedZScore("1309918", 1899, 360, 330, true))
+	//Pinpoint seasonal cycles of items to forecast growth potential
+	forecastItems := []string{"362081769", "136803077", "9255011", "2569005011"}
+	for _,id := range(forecastItems) {
+		itemDetails := tools.GetLimitedData()
+		name := itemDetails.Items[id][0]
+		rap := itemDetails.Items[id][2].(float64)
+		log.Println(name, ":", -findDatedZScore(id, rap, 360, 300, false))
+	}
+	
 }
