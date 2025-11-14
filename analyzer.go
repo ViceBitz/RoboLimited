@@ -15,8 +15,8 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-//Extracts past sales data and calculates mean and SD
-func analyzeSales(id string) (float64, float64, *tools.Sales) {
+//Extracts past sales data and calculates mean/SD within date range
+func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64, *tools.Sales) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
 
@@ -29,9 +29,12 @@ func analyzeSales(id string) (float64, float64, *tools.Sales) {
 	timestamps := historyData.Timestamp
 	var pricePoints []int
 	for i := len(pricePointsAll) - 1; i >= 0; i-- {
-		//Exclude points beyond lookback period
-		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*config.LookbackPeriod {
-			break
+		//Only look at sales data within interval [today-daysLower, today-daysUpper]
+		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*daysLower {
+			break //Exclude points before (today - daysLower)
+		}
+		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*daysUpper {
+			continue //Don't scan points after (today - daysUpper)
 		}
 		pricePoints = append(pricePoints, pricePointsAll[i])
 	}
@@ -57,7 +60,7 @@ func analyzeSales(id string) (float64, float64, *tools.Sales) {
 func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
-		mean, std, _ = analyzeSales(id)
+		mean, std, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from last 90 days
 	}
 	z_score := (price - mean) / std
 
@@ -99,7 +102,7 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 
-//Scans items within z-score range within price range and at demand level
+//Scans z-scores of items within price range and at demand level
 func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	type Item struct {
 		id string
@@ -128,7 +131,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		onlyItems = append(onlyItems, m.id)
 		fmt.Println("Found item", name, "| ID:", m.id, "| Z-Score:", m.z_score)
 	}
-	
+
 	return onlyItems
 }
 //Scans items under z-score threshold within price range and at demand level
@@ -253,7 +256,8 @@ func init() {
 					mean, SD = tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
 					historyData = tools.SalesData[id];
 				} else {
-					mean, SD, historyData = analyzeSales(itemID)
+					//Get data from last 90 days
+					mean, SD, historyData = analyzeSales(itemID, config.LookbackPeriod, 0)
 				}
 
 				//Check throttle to prevent excessive rate-limiting
