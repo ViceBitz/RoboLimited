@@ -27,6 +27,7 @@ func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64
 	// Find segment of time series to consider
 	pricePointsAll := historyData.AvgDailySalesPrice
 	timestamps := historyData.Timestamp
+
 	var pricePoints []int
 	for i := len(pricePointsAll) - 1; i >= 0; i-- {
 		//Only look at sales data within interval [today-daysLower, today-daysUpper]
@@ -113,13 +114,43 @@ func CheckDip(id string, bestPrice float64, value float64, isDemand bool) bool {
 	return z_score <= cutoff && z_score <= config.DipUpperBound
 }
 
-//Scans z-scores of items within price range, demand level, and date range
-func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
-	type Item struct {
-		id string
-		z_score float64
+
+type Item struct {
+	id string
+	z_score float64
+}
+//Scans dated z-scores of items within price range, demand level, and date range
+func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysLower int64, daysUpper int64, isDemand bool) []string {
+	itemDetails := tools.GetLimitedData()
+	var itemsWithin []Item
+	for id, _ := range itemDetails.Items {
+		rap := itemDetails.Items[id][2].(float64)
+		demand := int(itemDetails.Items[id][5].(float64))
+		price := rap
+
+		z_score := findDatedZScore(id, price, daysLower, daysUpper, config.LogConsole)
+		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+			itemsWithin = append(itemsWithin, Item{id, z_score})
+		}
+	}
+	//Sort by ascending z-score
+	sort.Slice(itemsWithin, func(i, j int) bool {
+		return itemsWithin[i].z_score < itemsWithin[j].z_score
+	})
+	var onlyItems []string
+	for _, m := range itemsWithin {
+		name := itemDetails.Items[m.id][0]
+		rap := itemDetails.Items[m.id][2]
+		onlyItems = append(onlyItems, m.id)
+		fmt.Println("Found item", name, "| ID:", m.id, "| RAP:", rap, "| Z-Score:", m.z_score)
 	}
 
+	return onlyItems
+}
+
+
+//Scans z-scores of items within price range and demand level
+func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
 	var itemsWithin []Item
 	for id, _ := range itemDetails.Items {
