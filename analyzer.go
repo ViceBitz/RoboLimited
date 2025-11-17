@@ -58,7 +58,7 @@ func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64
 	return mean, std, historyData
 }
 
-//Calculates Z-score of price relative to past sales data
+//Calculates Z-score of price relative to past sales data; pulls from cached data if exists
 func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
 	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
@@ -74,23 +74,34 @@ func findZScore(id string, price float64, logStats bool) float64 {
 }
 
 /*
-Calculates Z-score of seasonal spike across specified date range.
+Calculates Z-score of seasonal spike across specified date range, and projects
+future price using that dated z-score from past year.
 
 Let L1 = today-daysL1, U1 = today-daysU1, L2 = today-daysL2, U2 = today-daysU2.
 This computes the z-score using the price average of date range [L1, U1] as the target
 and the distribution across date range [L2, U2] as the reference/baseline.
+
+We predict a future price by casting last year's z-score change to this year, in the
+following manner: P_future = P_avg_current + dated_z_score * sd_current
 */
-func findDatedZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) float64 {
+func projectSeasonal(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) (float64, float64) {
 	//**Does not read from sales data cache, use "findZScore" for that
-	mean, std, _ := analyzeSales(id, daysL2, daysU2) //Reference distribution
+	mean, sd, _ := analyzeSales(id, daysL2, daysU2) //Reference distribution
 	avgPrice, _, _ := analyzeSales(id, daysL1, daysU1) //Target mean
 
 	//Compute preceding mean's z-score across date range
-	z_score := (avgPrice - mean) / std
+	z_score := (avgPrice - mean) / sd
 	if logStats {
-		fmt.Println("Dated Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
+		fmt.Println("Dated Z-Score: ", z_score, "| Ref. Mean: ", mean, "| Target Price: ", avgPrice)
 	}
-	return z_score
+	//Predict future price using past year's trend
+	curMean, curSD := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
+	if curMean == 0.0 && curSD == 0.0 { //Scrape mean and SD if not cached
+		curMean, curSD, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from lookback period
+	}
+	priceFuture := curMean + z_score * curSD
+
+	return z_score, priceFuture
 }
 
 //Identify dip to support buy decision with price z-score
@@ -141,11 +152,11 @@ func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHig
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			z_score := findDatedZScore(id, daysL1, daysU1, daysL2, daysU2, config.LogConsole)
+			z_score, priceFuture := projectSeasonal(id, daysL1, daysU1, daysL2, daysU2, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Item{id, z_score})
 			}
-			fmt.Println("Processed item:", name, "| Z-Score:", z_score)
+			fmt.Println("Processed item:", name, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
 			time.Sleep(3 * time.Second) //Avoid rate-limiting
 		}
 		
@@ -236,13 +247,13 @@ func AnalyzeInventory(forecastPrices bool) {
 			name := itemDetails.Items[id][0]
 			rap := itemDetails.Items[id][2].(float64)
 			//Examine z-score from 2 months last year compared to its preceding 30 days
-			past_z_score := findDatedZScore(id, 330, 270, 450, 360, config.LogConsole)
+			past_z_score, priceFuture := projectSeasonal(id, 330, 270, 450, 360, config.LogConsole)
 			if (past_z_score != past_z_score) {
 				continue //Check for NaN
 			}
 			tot_past_z += past_z_score
 			weighted_past_z += rap * past_z_score
-			fmt.Println(name, "| Forecast Z-Score:", past_z_score)
+			fmt.Println(name, "| Forecast Z-Score:", past_z_score, "| Price Prediction:", priceFuture)
 		}
 		fmt.Println()
 		fmt.Println("Avg. Forecast Z-Score: ", (tot_past_z / float64(itemsProcessed)), " | ", "Weighted Forecast Z-Score: ", (weighted_past_z / float64(tot_rap)))

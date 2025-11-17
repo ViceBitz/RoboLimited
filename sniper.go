@@ -182,7 +182,4 @@ func ExecutePurchase(id string, bypass bool, value float64, isDemand bool) bool 
 func init() {
     //Set log to file
     consoleLog, _ = os.OpenFile(config.ConsoleLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    
-    //Make dummy purchase for X-CSRF token
-    ExecutePurchase("21070012", true, -1, false)
 }
