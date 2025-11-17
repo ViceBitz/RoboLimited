@@ -72,11 +72,19 @@ func findZScore(id string, price float64, logStats bool) float64 {
 	return z_score
 }
 
-//Calculates Z-score of price relative to past sales data within date range [today-daysLower, today-daysUpper]
-func findDatedZScore(id string, price float64, daysLower int64, daysUpper int64, logStats bool) float64 {
+/*
+Calculates Z-score of past price across specified date range.
+
+More specifically, let LB = today-daysLower, UB = today-daysUpper, O = daysOffset.
+This computes the z-score of the price average of [LB-O, LB] against [LB, UB]
+*/
+func findDatedZScore(id string, daysLower int64, daysUpper int64, daysOffset int64, logStats bool) float64 {
 	//**Does not read from sales data cache, use "findZScore" for that
-	mean, std, _ := analyzeSales(id, daysLower, daysUpper) //Get data from date range
-	z_score := (price - mean) / std
+	avgPrice, _, _ := analyzeSales(id, daysLower - daysOffset, daysLower) //Get target value
+	mean, std, _ := analyzeSales(id, daysLower, daysUpper) //Get reference distribution
+
+	//Compute preceding mean's z-score across date range
+	z_score := (avgPrice - mean) / std
 	if logStats {
 		fmt.Println("Dated Z-Score: ", z_score, "| Mean: ", mean, "| SD: ", std)
 	}
@@ -119,18 +127,23 @@ type Item struct {
 	id string
 	z_score float64
 }
-//Scans dated z-scores of items within price range, demand level, and date range
-func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysLower int64, daysUpper int64, isDemand bool) []string {
+//Scans dated z-scores of items compared to past means within price range, demand level, and date range
+func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysLower int64, daysUpper int64, daysOffset int64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
 	var itemsWithin []Item
 	for id, _ := range itemDetails.Items {
+		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
 
-		z_score := findDatedZScore(id, price, daysLower, daysUpper, config.LogConsole)
-		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			itemsWithin = append(itemsWithin, Item{id, z_score})
+		//Filter out items outside price range and demand
+		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+			z_score := findDatedZScore(id, daysLower, daysUpper, daysOffset, config.LogConsole)
+			if z_low <= z_score && z_score <= z_high {
+				itemsWithin = append(itemsWithin, Item{id, z_score})
+			}
+			fmt.Println("Processed item:", name, "| Z-Score:", z_score)
 		}
 	}
 	//Sort by ascending z-score
@@ -158,10 +171,14 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		demand := int(itemDetails.Items[id][5].(float64))
 		price := rap
 
-		z_score := findZScore(id, price, config.LogConsole)
-		if z_low <= z_score && z_score <= z_high && priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			itemsWithin = append(itemsWithin, Item{id, z_score})
+		//Filter out items outside price range and demand
+		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+			z_score := findZScore(id, price, config.LogConsole)
+			if z_low <= z_score && z_score <= z_high {
+				itemsWithin = append(itemsWithin, Item{id, z_score})
+			}
 		}
+		
 	}
 	//Sort by ascending z-score
 	sort.Slice(itemsWithin, func(i, j int) bool {
@@ -205,7 +222,7 @@ func AnalyzeInventory(forecastPrices bool) {
 	fmt.Println("Avg. Z-Score: ", (tot_z / float64(itemsProcessed)), " | ", "Weighted Z-Score: ", (weighted_z / float64(tot_rap)))
 	fmt.Println("____________________________________________________")
 
-	//Use previous year's prices to forecast future ones -> seasonal cycles
+	//Use previous year's price trends to forecast future seasonal cycles
 	if (forecastPrices) {
 		var tot_past_z float64 //Total forecasted z-scores
 		var weighted_past_z float64 //Weighted forecasted z-scores
@@ -214,8 +231,8 @@ func AnalyzeInventory(forecastPrices bool) {
 			if len(itemDetails.Items[id]) == 0 { continue }
 			name := itemDetails.Items[id][0]
 			rap := itemDetails.Items[id][2].(float64)
-			//Look at z-score from 2 months exactly last year
-			past_z_score := -findDatedZScore(id, rap, 360, 300, config.LogConsole) //Negative because current -> future is eq. to -(future -> current z-score))
+			//Examine z-score from 2 months last year compared to its preceding 30 days
+			past_z_score := findDatedZScore(id, 360, 300, 30, config.LogConsole)
 			tot_past_z += past_z_score
 			weighted_past_z += rap * past_z_score
 			fmt.Println(name, "| Forecast Z-Score:", past_z_score)

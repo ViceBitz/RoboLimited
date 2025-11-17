@@ -181,17 +181,22 @@ func main() {
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 	
 	//Finds current price-lowering items in market
-	//SearchFallingItems(-0.5, 5000, 13000, true) 
+	//SearchFallingItems(-0.5, 800, 1200, false) 
 
 	//Pinpoint seasonal cycles of items to forecast growth potential
-	/*
-	forecastItems := []string{"362081769", "136803077", "9255011", "2569005011"}
+	//SearchDatedWithin(-1000, 1000, 500, 30000, 360, 300, 30, true)
+	
+	itemDetails := tools.GetLimitedData()
+	onlyDemand := true //scan demand items only
+	forecastItems := []string{"151786902"}
 	for _,id := range(forecastItems) {
-		itemDetails := tools.GetLimitedData()
 		name := itemDetails.Items[id][0]
-		rap := itemDetails.Items[id][2].(float64)
-		log.Println(name, ":", -findDatedZScore(id, rap, 360, 300, false))
+		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
+		if onlyDemand && isDemand {
+			log.Println(name, ":", findDatedZScore(id, 360, 300, 30, true))
+		}
 	}
-	*/
+	
+	
 	
 }
