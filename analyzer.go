@@ -76,7 +76,8 @@ func findZScore(id string, price float64, logStats bool) float64 {
 Calculates Z-score of past price across specified date range.
 
 More specifically, let LB = today-daysLower, UB = today-daysUpper, O = daysOffset.
-This computes the z-score of the price average of [LB-O, LB] against [LB, UB]
+This computes the z-score using the price average of date range [LB-O, LB] as the target
+and the distribution across date range [LB, UB] as the reference/baseline.
 */
 func findDatedZScore(id string, daysLower int64, daysUpper int64, daysOffset int64, logStats bool) float64 {
 	//**Does not read from sales data cache, use "findZScore" for that
