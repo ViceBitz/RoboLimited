@@ -175,7 +175,7 @@ func main() {
 	//===Analyzer Methods===\\
 
 	//Displays player inventory metrics
-	//AnalyzeInventory(true)
+	AnalyzeInventory(true)
 
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
@@ -184,18 +184,19 @@ func main() {
 	//SearchFallingItems(-0.5, 800, 1200, false) 
 
 	//Pinpoint seasonal cycles of items to forecast growth potential
-	//SearchDatedWithin(-1000, 1000, 500, 30000, 360, 300, 30, true)
-	
+	//SearchDatedWithin(-1000, 1000, 500, 30000, 330, 270, 450, 360, true)
+	/*
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := true //scan demand items only
-	forecastItems := []string{"151786902"}
+	forecastItems := []string{"928908332"}
 	for _,id := range(forecastItems) {
 		name := itemDetails.Items[id][0]
 		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
 		if onlyDemand && isDemand {
-			log.Println(name, ":", findDatedZScore(id, 360, 300, 30, true))
+			log.Println(name, ":", findDatedZScore(id, 330, 270, 450, 360, true))
 		}
 	}
+	*/
 	
 	
 	
