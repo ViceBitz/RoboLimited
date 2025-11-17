@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,8 +10,10 @@ import (
 	"sync"
 	"time"
 	"sort"
-
-	"github.com/chromedp/chromedp"
+	"net/http"
+	"io"
+	"regexp"
+	"strings"
 )
 
 //Extracts past sales data and calculates mean/SD within date range
@@ -81,7 +82,7 @@ and the distribution across date range [LB, UB] as the reference/baseline.
 */
 func findDatedZScore(id string, daysLower int64, daysUpper int64, daysOffset int64, logStats bool) float64 {
 	//**Does not read from sales data cache, use "findZScore" for that
-	avgPrice, _, _ := analyzeSales(id, daysLower - daysOffset, daysLower) //Get target value
+	avgPrice, _, _ := analyzeSales(id, daysLower + daysOffset, daysLower) //Get target value
 	mean, std, _ := analyzeSales(id, daysLower, daysUpper) //Get reference distribution
 
 	//Compute preceding mean's z-score across date range
@@ -247,46 +248,26 @@ func AnalyzeInventory(forecastPrices bool) {
 
 //Extracts time-series sales data from Rolimon's asset URL
 func extractPriceSeries(url string) (*tools.Sales, error) {
-	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	//Extract raw HTML from item page source
+	resp, err := http.Get(url)
+    if err != nil {
+        return nil, fmt.Errorf("failed to fetch url: %v", err)
+    }
+    defer resp.Body.Close()
 
-	// Create chrome instance
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.Flag("headless", true),
-		chromedp.Flag("disable-gpu", true),
-		chromedp.Flag("no-sandbox", true),
-		chromedp.Flag("disable-dev-shm-usage", true),
-		chromedp.UserAgent(config.UserAgent),
-	)
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read response: %v", err)
+    }
+    html := string(body)
 
-	allocCtx, cancel2 := chromedp.NewExecAllocator(ctx, opts...)
-	defer cancel2()
-
-	chromeCtx, cancel3 := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
-	defer cancel3()
-
-	var salesDataJSON string
-
-	err := chromedp.Run(chromeCtx,
-		chromedp.Navigate(url),
-		chromedp.WaitReady("body"),
-		chromedp.Sleep(1*time.Second),
-
-		chromedp.Evaluate(`
-			(function() {
-				return JSON.stringify(window.sales_data);
-			})()
-		`, &salesDataJSON),
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("chrome automation failed: %v", err)
+	//Find sales data embedded within source using regex search
+	re := regexp.MustCompile(`var\s+sales_data\s*=\s*(\{[\s\S]*?\});`)
+	match := re.FindStringSubmatch(html)
+	if len(match) < 2 {
+		return nil, fmt.Errorf("sales data not found in page HTML")
 	}
-
-	if (config.LogConsole) {
-		fmt.Printf("Extracted JSON data (%d characters)\n", len(salesDataJSON))
-	}
+	salesDataJSON := strings.TrimSuffix(match[1], ";")
 
 	// Parse the actual sales data
 	var salesData tools.Sales
