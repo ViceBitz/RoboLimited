@@ -185,9 +185,9 @@ func main() {
 	//Finds current price-lowering items in market
 	//SearchFallingItems(-0.5, 2000, 6000, true) 
 
-	//Pinpoint seasonal cycles of items to forecast growth potential
+	//Forecast growth potential with z-score analysis of past year
 	//SearchDatedWithin(-1000, 1000, 2000, 6000, 330, 270, 450, 360, true)
-	
+	/*
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false //scan demand items only
 	forecastItems := []string{"928908332"} //"11188705", "20573078"
@@ -195,8 +195,12 @@ func main() {
 		name := itemDetails.Items[id][0]
 		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
 		if !onlyDemand || isDemand {
-			z_score, priceFuture := projectSeasonal(id, 330, 270, 450, 360, true)
+			z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, true)
 			log.Println(name, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
 		}
 	}
+	*/
+	//Forecast prices with STL decomposition
+	log.Println(projectPrice_STL("11188705", 365, 30, true))
+
 }

@@ -3,42 +3,75 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
+	"io"
 	"log"
 	"math"
+	"net/http"
+	"regexp"
 	"robolimited/config"
 	"robolimited/tools"
+	"sort"
+	"strings"
 	"sync"
 	"time"
-	"sort"
-	"net/http"
-	"io"
-	"regexp"
-	"strings"
+
+	"github.com/chewxy/stl"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
 )
 
-//Extracts past sales data and calculates mean/SD within date range
-func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64, *tools.Sales) {
+//Extracts price data, resamples to 1-day snapshots, calculates mean/SD within date range
+func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, float64, *tools.Sales, []int) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
 	historyData, err := extractPriceSeries(url)
+	dayUnit := int64(24*60*60) //1 day in seconds
 
+	var pricePoints []int
 	if err != nil {
-		return 0, 0, historyData
+		return 0, 0, historyData, pricePoints
 	}
 
 	// Find segment of time series to consider
 	pricePointsAll := historyData.AvgDailySalesPrice
-	timestamps := historyData.Timestamp
+	t := historyData.Timestamp
+	var prevTimestamp int64
+	var prevPrice int
 
-	var pricePoints []int
-	for i := len(pricePointsAll) - 1; i >= 0; i-- {
+	for i := len(pricePointsAll)-1; i>=0; i-- {
 		//Only look at sales data within interval [today-daysLower, today-daysUpper]
-		if timestamps[len(timestamps)-1]-timestamps[i] > 24*60*60*daysLower {
+		if t[len(t)-1]-t[i] > dayUnit*daysLower {
 			break //Exclude points before (today - daysLower)
 		}
-		if timestamps[len(timestamps)-1]-timestamps[i] < 24*60*60*daysUpper {
+		if t[len(t)-1]-t[i] < dayUnit*daysUpper {
 			continue //Don't scan points after (today - daysUpper)
 		}
-		pricePoints = append(pricePoints, pricePointsAll[i])
+		
+		if (prevTimestamp != 0) {
+			timeGap := int64(prevTimestamp) - t[i]
+			//Append intermediary price points if prev_t - t[i] > 1 day
+			if (timeGap > dayUnit) {
+				priceDiff := prevPrice - pricePointsAll[i]
+				slope := priceDiff / int(timeGap) //slope from i+1 -> i
+				missingDays := int(timeGap / dayUnit)
+				for k := 1; k <= missingDays; k++ {
+					pricePoints = append(pricePoints, int(prevPrice + slope * k * int(dayUnit))) //assume linear
+				}
+				prevTimestamp -= int64(missingDays) * dayUnit
+				prevPrice += slope * missingDays * int(dayUnit)
+			}
+			timeGap = prevTimestamp - t[i]
+			//Skip points if prev_t - t[i] < 1 day
+			if (timeGap < dayUnit) {
+				prevTimestamp = t[i]
+				prevPrice = pricePointsAll[i]
+				continue
+			}
+		} else {
+			pricePoints = append(pricePoints, pricePointsAll[i])
+			prevTimestamp = t[i];
+			prevPrice = pricePointsAll[i]
+		}
 	}
 
 	// Calculate z-index of point (across past points)
@@ -55,14 +88,19 @@ func analyzeSales(id string, daysLower int64, daysUpper int64) (float64, float64
 	}
 	std = math.Sqrt(std / (N - 1))
 
-	return mean, std, historyData
+	//Reverse price points to be chronological
+	for i, j := 0, len(pricePoints)-1; i < j; i, j = i+1, j-1 {
+        pricePoints[i], pricePoints[j] = pricePoints[j], pricePoints[i]
+    }
+
+	return mean, std, historyData, pricePoints
 }
 
 //Calculates Z-score of price relative to past sales data; pulls from cached data if exists
 func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
 	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
-		mean, std, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from lookback period
+		mean, std, _, _ = processPriceSeries(id, config.LookbackPeriod, 0) //Get data from lookback period
 	}
 	z_score := (price - mean) / std
 
@@ -84,10 +122,10 @@ and the distribution across date range [L2, U2] as the reference/baseline.
 We predict a future price by casting last year's z-score change to this year, in the
 following manner: P_future = P_avg_current + dated_z_score * sd_current
 */
-func projectSeasonal(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) (float64, float64) {
+func projectPrice_ZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) (float64, float64) {
 	//**Does not read from sales data cache, use "findZScore" for that
-	mean, sd, _ := analyzeSales(id, daysL2, daysU2) //Reference distribution
-	avgPrice, _, _ := analyzeSales(id, daysL1, daysU1) //Target mean
+	mean, sd, _, _ := processPriceSeries(id, daysL2, daysU2) //Reference distribution
+	avgPrice, _, _, _ := processPriceSeries(id, daysL1, daysU1) //Target mean
 
 	//Compute preceding mean's z-score across date range
 	z_score := (avgPrice - mean) / sd
@@ -97,11 +135,116 @@ func projectSeasonal(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2
 	//Predict future price using past year's trend
 	curMean, curSD := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
 	if curMean == 0.0 && curSD == 0.0 { //Scrape mean and SD if not cached
-		curMean, curSD, _ = analyzeSales(id, config.LookbackPeriod, 0) //Get data from lookback period
+		curMean, curSD, _, _ = processPriceSeries(id, config.LookbackPeriod, 0) //Get data from lookback period
 	}
 	priceFuture := curMean + z_score * curSD
 
 	return z_score, priceFuture
+}
+
+//Models 30-day future pattern from noisy data using Holt's linear trend method
+func holtLinear(data []float64, alpha, beta float64, steps int) ([]float64, float64) {
+	level := data[0]
+	trend := data[1] - data[0]
+	for t := 1; t < len(data); t++ {
+		prevLevel := level
+		level = alpha*data[t] + (1-alpha)*(level+trend)
+		trend = beta*(level-prevLevel) + (1-beta)*trend
+	}
+	forecast := make([]float64, steps)
+	for i := 0; i < steps; i++ {
+		forecast[i] = level + float64(i+1)*trend
+	}
+	sum := 0.0
+	for _, v := range forecast {
+		sum += v
+	}
+	nextAvg := sum / float64(steps)
+	return forecast, nextAvg
+}
+
+/*
+Uses STL (season-trend) decomposition to forecast a price average for future date range.
+
+We break down past prices as a long-term trend component (T), seasonal cyclical component (S),
+and random residue (R). Once we have models for T and S, we can predict future prices with
+T_avg(today + next) + S_avg(today + next)
+*/
+func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64) {
+	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
+
+	//Prepare price series for decomposition
+	priceSeries := make([]float64, len(pricePoints))
+	for i, v := range pricePoints {
+		priceSeries[i] = float64(v)
+	}
+	if (len(priceSeries) < 2) { //Too short, error out
+		return math.NaN()
+	}
+	//Decompose price series into trend and seasonal components with STL
+	period := 7 //weekly cycles
+	width := 31
+	res := stl.Decompose(priceSeries, period, width, stl.Additive())
+
+	
+	//Predict future 30 days with linear trend forecast
+	trend := res.Trend
+	seasonal := res.Seasonal
+
+	n := len(trend)
+    if n < 2 {
+        return -1
+    }
+
+	//Future prediction with Holt's and P = T + S
+	trendForecast, _ := holtLinear(trend, 0.8, 0.2, int(daysFuture))
+
+	sum := 0.0
+	for h := 1; h <= int(daysFuture); h++ {
+		tFuture := trendForecast[h-1] //predicted trend from Holt's
+		seasonalIdx := (n + h) % period //seasonal component
+		sFuture := seasonal[seasonalIdx]
+		yFuture := tFuture + sFuture //assume residue = 0
+		sum += yFuture
+	}
+
+	if (logStats) {
+		fmt.Println(n)
+		//Plot time-series models
+		p := plot.New()
+		p.Title.Text = "STL Decomposition Models"
+		p.Y.Label.Text = "Price"
+
+		ptsPlot := make(plotter.XYs, n)
+		trendPlot := make(plotter.XYs, n+int(daysFuture))
+		seasonPlot := make(plotter.XYs, n)
+		for i := 0; i < n; i++ {
+			t := i
+			trendPlot[i].X = float64(t)
+			seasonPlot[i].X = float64(t)
+			ptsPlot[i].X = float64(t)
+			trendPlot[i].Y = trend[i]
+			seasonPlot[i].Y = seasonal[i]
+			ptsPlot[i].Y = priceSeries[i]
+		}
+		for i := 0; i < int(daysFuture); i++ {
+			trendPlot[n+i].X = float64(n+i)
+			trendPlot[n+i].Y = trendForecast[i]
+		}
+		lpTrend, _ := plotter.NewLine(trendPlot)
+		lpSeason, _ := plotter.NewLine(seasonPlot)
+		dots, _ := plotter.NewScatter(ptsPlot)
+
+		lpTrend.Color = color.RGBA{R: 30, G: 144, B: 255, A: 255}
+		lpSeason.Color = color.RGBA{R: 160, G: 32, B: 240, A: 255}
+		dots.Color = color.Black
+
+		p.Add(lpTrend, lpSeason, dots)
+		p.Add(plotter.NewGrid())
+		p.Save(800, 400, "data/stl_model.png")
+	}
+
+    return sum / float64(daysFuture)
 }
 
 //Identify dip to support buy decision with price z-score
@@ -152,7 +295,7 @@ func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHig
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			z_score, priceFuture := projectSeasonal(id, daysL1, daysU1, daysL2, daysU2, config.LogConsole)
+			z_score, priceFuture := projectPrice_ZScore(id, daysL1, daysU1, daysL2, daysU2, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Item{id, z_score})
 			}
@@ -247,7 +390,7 @@ func AnalyzeInventory(forecastPrices bool) {
 			name := itemDetails.Items[id][0]
 			rap := itemDetails.Items[id][2].(float64)
 			//Examine z-score from 2 months last year compared to its preceding 30 days
-			past_z_score, priceFuture := projectSeasonal(id, 330, 270, 450, 360, config.LogConsole)
+			past_z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, config.LogConsole)
 			if (past_z_score != past_z_score) {
 				continue //Check for NaN
 			}
@@ -336,7 +479,7 @@ func init() {
 					historyData = tools.SalesData[id];
 				} else {
 					//Get data from lookback period
-					mean, SD, historyData = analyzeSales(itemID, config.LookbackPeriod, 0)
+					mean, SD, historyData, _ = processPriceSeries(itemID, config.LookbackPeriod, 0)
 				}
 
 				//Check throttle to prevent excessive rate-limiting
