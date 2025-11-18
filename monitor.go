@@ -177,7 +177,7 @@ func main() {
 	//===Analyzer Methods===\\
 
 	//Displays player inventory metrics
-	//AnalyzeInventory(true)
+	AnalyzeInventory(true, "stl")
 
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
@@ -187,20 +187,27 @@ func main() {
 
 	//Forecast growth potential with z-score analysis of past year
 	//SearchDatedWithin(-1000, 1000, 2000, 6000, 330, 270, 450, 360, true)
+	
 	/*
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false //scan demand items only
-	forecastItems := []string{"928908332"} //"11188705", "20573078"
+	forecastItems := []string{"9255011"} //"928908332", "20573078"
 	for _,id := range(forecastItems) {
 		name := itemDetails.Items[id][0]
 		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
 		if !onlyDemand || isDemand {
-			z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, true)
-			log.Println(name, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
+			log.Println("____________________________________________________")
+			//Forecast prices with z-score analysis
+			z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
+			log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
+
+			//Forecast prices with STL decomposition
+			priceSTL := projectPrice_STL(id, 400, 60, true)
+			z_score_stl := findZScore(id, priceSTL, false)
+			log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+		
 		}
 	}
 	*/
-	//Forecast prices with STL decomposition
-	log.Println(projectPrice_STL("11188705", 365, 30, true))
-
+	
 }

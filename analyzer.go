@@ -141,28 +141,6 @@ func projectPrice_ZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, da
 
 	return z_score, priceFuture
 }
-
-//Models 30-day future pattern from noisy data using Holt's linear trend method
-func holtLinear(data []float64, alpha, beta float64, steps int) ([]float64, float64) {
-	level := data[0]
-	trend := data[1] - data[0]
-	for t := 1; t < len(data); t++ {
-		prevLevel := level
-		level = alpha*data[t] + (1-alpha)*(level+trend)
-		trend = beta*(level-prevLevel) + (1-beta)*trend
-	}
-	forecast := make([]float64, steps)
-	for i := 0; i < steps; i++ {
-		forecast[i] = level + float64(i+1)*trend
-	}
-	sum := 0.0
-	for _, v := range forecast {
-		sum += v
-	}
-	nextAvg := sum / float64(steps)
-	return forecast, nextAvg
-}
-
 /*
 Uses STL (season-trend) decomposition to forecast a price average for future date range.
 
@@ -182,7 +160,7 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
 		return math.NaN()
 	}
 	//Decompose price series into trend and seasonal components with STL
-	period := 7 //weekly cycles
+	period := 30 //monthly cycles
 	width := 31
 	res := stl.Decompose(priceSeries, period, width, stl.Additive())
 
@@ -197,16 +175,7 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
     }
 
 	//Future prediction with Holt's and P = T + S
-	trendForecast, _ := holtLinear(trend, 0.8, 0.2, int(daysFuture))
-
-	sum := 0.0
-	for h := 1; h <= int(daysFuture); h++ {
-		tFuture := trendForecast[h-1] //predicted trend from Holt's
-		seasonalIdx := (n + h) % period //seasonal component
-		sFuture := seasonal[seasonalIdx]
-		yFuture := tFuture + sFuture //assume residue = 0
-		sum += yFuture
-	}
+	priceFuture := tools.ForecastBest(priceSeries, trend, seasonal, period, int(daysFuture))
 
 	if (logStats) {
 		fmt.Println(n)
@@ -216,7 +185,7 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
 		p.Y.Label.Text = "Price"
 
 		ptsPlot := make(plotter.XYs, n)
-		trendPlot := make(plotter.XYs, n+int(daysFuture))
+		trendPlot := make(plotter.XYs, n)
 		seasonPlot := make(plotter.XYs, n)
 		for i := 0; i < n; i++ {
 			t := i
@@ -226,10 +195,6 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
 			trendPlot[i].Y = trend[i]
 			seasonPlot[i].Y = seasonal[i]
 			ptsPlot[i].Y = priceSeries[i]
-		}
-		for i := 0; i < int(daysFuture); i++ {
-			trendPlot[n+i].X = float64(n+i)
-			trendPlot[n+i].Y = trendForecast[i]
 		}
 		lpTrend, _ := plotter.NewLine(trendPlot)
 		lpSeason, _ := plotter.NewLine(seasonPlot)
@@ -244,7 +209,7 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
 		p.Save(800, 400, "data/stl_model.png")
 	}
 
-    return sum / float64(daysFuture)
+    return priceFuture
 }
 
 //Identify dip to support buy decision with price z-score
@@ -357,7 +322,7 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 }
 
 //Analyzes the z-scores of inventory items and prints list of metrics
-func AnalyzeInventory(forecastPrices bool) {
+func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	assetIds := tools.GetInventory(fmt.Sprintf("%d", config.RobloxId))
 	itemDetails := tools.GetLimitedData()
 	var tot_z float64 //Total z-score
@@ -389,11 +354,22 @@ func AnalyzeInventory(forecastPrices bool) {
 			if len(itemDetails.Items[id]) == 0 { continue }
 			name := itemDetails.Items[id][0]
 			rap := itemDetails.Items[id][2].(float64)
-			//Examine z-score from 2 months last year compared to its preceding 30 days
-			past_z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, config.LogConsole)
-			if (past_z_score != past_z_score) {
-				continue //Check for NaN
+
+			var past_z_score float64
+			var priceFuture float64
+
+			if forecastType == "z_score" {
+				//Examine z-score from 2 months last year compared to its preceding 30 days
+				past_z_score, priceFuture = projectPrice_ZScore(id, 330, 270, 450, 360, config.LogConsole)
+				if (past_z_score != past_z_score) {
+					continue //Check for NaN
+				}
+			} else if forecastType == "stl" {
+				//Examine z-score from 2 months last year compared to its preceding 30 days
+				priceFuture = float64(projectPrice_STL(id, 365, 60, false))
+				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
+			
 			tot_past_z += past_z_score
 			weighted_past_z += rap * past_z_score
 			fmt.Println(name, "| Forecast Z-Score:", past_z_score, "| Price Prediction:", priceFuture)
