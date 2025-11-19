@@ -143,10 +143,14 @@ func projectPrice_ZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, da
 }
 /*
 Uses STL (season-trend) decomposition to forecast a price average for future date range.
+Works well for data sets with strong annual seasonality.
 
 We break down past prices as a long-term trend component (T), seasonal cyclical component (S),
 and random residue (R). Once we have models for T and S, we can predict future prices with
 T_avg(today + next) + S_avg(today + next)
+
+From what I've found, best parameters are daysBefore = 720 (2 yrs of past data) and
+daysFuture = 60 (predict avg. of next 2 months)
 */
 func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64) {
 	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
@@ -160,8 +164,8 @@ func projectPrice_STL(id string, daysBefore int64, daysFuture int64, logStats bo
 		return math.NaN()
 	}
 	//Decompose price series into trend and seasonal components with STL
-	period := 30 //monthly cycles
-	width := 31
+	period := 7 //monthly cycles
+	width := 15
 	res := stl.Decompose(priceSeries, period, width, stl.Additive())
 
 	
@@ -248,8 +252,8 @@ type Item struct {
 	id string
 	z_score float64
 }
-//Scans dated z-scores of items compared to past means within price range, demand level, and date range
-func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, isDemand bool) []string {
+//Searches for items of STL price forecast within price range, demand level, and date range
+func PredictWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
 	var itemsWithin []Item
 	for id, _ := range itemDetails.Items {
@@ -260,7 +264,8 @@ func SearchDatedWithin(z_low float64, z_high float64, priceLow float64, priceHig
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			z_score, priceFuture := projectPrice_ZScore(id, daysL1, daysU1, daysL2, daysU2, config.LogConsole)
+			priceFuture := projectPrice_STL(id, daysPast, daysFuture, config.LogConsole)
+			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Item{id, z_score})
 			}
@@ -366,7 +371,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				}
 			} else if forecastType == "stl" {
 				//Examine z-score from 2 months last year compared to its preceding 30 days
-				priceFuture = float64(projectPrice_STL(id, 365, 60, false))
+				priceFuture = float64(projectPrice_STL(id, 720, 60, false))
 				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
 			
