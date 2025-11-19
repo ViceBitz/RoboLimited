@@ -146,11 +146,11 @@ func projectPrice_ZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, da
 Uses STL (season-trend) decomposition with Fourier regression to forecast
 a price average for future date range.
 
-We break down past prices as a long-term trend component (T), seasonal cyclical component (S),
-and random residue (R). Once we have models for T and S, we can predict future prices with
-T_avg(today + next) + S_avg(today + next).
+We break down past prices as a long-term trend component (T), seasonal cyclical component (S).
+Once we have models for T and S, we can predict future prices with T_avg(today + next) + S_avg(today + next).
 
-S(t) is modelled using Fourier regression to identify weekly and yearly cycles.
+T(t) is fitted with standard linear regression to account for price drift over time.
+S(t) is modeled using Fourier regression to identify weekly and yearly cycles.
 
 From what I've found, best parameters are daysBefore = 720 (2 yrs of past data) and
 daysFuture = 60 (predict avg. of next 2 months)
@@ -207,9 +207,12 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		t := n - 1 + h
 		row := make([]float64, 0, p)
 		row = append(row, 1.0)
-		row = append(row, float64(t)/float64(n)) // extend trend linearly
 
-		row = append(row, tools.FourierFeatures(t, 7.0, Kw)...)
+		//Extend trend linearly
+		row = append(row, float64(t)/float64(n)) 
+
+		//Add fourier periodic movements
+		row = append(row, tools.FourierFeatures(t, 7.0, Kw)...) 
 		if useYearly {
 			row = append(row, tools.FourierFeatures(t, 365.25, Ky)...)
 		}

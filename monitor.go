@@ -190,7 +190,7 @@ func main() {
 
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false                    //scan demand items only
-	forecastItems := []string{"928908332"} //"928908332", "20573078"
+	forecastItems := []string{"9255011"} //"928908332", "20573078"
 	for _, id := range forecastItems {
 		name := itemDetails.Items[id][0]
 		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
