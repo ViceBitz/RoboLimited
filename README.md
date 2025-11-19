@@ -31,7 +31,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Informs immediate purchase decisions with z-score and margin analysis
 - Cache sales data to classify price points quickly
 - Finds trends and identifies outliers in past sales data
-- Pinpoints seasonal cycles and forecasts future prices to guide long-term trading
+- Forecasts future prices with STL decomposition and linear regression to guide long-term trading
 
 
 ---
@@ -48,6 +48,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 ### Market Evaluation
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights  
+- **Price Prediction**: Leverages past seasonal cycles and price patterns to predict item potential  
 - **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
 
 ---
