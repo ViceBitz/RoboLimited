@@ -31,8 +31,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Informs immediate purchase decisions with z-score and margin analysis
 - Cache sales data to classify price points quickly
 - Finds trends and identifies outliers in past sales data
-- Forecasts future prices with STL decomposition and Fourier regression on seasonal data to guide long-term trading
-
+- Forecasts future prices with STL decomposition and Fourier regression
 
 ---
 
