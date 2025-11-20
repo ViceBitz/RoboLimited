@@ -46,7 +46,8 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 
 ### Market Evaluation
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
-- **Market Metrics**: Compares prices of item groups to past time periods for market insights  
+- **Market Metrics**: Compares prices of item groups to past time periods for market insights
+- **Inventory Scan**: Assess current player inventory and estimate future potential
 - **Price Prediction**: Predicts item potential with seasonal cycles and trend directions
 - **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
 
