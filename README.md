@@ -91,6 +91,6 @@ go run cmd/cli.go -mode=<mode> [flags]
 
 
 ## 📊 Results
-During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
+During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
 
 #
