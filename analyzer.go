@@ -21,6 +21,13 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
+/**
+Toolkit/API for performing statistical data analysis on historical price day.
+Drives decision-making and guides buying/selling/trading. Used across different
+components in this project, both automatically and manually.
+*/
+
+
 // Extracts price data, resamples to 1-day snapshots, calculates mean/SD within date range
 func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, float64, *tools.Sales, []int) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
@@ -530,8 +537,8 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 					continue //Check for NaN
 				}
 			} else if forecastType == "stl" {
-				//Examine z-score from 2 months last year compared to its preceding 30 days
-				priceFuture = float64(projectPrice_FourierSTL(id, 720, 60, false))
+				//Forecast future prices with STL + Fourier regression
+				priceFuture = float64(projectPrice_FourierSTL(id, 365 * 3, 60, false))
 				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
 
@@ -546,7 +553,36 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed)+"/"+fmt.Sprintf("%d", len(assetIds)))
 }
 
-// Extracts time-series sales data from Rolimon's asset URL
+//Estimates item exchange value by projecting item prices with STL-Fourier
+func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int, daysFuture int) {
+	itemDetails := tools.GetLimitedData()
+
+	var forecast = func(id string) float64 {
+		name := itemDetails.Items[id][0]
+
+		//Forecast prices with STL decomposition
+		priceSTL := projectPrice_FourierSTL(id, 365 * 3, 30, true)
+		z_score_stl := findZScore(id, priceSTL, false)
+		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+		
+		return priceSTL
+	}
+
+	var giveValue, receiveValue float64
+	for _, id := range giveIds {
+		giveValue += forecast(id)
+	}
+	log.Println("____________________________________________________")
+	for _, id := range receiveIds {
+		receiveValue += forecast(id)
+	}
+	log.Println("____________________________________________________")
+	log.Printf("Predicted Trade Value (%v Days)", daysFuture)
+	log.Println("You Give:", giveValue)
+	log.Println("You Receive:", receiveValue)
+	log.Println()
+}
+//Extracts time-series sales data from Rolimon's asset URL
 func extractPriceSeries(url string) (*tools.Sales, error) {
 	//Extract raw HTML from item page source
 	resp, err := http.Get(url)
