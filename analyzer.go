@@ -569,6 +569,7 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 	}
 
 	var giveValue, receiveValue float64
+	log.Println("____________________________________________________")
 	for _, id := range giveIds {
 		giveValue += forecast(id)
 	}
@@ -580,7 +581,7 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 	log.Printf("Predicted Trade Value (%v Days)", daysFuture)
 	log.Println("You Give:", giveValue)
 	log.Println("You Receive:", receiveValue)
-	log.Println()
+	log.Println("____________________________________________________")
 }
 //Extracts time-series sales data from Rolimon's asset URL
 func extractPriceSeries(url string) (*tools.Sales, error) {
