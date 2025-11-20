@@ -174,6 +174,10 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 	}
 	n := len(priceSeries)
 
+	if (n < 20) {
+		return -999
+	}
+
 	//Fourier regression + linear drift to model seasonality
 	Kw := 3 //weekly order
 	Ky := 5 //yearly order
@@ -432,7 +436,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Item{id, z_score})
 			}
-			fmt.Println("Processed item:", name, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
+			fmt.Println("Processed item:", name, "| ID:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
 			time.Sleep(3 * time.Second) //Avoid rate-limiting
 		}
 
