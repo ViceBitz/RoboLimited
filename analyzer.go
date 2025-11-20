@@ -269,7 +269,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 			trendLine[t].Y = trendVal
 		}
 
-		//Construct Fourier seasonal component
+		//Make plotting data
 		bWeekly := beta[idx : idx+2*Kw]
 		idx += 2 * Kw
 		var bYearly []float64
@@ -333,6 +333,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 			}
 		}
 
+		//Create graphs
 		plt := plot.New()
 		plt.Title.Text = "Fourier Seasonality: Fit & Projection"
 		plt.X.Label.Text = "Day"
@@ -371,6 +372,14 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 			plt.Add(ly)
 			plt.Legend.Add("Yearly season", ly)
 		}
+
+		//Set x-axis ticks to month (30 day intervals)
+		var x_ticks []plot.Tick
+		for i := 0; i <= int(daysBefore); i += 30 {
+			x_ticks = append(x_ticks, plot.Tick{Value: float64(i), Label: fmt.Sprintf("%d", i)})
+		}
+		plt.X.Tick.Marker = plot.ConstantTicks(x_ticks)
+
 		if err := plt.Save(1000, 450, "data/fourier_stl_model.png"); err != nil {
 			fmt.Println("plot save png:", err)
 		}
