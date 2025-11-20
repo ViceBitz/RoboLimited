@@ -75,17 +75,17 @@ go run cmd/cli.go -mode=<mode> [flags]
 
 | Flag           | Type    | Default       | Description |
 | -------------- | ------- | ------------- | ----------- |
-| -mode          | string  | "monitor"     | Specifies which function/mode to run: monitor, analyzeInventory, analyzeTrade, searchDips, searchForecast, forecast, executor |
-| -give          | string  | ""            | Comma-separated list of items to give (for analyzeTrade) |
-| -receive       | string  | ""            | Comma-separated list of items to receive (for analyzeTrade) |
-| -forecast_type | string  | "stl"         | Forecast type for inventory analysis (for analyzeInventory) |
-| -threshold     | float64 | -0.5          | Threshold value for detecting price dips (for searchDips) |
-| -priceLow      | float64 | 0.0           | Minimum price filter (for searchDips and searchForecast) |
-| -priceHigh     | float64 | 1000000.0     | Maximum price filter (for searchDips and searchForecast) |
-| -isDemand      | bool    | false         | Only include high-demand items (for searchDips, searchForecast, forecast) |
-| -items         | string  | ""            | Comma-separated list of items to forecast (for forecast) |
-| -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts (for analyzeTrade, searchForecast, forecast) |
-| -daysFuture    | int64   | 30            | Number of days forward to project average price (for analyzeTrade, searchForecast, forecast) |
+| -mode          | string  | "monitor"     | Specifies which function/mode to run: monitor, analyzeInventory, analyzeTrade, searchDips, searchForecast, forecast |
+| -give          | string  | ""            | Comma-separated list of items to give |
+| -receive       | string  | ""            | Comma-separated list of items to receive |
+| -forecast_type | string  | "stl"         | Forecast type for inventory analysis |
+| -threshold     | float64 | -0.5          | Threshold value for detecting price dips |
+| -priceLow      | float64 | 0.0           | Minimum price filter |
+| -priceHigh     | float64 | 1000000.0     | Maximum price filter |
+| -isDemand      | bool    | false         | Only include high-demand items |
+| -items         | string  | ""            | Comma-separated list of items to forecast |
+| -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts |
+| -daysFuture    | int64   | 30            | Number of days forward to project average price |
 
 
 ## 📊 Results
