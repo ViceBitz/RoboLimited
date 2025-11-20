@@ -170,6 +170,7 @@ func monitorDeals(live_money bool) {
 }
 
 // Driver
+/* DEPRECATED, RUN FROM CLI
 func main() {
 	//Start deal sniper process
 	//monitorDeals(config.LiveMoney)
@@ -178,6 +179,13 @@ func main() {
 
 	//Displays player inventory metrics
 	//AnalyzeInventory(true, "stl")
+
+	//Assess future value of item trade
+	/*
+	giveItems := []string{}
+	receiveItems := []string{}
+	EvaluateTrade(giveItems, receiveItems, 365 * 3, 30)
+	*/
 
 	//Check singular item's price trend with z-score
 	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
@@ -188,7 +196,8 @@ func main() {
 	//Forecast growth potential with z-score analysis of past year
 	//ForecastWithin(-1000, 1000, 2000, 4000, 365 * 3, 30, true)
 
-	
+	/*
+	//General forecast tester
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false                    //scan demand items only
 	forecastItems := []string{"9255011"} //"928908332", "20573078"
@@ -209,5 +218,7 @@ func main() {
 		}
 	}
 	
+	
 
 }
+*/

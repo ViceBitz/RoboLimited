@@ -554,7 +554,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 }
 
 //Estimates item exchange value by projecting item prices with STL-Fourier
-func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int, daysFuture int) {
+func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFuture int64) {
 	itemDetails := tools.GetLimitedData()
 
 	var forecast = func(id string) float64 {
