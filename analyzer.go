@@ -380,7 +380,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		}
 		plt.X.Tick.Marker = plot.ConstantTicks(x_ticks)
 
-		if err := plt.Save(1000, 450, "data/fourier_stl_model.png"); err != nil {
+		if err := plt.Save(vg.Length(daysBefore/365 * 300), 450, "data/fourier_stl_model.png"); err != nil {
 			fmt.Println("plot save png:", err)
 		}
 	}
@@ -429,11 +429,16 @@ type Item struct {
 	id      string
 	z_score float64
 }
+type Prediction struct {
+	id      string
+	z_score float64
+	priceFuture float64
+}
 
 // Searches for items of STL price forecast within price range, demand level, and date range
 func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
-	var itemsWithin []Item
+	var itemsWithin []Prediction
 	for id, _ := range itemDetails.Items {
 		name := itemDetails.Items[id][0]
 		rap := itemDetails.Items[id][2].(float64)
@@ -445,9 +450,9 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 			priceFuture := projectPrice_FourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
-				itemsWithin = append(itemsWithin, Item{id, z_score})
+				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture})
 			}
-			fmt.Println("Processed item:", name, "| ID:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture)
+			fmt.Println("Processed item:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture, "|", name)
 			time.Sleep(3 * time.Second) //Avoid rate-limiting
 		}
 
@@ -461,7 +466,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		name := itemDetails.Items[m.id][0]
 		rap := itemDetails.Items[m.id][2]
 		onlyItems = append(onlyItems, m.id)
-		fmt.Println("Found item", name, "| ID:", m.id, "| RAP:", rap, "| Z-Score:", m.z_score)
+		fmt.Println("Found item:", m.id, "| RAP:", rap, "| Z-Score:", math.Trunc(m.z_score*100)/100, "| Abs. Price Diff:", math.Trunc((m.priceFuture-rap.(float64))*100)/100, "|", name)
 	}
 
 	return onlyItems
@@ -493,7 +498,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 	for _, m := range itemsWithin {
 		name := itemDetails.Items[m.id][0]
 		onlyItems = append(onlyItems, m.id)
-		fmt.Println("Found item", name, "| ID:", m.id, "| Z-Score:", m.z_score)
+		fmt.Println("Found item:", m.id, "| Z-Score:", math.Trunc(m.z_score*100)/100, "|", name)
 	}
 
 	return onlyItems

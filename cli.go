@@ -79,7 +79,7 @@ func main() {
 
     // Flags for forecast
     items := flag.String("items", "", "Comma-separated list of items to forecast")
-    daysPast := flag.Int64("daysPast", 365 * 3, "Number of past days of historical data to include in the forecast")
+    daysPast := flag.Int64("daysPast", 365 * 5, "Number of past days of historical data to include in the forecast")
     daysFuture := flag.Int64("daysFuture", 30, "Number of days forward to project avg. price")
 
     flag.Parse()
