@@ -52,10 +52,43 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 
 ---
 
+## 🔧 Usage
+
+### Command-Line Interface
+
+The project CLI provides a unified way to run various modules and operations related to price sniping, item trading, inventory analysis, and forecasting. You can execute different functions directly from the terminal.
+
+### Running the CLI
+
+```bash
+go run cmd/cli.go -mode=<mode> [flags]
+```
+
+| Mode             | Description | Required Flags | Optional Flags |
+| ---------------- | ----------- | --------------- | --------------- |
+| monitor          | Starts the deal sniper to track live trades. | None | None |
+| analyzeInventory | Displays player inventory metrics and forecasts. | None | -forecast_type |
+| analyzeTrade     | Evaluates the future value of a proposed item trade. | -give, -receive | -daysPast, -daysFuture |
+| searchDips       | Finds items in the market that are currently dropping in price. | None | -threshold, -priceLow, -priceHigh, -isDemand |
+| searchForecast   | Forecasts growth potential using past year data. | None | -priceLow, -priceHigh, -daysPast, -daysFuture, -isDemand |
+| forecast         | General price forecasting for a list of items. | -items | -isDemand, -daysPast, -daysFuture |
+
+| Flag           | Type    | Default       | Description |
+| -------------- | ------- | ------------- | ----------- |
+| -mode          | string  | "monitor"     | Specifies which function/mode to run: monitor, analyzeInventory, analyzeTrade, searchDips, searchForecast, forecast, executor |
+| -give          | string  | ""            | Comma-separated list of items to give (for analyzeTrade) |
+| -receive       | string  | ""            | Comma-separated list of items to receive (for analyzeTrade) |
+| -forecast_type | string  | "stl"         | Forecast type for inventory analysis (for analyzeInventory) |
+| -threshold     | float64 | -0.5          | Threshold value for detecting price dips (for searchDips) |
+| -priceLow      | float64 | 0.0           | Minimum price filter (for searchDips and searchForecast) |
+| -priceHigh     | float64 | 1000000.0     | Maximum price filter (for searchDips and searchForecast) |
+| -isDemand      | bool    | false         | Only include high-demand items (for searchDips, searchForecast, forecast) |
+| -items         | string  | ""            | Comma-separated list of items to forecast (for forecast) |
+| -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts (for analyzeTrade, searchForecast, forecast) |
+| -daysFuture    | int64   | 30            | Number of days forward to project average price (for analyzeTrade, searchForecast, forecast) |
+
 
 ## 📊 Results
 During experimental tests, the algorithm bought and sold over **20 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
-
----
 
 #
