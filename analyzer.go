@@ -385,6 +385,8 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		}
 	}
 
+	//@todo pinpoint peaks and dips, output key breakpoints
+
 	return priceFuture
 }
 
