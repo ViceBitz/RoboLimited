@@ -186,11 +186,12 @@ func main() {
 	//SearchFallingItems(-0.5, 2000, 6000, true)
 
 	//Forecast growth potential with z-score analysis of past year
-	//PredictWithin(-1000, 1000, 2000, 6000, 720, 30, true)
+	//ForecastWithin(-1000, 1000, 2000, 4000, 720, 30, true)
 
+	
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false                    //scan demand items only
-	forecastItems := []string{"9255011"} //"928908332", "20573078"
+	forecastItems := []string{"928908332"} //"928908332", "20573078"
 	for _, id := range forecastItems {
 		name := itemDetails.Items[id][0]
 		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
@@ -201,11 +202,12 @@ func main() {
 			log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
 			//Forecast prices with STL decomposition
-			priceSTL := projectPrice_FourierSTL(id, 720, 30, true)
+			priceSTL := projectPrice_FourierSTL(id, 365 * 1000, 30, true)
 			z_score_stl := findZScore(id, priceSTL, false)
 			log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 
 		}
 	}
+	
 
 }

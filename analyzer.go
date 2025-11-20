@@ -147,13 +147,15 @@ Uses STL (season-trend) decomposition with Fourier regression to forecast
 a price average for future date range.
 
 We break down past prices as a long-term trend component (T), seasonal cyclical component (S).
-Once we have models for T and S, we can predict future prices with T_avg(today + next) + S_avg(today + next).
-
 T(t) is fitted with standard linear regression to account for price drift over time.
 S(t) is modeled using Fourier regression to identify weekly and yearly cycles.
 
-From what I've found, best parameters are daysBefore = 720 (2 yrs of past data) and
-daysFuture = 60 (predict avg. of next 2 months)
+The model would take on the form:
+y(t) = beta_0 + beta_1 * linearTrend(t) + fourierFeatures(t)
+				   ^ T                  +        ^S
+
+Once we have models for T and S, we can predict future prices by simplying extending the
+model to (t, t + 1 ... t + future).
 */
 func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) float64 {
 	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
@@ -165,9 +167,9 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 	}
 	n := len(priceSeries)
 
-	//Fourier regression to model seasonality
-	Kw := 3 // weekly order
-	Ky := 5 // yearly order
+	//Fourier regression + linear drift to model seasonality
+	Kw := 3 //weekly order
+	Ky := 5 //yearly order
 	useYearly := n >= 400
 	baseCols := 2
 	p := baseCols + 2*Kw + 1
@@ -195,7 +197,8 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		y[t] = priceSeries[t]
 	}
 
-	beta, _ := tools.SolveNormalEq(X, y)
+	//Solve the regression for optimal betas
+	beta, _ := tools.SolveNormalEq(X, y) 
 
 	//Forecast prices in future days
 	if daysFuture <= 0 {
@@ -208,11 +211,11 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		row := make([]float64, 0, p)
 		row = append(row, 1.0)
 
-		//Extend trend linearly
-		row = append(row, float64(t)/float64(n)) 
+		//Linear component
+		row = append(row, float64(t)/float64(n))
 
-		//Add fourier periodic movements
-		row = append(row, tools.FourierFeatures(t, 7.0, Kw)...) 
+		//Fourier periodic movements
+		row = append(row, tools.FourierFeatures(t, 7.0, Kw)...)
 		if useYearly {
 			row = append(row, tools.FourierFeatures(t, 365.25, Ky)...)
 		}
@@ -387,7 +390,7 @@ type Item struct {
 }
 
 // Searches for items of STL price forecast within price range, demand level, and date range
-func PredictWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) []string {
+func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) []string {
 	itemDetails := tools.GetLimitedData()
 	var itemsWithin []Item
 	for id, _ := range itemDetails.Items {
