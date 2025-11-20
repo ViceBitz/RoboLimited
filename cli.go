@@ -75,7 +75,7 @@ func main() {
     threshold := flag.Float64("threshold", -0.5, "Threshold for price dips")
     priceLow := flag.Float64("priceLow", 0.0, "Minimum price for search")
     priceHigh := flag.Float64("priceHigh", 1000000.0, "Maximum price for search")
-    isDemand := flag.Bool("isDemand", false, "Only include high-demand items")
+    isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
 
     // Flags for forecast
     items := flag.String("items", "", "Comma-separated list of items to forecast")
