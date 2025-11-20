@@ -64,20 +64,6 @@ The project CLI provides a unified way to run various modules and operations rel
 go run cmd/cli.go -mode=<mode> [flags]
 ```
 
-<style>
-  table th:first-of-type {
-    width: 20%;
-  }
-  table th:nth-of-type(2) {
-    width: 30%;
-  }
-  table th:nth-of-type(3) {
-    width: 20%;
-  }
-  table th:last-of-type {
-    width: 20%;
-  }
-</style>
 
 | Mode             | Description | Required Flags | Optional Flags |
 | ---------------- | ----------- | --------------- | --------------- |
