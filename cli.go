@@ -39,7 +39,7 @@ func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFut
 }
 
 //General forecaster
-func forecast(forecastItems []string, onlyDemand bool) {
+func forecast(forecastItems []string, daysPast int64, daysFuture int64, onlyDemand bool) {
     itemDetails := tools.GetLimitedData()
     for _, id := range forecastItems {
         name := itemDetails.Items[id][0]
@@ -51,7 +51,7 @@ func forecast(forecastItems []string, onlyDemand bool) {
             log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
             //Forecast prices with STL decomposition
-            priceSTL := projectPrice_FourierSTL(id, 365 * 3, 30, true)
+            priceSTL := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
             z_score_stl := findZScore(id, priceSTL, false)
             log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 
@@ -112,7 +112,7 @@ func main() {
             return
         }
         forecastItems := strings.Split(*items, ",")
-        forecast(forecastItems, *isDemand)
+        forecast(forecastItems, *daysPast, *daysFuture, *isDemand)
 
     default:
         fmt.Println("Unknown mode:", *mode)
