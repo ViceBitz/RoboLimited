@@ -62,7 +62,7 @@ The project CLI provides a unified way to run various modules and operations rel
 ### Running the CLI
 
 ```bash
-go run cmd/cli.go -mode=<mode> [flags]
+go run . -mode=<mode> [flags]
 ```
 
 
@@ -89,6 +89,10 @@ go run cmd/cli.go -mode=<mode> [flags]
 | -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts |
 | -daysFuture    | int64   | 30            | Number of days forward to project average price |
 
+Example:
+```bash
+go run . -mode=analyzeTrade -give=11188705,119040562647325,20573078,11700905898 -receive=928908332
+```
 
 ## 📊 Results
 During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
