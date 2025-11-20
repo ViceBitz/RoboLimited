@@ -247,6 +247,18 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		idx++
 		bTrend := beta[idx]
 		idx++
+		
+		//Construct linear trendline
+		trendLine := make(plotter.XYs, n)
+		for t := 0; t < n; t++ {
+			x := float64(t)
+			trendVal := b0 + bTrend * (float64(t) / float64(n))
+
+			trendLine[t].X = x
+			trendLine[t].Y = trendVal
+		}
+
+		//Construct Fourier seasonal component
 		bWeekly := beta[idx : idx+2*Kw]
 		idx += 2 * Kw
 		var bYearly []float64
@@ -327,6 +339,13 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 		lw.Color = color.RGBA{R: 30, G: 144, B: 255, A: 255}
 		lw.Dashes = []vg.Length{vg.Points(5), vg.Points(3)}
 		lw.Width = vg.Points(1.5)
+
+		lt, _ := plotter.NewLine(trendLine)
+		lt.Color = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+		lt.Width = vg.Points(2)
+
+		plt.Add(lt)
+		plt.Legend.Add("Trendline", lt)
 
 		plt.Add(dots, lf, lw)
 		plt.Legend.Add("Raw", dots)
