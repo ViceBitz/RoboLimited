@@ -570,7 +570,7 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
 }
 
-//Looks for owners of specific item within net worth range
+//Looks for item owners within net worth range and construct trade links 
 func SearchOwners(targetItemId string, worth_low float64, worth_high float64) {
 	url := fmt.Sprintf(config.RolimonsSite, targetItemId)
 	ownerIds, _ := extractOwners(url)
@@ -579,7 +579,7 @@ func SearchOwners(targetItemId string, worth_low float64, worth_high float64) {
 
 	//Calculate net worth of every owner
 	for _, owner := range ownerIds {
-		assetIds := tools.GetInventory(fmt.Sprintf("%d", owner))
+		assetIds := tools.GetInventory(owner)
 		netWorth := 0.0
 		for _, id := range assetIds {
 			if len(itemDetails.Items[id]) == 0 {
@@ -591,7 +591,7 @@ func SearchOwners(targetItemId string, worth_low float64, worth_high float64) {
 
 		//Check if total RAP within net worth range
 		if (worth_low <= netWorth && netWorth <= worth_high) {
-			log.Println("Owner:", owner)
+			log.Println("Owner Trade Link:", fmt.Sprintf(config.PlayerTrade, owner))
 		}
 	}
 }

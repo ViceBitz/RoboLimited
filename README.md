@@ -31,6 +31,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Informs immediate purchase decisions with z-score and margin analysis
 - Cache sales data to classify price points quickly
 - Finds trends and identifies outliers in past sales data
+- Scans item owners within net worth range for trade opportunity
 - Forecasts future prices with STL decomposition and Fourier regression
 
 ---
@@ -47,7 +48,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 ### Market Evaluation
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights
-- **Inventory Scan**: Assess current player inventory and estimate future potential
+- **Inventory Scan**: Assesses player inventories to estimate item and trading potential
 - **Price Prediction**: Predicts item potential with seasonal cycles and trend directions
 - **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
 
@@ -84,7 +85,7 @@ go run . -mode=<mode> [flags]
 | -threshold     | float64 | -0.5          | Threshold value for detecting price dips |
 | -priceLow      | float64 | 0.0           | Minimum price filter |
 | -priceHigh     | float64 | 1000000.0     | Maximum price filter |
-| -isDemand      | bool    | false         | Only include high-demand items |
+| -isDemand      | bool    | true         | Only include high-demand items |
 | -items         | string  | ""            | Comma-separated list of items to forecast |
 | -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts |
 | -daysFuture    | int64   | 30            | Number of days forward to project average price |
@@ -95,6 +96,6 @@ go run . -mode=analyzeTrade -give=11188705,119040562647325,20573078,11700905898 
 ```
 
 ## 📊 Results
-During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **30% ROI** after internal marketplace fees but before currency conversion costs.
+During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **30% avg. ROI** after internal marketplace fees but before currency conversion costs.
 
 #
