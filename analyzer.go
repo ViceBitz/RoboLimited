@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/color"
-	"io"
 	"log"
 	"math"
-	"net/http"
 	"regexp"
 	"robolimited/config"
 	"robolimited/tools"
@@ -22,7 +20,8 @@ import (
 )
 
 /**
-Toolkit/API for performing statistical data analysis on historical price day.
+Toolkit/API for ingesting, transforming, and analyzing historical price data.
+Uses statistical methods like z-score and STL-Fourier regression for forecasting.
 Drives decision-making and guides buying/selling/trading. Used across different
 components in this project, both automatically and manually.
 */
@@ -30,17 +29,7 @@ components in this project, both automatically and manually.
 //Extracts time-series sales data from Rolimon's asset URL
 func extractPriceSeries(url string) (*tools.Sales, error) {
 	//Extract raw HTML from item page source
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch url: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %v", err)
-	}
-	html := string(body)
+	html, _ := tools.GetPageSource(url)
 
 	//Find sales data embedded within source using regex search
 	re := regexp.MustCompile(`var\s+sales_data\s*=\s*(\{[\s\S]*?\});`)
@@ -50,11 +39,10 @@ func extractPriceSeries(url string) (*tools.Sales, error) {
 	}
 	salesDataJSON := strings.TrimSuffix(match[1], ";")
 
-	// Parse the actual sales data
+	//Parse the actual sales data
 	var salesData tools.Sales
-	err = json.Unmarshal([]byte(salesDataJSON), &salesData)
+	err := json.Unmarshal([]byte(salesDataJSON), &salesData)
 	if err != nil {
-		// Show first part of JSON for debugging
 		preview := salesDataJSON
 		if len(preview) > 200 {
 			preview = preview[:200] + "..."
@@ -145,6 +133,36 @@ func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, f
 	}
 
 	return mean, std, historyData, pricePoints
+}
+
+//Extracts all owner ids of specific item from Rolimon's asset URL
+func extractOwners(url string) ([]string, error) {
+	//Extract raw HTML from item page source
+	html, _ := tools.GetPageSource(url)
+
+	//Find ownership data embedded within source using regex search
+	re := regexp.MustCompile(`var\s+bc_copies_data\s*=\s*(\{[\s\S]*?\});`)
+	match := re.FindStringSubmatch(html)
+	if len(match) < 2 {
+		return nil, fmt.Errorf("bc_copies_data not found in page HTML")
+	}
+
+	jsonStr := strings.TrimSuffix(match[1], ";")
+	var bcData struct {
+		OwnerIDs []string `json:"owner_ids"`
+	}
+
+	//Parse the JSON
+	err := json.Unmarshal([]byte(jsonStr), &bcData)
+	if err != nil {
+		preview := jsonStr
+		if len(preview) > 200 {
+			preview = preview[:200] + "..."
+		}
+		return nil, fmt.Errorf("failed to parse bc_copies_data JSON: %v\nPreview: %s", err, preview)
+	}
+
+	return bcData.OwnerIDs, nil
 }
 
 // Calculates Z-score of price relative to past sales data; pulls from cached data if exists
@@ -490,14 +508,13 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		price := rap
 
 		//Filter out items outside price range and demand
-		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
 			priceFuture, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture})
 			}
 			fmt.Println("Processed item:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture, "|", name)
-			time.Sleep(3 * time.Second) //Avoid rate-limiting
 		}
 
 	}
@@ -526,7 +543,7 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 		price := rap
 
 		//Filter out items outside price range and demand
-		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
+		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
 			z_score := findZScore(id, price, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Item{id, z_score})
@@ -548,12 +565,38 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 	return onlyItems
 }
 
-// Scans items under z-score threshold within price range and demand level in lookback period
+//Scans items under z-score threshold within price range and demand level in lookback period
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
 }
 
-// Analyzes the z-scores of inventory items and prints list of metrics
+//Looks for owners of specific item within net worth range
+func SearchOwners(targetItemId string, worth_low float64, worth_high float64) {
+	url := fmt.Sprintf(config.RolimonsSite, targetItemId)
+	ownerIds, _ := extractOwners(url)
+
+	itemDetails := tools.GetLimitedData()
+
+	//Calculate net worth of every owner
+	for _, owner := range ownerIds {
+		assetIds := tools.GetInventory(fmt.Sprintf("%d", owner))
+		netWorth := 0.0
+		for _, id := range assetIds {
+			if len(itemDetails.Items[id]) == 0 {
+				continue
+			}
+			rap := itemDetails.Items[id][2].(float64)
+			netWorth += rap
+		}
+
+		//Check if total RAP within net worth range
+		if (worth_low <= netWorth && netWorth <= worth_high) {
+			log.Println("Owner:", owner)
+		}
+	}
+}
+
+//Analyzes the z-scores of inventory items and prints list of metrics
 func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	assetIds := tools.GetInventory(fmt.Sprintf("%d", config.RobloxId))
 	itemDetails := tools.GetLimitedData()
@@ -625,11 +668,11 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 		name := itemDetails.Items[id][0]
 
 		//Forecast prices with STL decomposition
-		priceSTL, _, _ := projectPrice_FourierSTL(id, 365 * 3, 30, true)
-		z_score_stl := findZScore(id, priceSTL, false)
-		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+		priceFuture, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
+		z_score_stl := findZScore(id, priceFuture, false)
+		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceFuture)
 		
-		return priceSTL
+		return priceFuture
 	}
 
 	var giveValue, receiveValue float64
@@ -662,7 +705,7 @@ func init() {
 			//Refresh global sales cache
 			tools.SalesStats = tools.RetrieveSalesStats()
 			tools.SalesData = tools.RetrieveSalesData()
-			
+
 			log.Println("Sales Stats: ", len(tools.SalesStats))
 			log.Println("Sales Data: ", len(tools.SalesData))
 

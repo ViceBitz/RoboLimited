@@ -53,7 +53,8 @@ const (
 	//Roblox pages
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
 	RobloxHome           = "https://www.roblox.com/home"
-
+	PlayerTrade          = "https://www.roblox.com/users/%s/trade"
+	
 	//Data Files
 	ActionLogFile  = "data/actions.log" //Log of all buy actions
 	ConsoleLogFile = "data/console.log" //Log of terminal output
