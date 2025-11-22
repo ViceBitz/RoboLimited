@@ -587,8 +587,9 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 	log.Println(len(ownerIds))
 	for _, owner := range ownerIds {
 		if (limit <= 0) { //Don't go over link limit
-			break 
+			break
 		}
+		limit--
 		assetIds := tools.GetInventory(owner)
 		netWorth := 0.0
 		for _, id := range assetIds {
