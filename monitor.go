@@ -112,7 +112,7 @@ func snipeDeals(live_money bool) {
 				continue
 			}
 
-			isDemand := int(itemDetails.Items[id][5].(float64)) != -1
+			isDemand := int(itemDetails.Items[id][5].(float64)) >= 1
 			projected := int(itemDetails.Items[id][7].(float64))
 
 			//Exclude projected items and erroneous listings

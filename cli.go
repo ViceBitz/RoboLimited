@@ -39,23 +39,19 @@ func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFut
 }
 
 // General forecaster
-func forecast(forecastItems []string, daysPast int64, daysFuture int64, onlyDemand bool) {
+func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 	itemDetails := tools.GetLimitedData()
 	for _, id := range forecastItems {
 		name := itemDetails.Items[id][0]
-		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
-		if !onlyDemand || isDemand {
-			log.Println("____________________________________________________")
-			//Forecast prices with z-score analysis
-			z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
-			log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
+		log.Println("____________________________________________________")
+		//Forecast prices with z-score analysis
+		z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
+		log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
-			//Forecast prices with STL decomposition
-			priceSTL, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
-			z_score_stl := findZScore(id, priceSTL, false)
-			log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
-
-		}
+		//Forecast prices with STL decomposition
+		priceSTL, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
+		z_score_stl := findZScore(id, priceSTL, false)
+		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 	}
 }
 
@@ -111,7 +107,7 @@ func main() {
 			return
 		}
 		forecastItems := strings.Split(*items, ",")
-		forecast(forecastItems, *daysPast, *daysFuture, *isDemand)
+		forecast(forecastItems, *daysPast, *daysFuture)
 
 	default:
 		fmt.Println("Unknown mode:", *mode)
