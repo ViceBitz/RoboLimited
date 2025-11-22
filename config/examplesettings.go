@@ -6,6 +6,7 @@ package config
 const (
 	//Economy APIs
 	RolimonsAPI            = "https://www.rolimons.com/itemapi/itemdetails"
+	RolimonsPlayerAPI      = "https://api.rolimons.com/players/v1/playerassets/%s"
 	RobloxEconomyDetailsV2 = "https://economy.roblox.com/v2/assets/"
 	RolimonsSite           = "https://www.rolimons.com/item/%s"
 	RolimonsDeals          = "https://api.rolimons.com/market/v1/dealactivity"
@@ -54,7 +55,7 @@ const (
 	RobloxCatalogBaseURL = "https://www.roblox.com/catalog/"
 	RobloxHome           = "https://www.roblox.com/home"
 	PlayerTrade          = "https://www.roblox.com/users/%s/trade"
-	
+
 	//Data Files
 	ActionLogFile  = "data/actions.log" //Log of all buy actions
 	ConsoleLogFile = "data/console.log" //Log of terminal output

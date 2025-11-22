@@ -229,10 +229,24 @@ func GetResellers(collectibleId string) ([]ResellerResponse, error) {
 	return data.Data, nil
 }
 
-//Player inventory JSON structure
-type InventoryResponse struct {
-	NextPageCursor string        `json:"nextPageCursor"`
-	Data           []LimitedItem `json:"data"`
+//Player data JSON structure
+type PlayerData struct {
+    Success               bool                             `json:"success"`
+    PlayerTerminated      bool                             `json:"playerTerminated"`
+    PlayerPrivacyEnabled  bool                             `json:"playerPrivacyEnabled"`
+    PlayerVerified        bool                             `json:"playerVerified"`
+    PlayerId              int64                            `json:"playerId"`
+    ChartNominalScanTime  int64                            `json:"chartNominalScanTime"`
+    PlayerAssets          map[string][]int64               `json:"playerAssets"`
+    IsOnline              bool                             `json:"isOnline"`
+    PresenceType          int                              `json:"presenceType"`
+    LastOnline            int64                            `json:"lastOnline"`
+    LastLocation          string                           `json:"lastLocation"`
+    LastPlaceId           *int64                           `json:"lastPlaceId"`
+    LocationGameIsTracked bool                             `json:"locationGameIsTracked"`
+    Premium               bool                             `json:"premium"`
+    Badges                map[string]int64                 `json:"badges"`
+    Holds                 []interface{}                    `json:"holds"`
 }
 
 //Simplified limited item JSON structure
@@ -246,7 +260,7 @@ func GetInventory(playerId string) ([]string) {
 	//Roblox API endpoint for player inventory
 	apiURL := fmt.Sprintf(config.InventoryAPI, playerId)
 
-	//Make a GET request to the Rolimons API
+	//GET request to the Rolimons API
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		log.Printf("Error making HTTP request: %v", err)
@@ -255,20 +269,17 @@ func GetInventory(playerId string) ([]string) {
 	defer resp.Body.Close()
 
 	//Read response body
-	var data InventoryResponse
+	var data PlayerData
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		log.Printf("Error decoding JSON: %v", err)
 		return nil
 	}
 
-	assetIDs := make(map[string]bool)
-	for _, item := range data.Data {
-		assetIDs[fmt.Sprintf("%d", item.AssetID)] = true
-	}
-
-	idList := make([]string, 0, len(assetIDs))
-	for id := range assetIDs {
-		idList = append(idList, id)
+	var idList []string
+	for item, uaidList := range data.PlayerAssets {
+		for i := 0; i < len(uaidList); i++ {
+			idList = append(idList, item) //includes duplicates
+		} 
 	}
 	return idList
 }
