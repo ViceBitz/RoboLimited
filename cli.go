@@ -13,30 +13,36 @@ import (
 Command-line interface to run various modules and operations
 */
 
-// Start deal sniper process
+//Start deal sniper process
 func monitor() {
 	snipeDeals(config.LiveMoney)
 }
 
-// Displays player inventory metrics
+//Displays player inventory metrics
 func analyzeInventory(forecast_type string) {
 	AnalyzeInventory(true, forecast_type)
 }
 
-// Assess future value of item trade
+//Assess future value of item trade
 func analyzeTrade(giveItems []string, receiveItems []string, daysPast int64, daysFuture int64) {
 	EvaluateTrade(giveItems, receiveItems, daysPast, daysFuture)
 }
 
-// Finds current price-lowering items in market
+//Finds current price-lowering items in market
 func searchDips(threshold float64, priceLow float64, priceHigh float64, isDemand bool) {
 	SearchFallingItems(threshold, priceLow, priceHigh, isDemand)
 }
 
-// Forecast growth potential with z-score analysis of past year
+//Forecast growth potential with z-score analysis
 func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) {
 	ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand)
 }
+
+//Scan for item owners within net worth range
+func searchOwners(itemId string, worth_low float64, worth_high float64) {
+	FindOwners(itemId, worth_low, worth_high)
+}
+
 
 // General forecaster
 func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
@@ -66,11 +72,12 @@ func main() {
 	// Flags for analyzeInventory
 	forecastType := flag.String("forecast_type", "stl", "Forecast type for inventory analysis")
 
-	// Flags for searchDips
+	// Flags for searches
 	threshold := flag.Float64("threshold", -0.5, "Threshold for price dips")
 	priceLow := flag.Float64("priceLow", 0.0, "Minimum price for search")
 	priceHigh := flag.Float64("priceHigh", 1000000.0, "Maximum price for search")
 	isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
+	itemId := flag.String("item", "", "Specific item to target")
 
 	// Flags for forecast
 	items := flag.String("items", "", "Comma-separated list of items to forecast")
@@ -100,7 +107,14 @@ func main() {
 
 	case "searchForecast":
 		searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand)
-
+	
+	case "searchOwners":
+		if (*itemId == "") {
+			fmt.Println("Please provide a target item id")
+			return
+		}
+		searchOwners(*itemId, *priceLow, *priceHigh)
+		
 	case "forecast":
 		if *items == "" {
 			fmt.Println("Please provide -items for forecast")

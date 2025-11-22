@@ -74,6 +74,7 @@ go run . -mode=<mode> [flags]
 | analyzeTrade     | Evaluates the future value of a proposed item trade. | -give, -receive | -daysPast, -daysFuture |
 | searchDips       | Finds items in the market that are currently dropping in price. | None | -threshold, -priceLow, -priceHigh, -isDemand |
 | searchForecast   | Forecasts growth potential using past year data. | None | -priceLow, -priceHigh, -daysPast, -daysFuture, -isDemand |
+| searchOwners   | Scans item owners within net worth range. | -item | -priceLow, -priceHigh |
 | forecast         | General price forecasting for a list of items. | -items | -isDemand, -daysPast, -daysFuture |
 
 | Flag           | Type    | Default       | Description |
@@ -86,6 +87,7 @@ go run . -mode=<mode> [flags]
 | -priceLow      | float64 | 0.0           | Minimum price filter |
 | -priceHigh     | float64 | 1000000.0     | Maximum price filter |
 | -isDemand      | bool    | true         | Only include high-demand items |
+| -item      | string    | ""         | Specific item to target |
 | -items         | string  | ""            | Comma-separated list of items to forecast |
 | -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts |
 | -daysFuture    | int64   | 30            | Number of days forward to project average price |

@@ -571,7 +571,7 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 }
 
 //Looks for item owners within net worth range and construct trade links 
-func SearchOwners(targetItemId string, worth_low float64, worth_high float64) {
+func FindOwners(targetItemId string, worth_low float64, worth_high float64) {
 	url := fmt.Sprintf(config.RolimonsSite, targetItemId)
 	ownerIds, _ := extractOwners(url)
 
