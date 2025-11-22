@@ -27,11 +27,55 @@ Drives decision-making and guides buying/selling/trading. Used across different
 components in this project, both automatically and manually.
 */
 
+//Extracts time-series sales data from Rolimon's asset URL
+func extractPriceSeries(url string) (*tools.Sales, error) {
+	//Extract raw HTML from item page source
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch url: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %v", err)
+	}
+	html := string(body)
+
+	//Find sales data embedded within source using regex search
+	re := regexp.MustCompile(`var\s+sales_data\s*=\s*(\{[\s\S]*?\});`)
+	match := re.FindStringSubmatch(html)
+	if len(match) < 2 {
+		return nil, fmt.Errorf("sales data not found in page HTML")
+	}
+	salesDataJSON := strings.TrimSuffix(match[1], ";")
+
+	// Parse the actual sales data
+	var salesData tools.Sales
+	err = json.Unmarshal([]byte(salesDataJSON), &salesData)
+	if err != nil {
+		// Show first part of JSON for debugging
+		preview := salesDataJSON
+		if len(preview) > 200 {
+			preview = preview[:200] + "..."
+		}
+		return nil, fmt.Errorf("failed to parse sales data JSON: %v\nJSON preview: %s", err, preview)
+	}
+
+	return &salesData, nil
+}
 
 // Extracts price data, resamples to 1-day snapshots, calculates mean/SD within date range
 func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, float64, *tools.Sales, []int) {
 	url := fmt.Sprintf(config.RolimonsSite, id)
-	historyData, err := extractPriceSeries(url)
+
+	//Pull price data from cache if possible
+	historyData := tools.SalesData[id]
+	var err error
+	if (tools.SalesData[id] == nil) {
+		historyData, err = extractPriceSeries(url)
+	}
+
 	dayUnit := int64(24 * 60 * 60) //1 day in seconds
 
 	var pricePoints []int
@@ -164,8 +208,8 @@ y(t) = beta_0 + beta_1 * linearTrend(t) + fourierFeatures(t)
 Once we have models for T and S, we can predict future prices by simplying extending the
 model to (t, t + 1 ... t + future).
 */
-func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) float64 {
-	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
+func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, float64) {
+	seriesMean, seriesSD, _, pricePoints := processPriceSeries(id, daysBefore, 0)
 
 	//Prepare price series for decomposition
 	priceSeries := make([]float64, len(pricePoints))
@@ -175,7 +219,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 	n := len(priceSeries)
 
 	if (n < 20) {
-		return -999
+		return -999, -1, -1
 	}
 
 	//Fourier regression + linear drift to model seasonality
@@ -213,7 +257,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 
 	//Forecast prices in future days
 	if daysFuture <= 0 {
-		return math.NaN()
+		return math.NaN(), -1, -1
 	}
 	horizon := int(daysFuture)
 	var sumF float64
@@ -387,7 +431,7 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 
 	//@todo pinpoint peaks and dips, output key breakpoints
 
-	return priceFuture
+	return priceFuture, seriesMean, seriesSD
 }
 
 // Identify dip to support buy decision with price z-score
@@ -447,7 +491,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand != -1) {
-			priceFuture := projectPrice_FourierSTL(id, daysPast, daysFuture, config.LogConsole)
+			priceFuture, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture})
@@ -558,7 +602,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				}
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
-				priceFuture = float64(projectPrice_FourierSTL(id, 365 * 3, 60, false))
+				priceFuture, _, _ = projectPrice_FourierSTL(id, 365 * 3, 60, false)
 				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
 
@@ -581,7 +625,7 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 		name := itemDetails.Items[id][0]
 
 		//Forecast prices with STL decomposition
-		priceSTL := projectPrice_FourierSTL(id, 365 * 3, 30, true)
+		priceSTL, _, _ := projectPrice_FourierSTL(id, 365 * 3, 30, true)
 		z_score_stl := findZScore(id, priceSTL, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 		
@@ -603,108 +647,93 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 	log.Println("You Receive:", receiveValue)
 	log.Println("____________________________________________________")
 }
-//Extracts time-series sales data from Rolimon's asset URL
-func extractPriceSeries(url string) (*tools.Sales, error) {
-	//Extract raw HTML from item page source
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch url: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response: %v", err)
-	}
-	html := string(body)
-
-	//Find sales data embedded within source using regex search
-	re := regexp.MustCompile(`var\s+sales_data\s*=\s*(\{[\s\S]*?\});`)
-	match := re.FindStringSubmatch(html)
-	if len(match) < 2 {
-		return nil, fmt.Errorf("sales data not found in page HTML")
-	}
-	salesDataJSON := strings.TrimSuffix(match[1], ";")
-
-	// Parse the actual sales data
-	var salesData tools.Sales
-	err = json.Unmarshal([]byte(salesDataJSON), &salesData)
-	if err != nil {
-		// Show first part of JSON for debugging
-		preview := salesDataJSON
-		if len(preview) > 200 {
-			preview = preview[:200] + "..."
-		}
-		return nil, fmt.Errorf("failed to parse sales data JSON: %v\nJSON preview: %s", err, preview)
-	}
-
-	return &salesData, nil
-}
 
 func init() {
-	//Precompute mean & standard deviation for past sales data of all items
-	//Write to a .csv file to use for querying later
-	if config.PopulateSalesData {
-		itemDetails := tools.GetLimitedData()
-
-		var sales_stats []tools.StatsPoint
-		sales_data := make(map[string]*tools.Sales)
-
-		var mu sync.Mutex
-		var wg sync.WaitGroup
-
-		//Initialize global sales maps to check which values needed
-		tools.SalesStats = tools.RetrieveSalesStats()
-		tools.SalesData = tools.RetrieveSalesData()
-
-		//Multithread scan Rolimon's for sales data
-		maxThreads := 4
-		semaphore := make(chan struct{}, maxThreads)
-
-		for id, _ := range itemDetails.Items {
-			wg.Add(1)
-			go func(itemID string) {
-				defer wg.Done()
-
-				semaphore <- struct{}{}        // Acquire thread
-				defer func() { <-semaphore }() // Release thread
-
-				var historyData *tools.Sales
-
-				mean, SD := 0.0, 0.0
-				if tools.SalesStats[id].Mean != 0.0 {
-					mean, SD = tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
-					historyData = tools.SalesData[id]
-				} else {
-					//Get data from lookback period
-					mean, SD, historyData, _ = processPriceSeries(itemID, config.LookbackPeriod, 0)
-				}
-
-				//Check throttle to prevent excessive rate-limiting
-				if mean == 0.0 && SD == 0.0 {
-					time.Sleep(15 * time.Second)
-				}
-
-				mu.Lock()
-
-				sales_stats = append(sales_stats, tools.StatsPoint{ID: itemID, Mean: mean, StdDev: SD})
-				log.Println("(", len(sales_stats), "/", len(itemDetails.Items), ")", "Reading sales stats of", itemID, "| Mean:", mean, "| SD:", SD)
-
-				if historyData != nil {
-					sales_data[itemID] = historyData
-					log.Println("Reading sales data. Length: ", len(historyData.AvgDailySalesPrice))
-				}
-
-				mu.Unlock()
-			}(id)
-		}
-
-		wg.Wait()
-		log.Println("Caching stats and data into files..")
-		tools.StoreSalesStats(sales_stats)
-		tools.StoreSalesData(sales_data)
-	}
 	//Initialize global sales maps
 	tools.SalesStats = tools.RetrieveSalesStats()
 	tools.SalesData = tools.RetrieveSalesData()
+
+	//Precompute mean & standard deviation for past sales data of all items
+	//Write to a .csv file to use for querying later
+	if config.PopulateSalesData {
+		cycleIncomplete := true //to check if data collection is complete
+
+		for cycleIncomplete {
+			//Refresh global sales cache
+			tools.SalesStats = tools.RetrieveSalesStats()
+			tools.SalesData = tools.RetrieveSalesData()
+			
+			log.Println("Sales Stats: ", len(tools.SalesStats))
+			log.Println("Sales Data: ", len(tools.SalesData))
+
+			cycleIncomplete = false
+			itemDetails := tools.GetLimitedData()
+
+			var sales_stats []tools.StatsPoint
+			sales_data := make(map[string]*tools.Sales)
+
+			var mu sync.Mutex
+			var wg sync.WaitGroup
+
+			//Multithread scan Rolimon's for sales data
+			maxThreads := 4
+			semaphore := make(chan struct{}, maxThreads)
+
+			for id, _ := range itemDetails.Items {
+				wg.Add(1)
+				go func(itemID string) {
+					defer wg.Done()
+
+					semaphore <- struct{}{}
+					defer func() { <-semaphore }()
+
+					//Try to pull from caches
+					var historyData *tools.Sales
+
+					mean, SD := 0.0, 0.0
+					if tools.SalesStats[id].Mean != 0.0 { //stats cache
+						mean, SD = tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev
+					} else {
+						//Get data from lookback period
+						mean, SD, historyData, _ = processPriceSeries(itemID, config.LookbackPeriod, 0)
+						cycleIncomplete = true
+					}
+
+					if tools.SalesData[id] != nil { //data cache
+						historyData = tools.SalesData[id]
+					} else {
+						if (historyData == nil) {
+							_, _, historyData, _ = processPriceSeries(itemID, config.LookbackPeriod, 0)
+						}
+						cycleIncomplete = true
+					}
+
+					//Check throttle to prevent excessive rate-limiting
+					if mean == 0.0 && SD == 0.0 {
+						log.Println("Rate limited ... waiting")
+						time.Sleep(15 * time.Second)
+						cycleIncomplete = true
+					}
+
+					mu.Lock()
+
+					sales_stats = append(sales_stats, tools.StatsPoint{ID: itemID, Mean: mean, StdDev: SD})
+					log.Println("(", len(sales_stats), "/", len(itemDetails.Items), ")", "Reading sales stats of", itemID, "| Mean:", mean, "| SD:", SD)
+
+					if historyData != nil {
+						sales_data[itemID] = historyData
+						log.Println("Reading sales data | Length: ", len(historyData.AvgDailySalesPrice))
+					}
+
+					mu.Unlock()
+				}(id)
+			}
+
+			wg.Wait()
+			log.Println("Caching stats and data into files..")
+			tools.StoreSalesStats(sales_stats)
+			tools.StoreSalesData(sales_data)
+		}
+		
+	}
 }

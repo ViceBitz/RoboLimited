@@ -62,7 +62,7 @@ func throttleMonitor() {
 }
 
 // Monitor limited deals via Rolimon's deals page
-func monitorDeals(live_money bool) {
+func snipeDeals(live_money bool) {
 	//Make dummy purchase for X-CSRF token
 	ExecutePurchase("21070012", true, -1, false)
 
@@ -185,18 +185,18 @@ func main() {
 	giveItems := []string{}
 	receiveItems := []string{}
 	EvaluateTrade(giveItems, receiveItems, 365 * 3, 30)
-	*/
+*/
 
-	//Check singular item's price trend with z-score
-	//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
+//Check singular item's price trend with z-score
+//log.Println(findZScore("2620478831", 350, false)) //Check an item's current trend
 
-	//Finds current price-lowering items in market
-	//SearchFallingItems(-0.5, 2000, 6000, true)
+//Finds current price-lowering items in market
+//SearchFallingItems(-0.5, 2000, 6000, true)
 
-	//Forecast growth potential with z-score analysis of past year
-	//ForecastWithin(-1000, 1000, 2000, 4000, 365 * 3, 30, true)
+//Forecast growth potential with z-score analysis of past year
+//ForecastWithin(-1000, 1000, 2000, 4000, 365 * 3, 30, true)
 
-	/*
+/*
 	//General forecast tester
 	itemDetails := tools.GetLimitedData()
 	onlyDemand := false                    //scan demand items only

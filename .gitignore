@@ -1,2 +1,3 @@
 config/settings.go
 web/proxies.txt
+data/sales_data.json

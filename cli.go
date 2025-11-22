@@ -3,118 +3,117 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"robolimited/config"
-    "strings"
-    "log"
-    "robolimited/tools"
+	"robolimited/tools"
+	"strings"
 )
 
 /*
 Command-line interface to run various modules and operations
 */
 
-//Start deal sniper process
+// Start deal sniper process
 func monitor() {
-    monitorDeals(config.LiveMoney)
+	snipeDeals(config.LiveMoney)
 }
 
-//Displays player inventory metrics
+// Displays player inventory metrics
 func analyzeInventory(forecast_type string) {
-    AnalyzeInventory(true, forecast_type)
+	AnalyzeInventory(true, forecast_type)
 }
 
-//Assess future value of item trade
+// Assess future value of item trade
 func analyzeTrade(giveItems []string, receiveItems []string, daysPast int64, daysFuture int64) {
-    EvaluateTrade(giveItems, receiveItems, daysPast, daysFuture)
+	EvaluateTrade(giveItems, receiveItems, daysPast, daysFuture)
 }
 
-//Finds current price-lowering items in market
+// Finds current price-lowering items in market
 func searchDips(threshold float64, priceLow float64, priceHigh float64, isDemand bool) {
-    SearchFallingItems(threshold, priceLow, priceHigh, isDemand)
+	SearchFallingItems(threshold, priceLow, priceHigh, isDemand)
 }
 
-//Forecast growth potential with z-score analysis of past year
+// Forecast growth potential with z-score analysis of past year
 func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) {
-    ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand)
+	ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand)
 }
 
-//General forecaster
+// General forecaster
 func forecast(forecastItems []string, daysPast int64, daysFuture int64, onlyDemand bool) {
-    itemDetails := tools.GetLimitedData()
-    for _, id := range forecastItems {
-        name := itemDetails.Items[id][0]
-        isDemand := int(itemDetails.Items[id][5].(float64)) != -1
-        if !onlyDemand || isDemand {
-            log.Println("____________________________________________________")
-            //Forecast prices with z-score analysis
-            z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
-            log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
+	itemDetails := tools.GetLimitedData()
+	for _, id := range forecastItems {
+		name := itemDetails.Items[id][0]
+		isDemand := int(itemDetails.Items[id][5].(float64)) != -1
+		if !onlyDemand || isDemand {
+			log.Println("____________________________________________________")
+			//Forecast prices with z-score analysis
+			z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
+			log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
-            //Forecast prices with STL decomposition
-            priceSTL := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
-            z_score_stl := findZScore(id, priceSTL, false)
-            log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+			//Forecast prices with STL decomposition
+			priceSTL, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
+			z_score_stl := findZScore(id, priceSTL, false)
+			log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 
-        }
-    }
+		}
+	}
 }
-
 
 func main() {
-    // Define the main mode flag
-    mode := flag.String("mode", "monitor", "Which function to run: monitor, analyzeInventory, analyzeTrade, searchDips, searchForecast, forecast, executor")
+	// Define the main mode flag
+	mode := flag.String("mode", "", "Which function to run: monitor, analyzeInventory, analyzeTrade, searchDips, searchForecast, forecast, executor")
 
-    // Flags for analyzeTrade
-    give := flag.String("give", "", "Comma-separated list of items to give")
-    receive := flag.String("receive", "", "Comma-separated list of items to receive")
+	// Flags for analyzeTrade
+	give := flag.String("give", "", "Comma-separated list of items to give")
+	receive := flag.String("receive", "", "Comma-separated list of items to receive")
 
-    // Flags for analyzeInventory
-    forecastType := flag.String("forecast_type", "stl", "Forecast type for inventory analysis")
+	// Flags for analyzeInventory
+	forecastType := flag.String("forecast_type", "stl", "Forecast type for inventory analysis")
 
-    // Flags for searchDips
-    threshold := flag.Float64("threshold", -0.5, "Threshold for price dips")
-    priceLow := flag.Float64("priceLow", 0.0, "Minimum price for search")
-    priceHigh := flag.Float64("priceHigh", 1000000.0, "Maximum price for search")
-    isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
+	// Flags for searchDips
+	threshold := flag.Float64("threshold", -0.5, "Threshold for price dips")
+	priceLow := flag.Float64("priceLow", 0.0, "Minimum price for search")
+	priceHigh := flag.Float64("priceHigh", 1000000.0, "Maximum price for search")
+	isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
 
-    // Flags for forecast
-    items := flag.String("items", "", "Comma-separated list of items to forecast")
-    daysPast := flag.Int64("daysPast", 365 * 5, "Number of past days of historical data to include in the forecast")
-    daysFuture := flag.Int64("daysFuture", 30, "Number of days forward to project avg. price")
+	// Flags for forecast
+	items := flag.String("items", "", "Comma-separated list of items to forecast")
+	daysPast := flag.Int64("daysPast", 365*5, "Number of past days of historical data to include in the forecast")
+	daysFuture := flag.Int64("daysFuture", 30, "Number of days forward to project avg. price")
 
-    flag.Parse()
+	flag.Parse()
 
-    switch *mode {
-    case "monitor":
-        monitor()
+	switch *mode {
+	case "monitor":
+		monitor()
 
-    case "analyzeInventory":
-        analyzeInventory(*forecastType)
+	case "analyzeInventory":
+		analyzeInventory(*forecastType)
 
-    case "analyzeTrade":
-        if *give == "" || *receive == "" {
-            fmt.Println("Please provide both -give and -receive items for analyzeTrade")
-            return
-        }
-        giveItems := strings.Split(*give, ",")
-        receiveItems := strings.Split(*receive, ",")
-        analyzeTrade(giveItems, receiveItems, *daysPast, *daysFuture)
+	case "analyzeTrade":
+		if *give == "" || *receive == "" {
+			fmt.Println("Please provide both -give and -receive items for analyzeTrade")
+			return
+		}
+		giveItems := strings.Split(*give, ",")
+		receiveItems := strings.Split(*receive, ",")
+		analyzeTrade(giveItems, receiveItems, *daysPast, *daysFuture)
 
-    case "searchDips":
-        searchDips(*threshold, *priceLow, *priceHigh, *isDemand)
+	case "searchDips":
+		searchDips(*threshold, *priceLow, *priceHigh, *isDemand)
 
-    case "searchForecast":
-        searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand)
+	case "searchForecast":
+		searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand)
 
-    case "forecast":
-        if *items == "" {
-            fmt.Println("Please provide -items for forecast")
-            return
-        }
-        forecastItems := strings.Split(*items, ",")
-        forecast(forecastItems, *daysPast, *daysFuture, *isDemand)
+	case "forecast":
+		if *items == "" {
+			fmt.Println("Please provide -items for forecast")
+			return
+		}
+		forecastItems := strings.Split(*items, ",")
+		forecast(forecastItems, *daysPast, *daysFuture, *isDemand)
 
-    default:
-        fmt.Println("Unknown mode:", *mode)
-    }
+	default:
+		fmt.Println("Unknown mode:", *mode)
+	}
 }

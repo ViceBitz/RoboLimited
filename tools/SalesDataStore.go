@@ -81,7 +81,7 @@ func StoreSalesStats(data []StatsPoint) {
 func RetrieveSalesStats() map[string]Stats {
 	file, err := os.Open(config.SalesStatsFile)
 	if err != nil {
-		log.Println("Failed to open CSV file")
+		log.Println("Failed to open CSV file", err)
 		return nil
 	}
 	defer file.Close()
@@ -89,7 +89,7 @@ func RetrieveSalesStats() map[string]Stats {
 	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		log.Println("Failed to read CSV file")
+		log.Println("Failed to read CSV file", err)
 		return nil
 	}
 
