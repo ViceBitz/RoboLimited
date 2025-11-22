@@ -10,10 +10,10 @@ import (
 	"robolimited/config"
 	"robolimited/tools"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"strconv"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -27,7 +27,7 @@ Drives decision-making and guides buying/selling/trading. Used across different
 components in this project, both automatically and manually.
 */
 
-//Extracts time-series sales data from Rolimon's asset URL
+// Extracts time-series sales data from Rolimon's asset URL
 func extractPriceSeries(url string) (*tools.Sales, error) {
 	//Extract raw HTML from item page source
 	html, _ := tools.GetPageSource(url)
@@ -61,7 +61,7 @@ func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, f
 	//Pull price data from cache if possible
 	historyData := tools.SalesData[id]
 	var err error
-	if (tools.SalesData[id] == nil) {
+	if tools.SalesData[id] == nil {
 		historyData, err = extractPriceSeries(url)
 	}
 
@@ -136,7 +136,7 @@ func processPriceSeries(id string, daysLower int64, daysUpper int64) (float64, f
 	return mean, std, historyData, pricePoints
 }
 
-//Extracts all owner ids of specific item from Rolimon's asset URL
+// Extracts all owner ids of specific item from Rolimon's asset URL
 func extractOwners(url string) ([]string, error) {
 	//Extract raw HTML from item page source
 	html, _ := tools.GetPageSource(url)
@@ -197,7 +197,7 @@ and the distribution across date range [L2, U2] as the reference/baseline.
 We predict a future price by casting last year's z-score change to this year, in the
 following manner: P_future = P_avg_current + dated_z_score * sd_current
 */
-func projectPrice_ZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) (float64, float64) {
+func modelZScore(id string, daysL1 int64, daysU1 int64, daysL2 int64, daysU2 int64, logStats bool) (float64, float64) {
 	//**Does not read from sales data cache, use "findZScore" for that
 	mean, sd, _, _ := processPriceSeries(id, daysL2, daysU2)    //Reference distribution
 	avgPrice, _, _, _ := processPriceSeries(id, daysL1, daysU1) //Target mean
@@ -227,13 +227,17 @@ S(t) is modeled using Fourier regression to identify weekly and yearly cycles.
 
 The model would take on the form:
 y(t) = beta_0 + beta_1 * linearTrend(t) + fourierFeatures(t)
-				   ^ T                  +        ^S
+
+	^ T                  +        ^S
 
 Once we have models for T and S, we can predict future prices by simplying extending the
 model to (t, t + 1 ... t + future).
+
+Returns the forecasted price, residual standard dev. (to examine stability), peaks and dips timestamps
 */
-func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, float64) {
-	seriesMean, seriesSD, _, pricePoints := processPriceSeries(id, daysBefore, 0)
+
+func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, []int, []int) {
+	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
 
 	//Prepare price series for decomposition
 	priceSeries := make([]float64, len(pricePoints))
@@ -242,8 +246,8 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 	}
 	n := len(priceSeries)
 
-	if (n < 20) {
-		return -999, -1, -1
+	if n < 20 {
+		return math.NaN(), -1, make([]int, 0), make([]int, 0)
 	}
 
 	//Fourier regression + linear drift to model seasonality
@@ -277,11 +281,11 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 	}
 
 	//Solve the regression for optimal betas
-	beta, _ := tools.SolveNormalEq(X, y) 
+	beta, _ := tools.SolveNormalEq(X, y)
 
 	//Forecast prices in future days
 	if daysFuture <= 0 {
-		return math.NaN(), -1, -1
+		return math.NaN(), -1, make([]int, 0), make([]int, 0)
 	}
 	horizon := int(daysFuture)
 	var sumF float64
@@ -311,151 +315,185 @@ func projectPrice_FourierSTL(id string, daysBefore int64, daysFuture int64, logS
 
 	priceFuture := sumF / float64(horizon)
 
-	if logStats {
-		//Visualize Fourier regression
-		fitted := make(plotter.XYs, n)
-		weeklySeason := make(plotter.XYs, n)
-		var yearlySeason plotter.XYs
+	//Recover coefficients from beta array
+	idx := 0
+	b0 := beta[idx]
+	idx++
+	bTrend := beta[idx]
+	idx++
+
+	bWeekly := beta[idx : idx+2*Kw]
+	idx += 2 * Kw
+	var bYearly []float64
+	if useYearly {
+		bYearly = beta[idx : idx+2*Ky]
+	}
+	//Dot product helper
+	dot := func(a, b []float64) float64 {
+		s := 0.0
+		for i := 0; i < len(a); i++ {
+			s += a[i] * b[i]
+		}
+		return s
+	}
+	//Visualize Fourier regression
+	fitted := make(plotter.XYs, n)
+	weeklySeason := make(plotter.XYs, n)
+	var yearlySeason plotter.XYs
+	if useYearly {
+		yearlySeason = make(plotter.XYs, n)
+	}
+	rawPts := make(plotter.XYs, n)
+
+	//Construct linear trendline
+	trendLine := make(plotter.XYs, n)
+	for t := 0; t < n; t++ {
+		x := float64(t)
+		trendVal := b0 + bTrend*(float64(t)/float64(n))
+
+		trendLine[t].X = x
+		trendLine[t].Y = trendVal
+	}
+
+	//Make plotting data
+	for t := 0; t < n; t++ {
+		x := float64(t)
+		rawPts[t].X = x
+		rawPts[t].Y = priceSeries[t]
+
+		wf := tools.FourierFeatures(t, 7.0, Kw)
+		weeklySeason[t].X = x
+		weeklySeason[t].Y = dot(wf, bWeekly)
+
+		ycomp := 0.0
 		if useYearly {
-			yearlySeason = make(plotter.XYs, n)
+			yf := tools.FourierFeatures(t, 365.25, Ky)
+			yearlySeason[t].X = x
+			yearlySeason[t].Y = dot(yf, bYearly)
+			ycomp = yearlySeason[t].Y
 		}
-		rawPts := make(plotter.XYs, n)
 
-		idx := 0
-		b0 := beta[idx]
-		idx++
-		bTrend := beta[idx]
-		idx++
-		
-		//Construct linear trendline
-		trendLine := make(plotter.XYs, n)
-		for t := 0; t < n; t++ {
+		trendVal := bTrend * (float64(t) / float64(n))
+		fitted[t].X = x
+		fitted[t].Y = b0 + trendVal + weeklySeason[t].Y + ycomp
+		if fitted[t].Y < 0 {
+			fitted[t].Y = 0
+		}
+	}
+
+	//Visualization
+	var proj plotter.XYs
+	if daysFuture > 0 {
+		fh := int(daysFuture)
+		proj = make(plotter.XYs, fh)
+		for h := 1; h <= fh; h++ {
+			t := n - 1 + h
 			x := float64(t)
-			trendVal := b0 + bTrend * (float64(t) / float64(n))
-
-			trendLine[t].X = x
-			trendLine[t].Y = trendVal
-		}
-
-		//Make plotting data
-		bWeekly := beta[idx : idx+2*Kw]
-		idx += 2 * Kw
-		var bYearly []float64
-		if useYearly {
-			bYearly = beta[idx : idx+2*Ky]
-		}
-		dot := func(a, b []float64) float64 {
-			s := 0.0
-			for i := 0; i < len(a); i++ {
-				s += a[i] * b[i]
-			}
-			return s
-		}
-
-		for t := 0; t < n; t++ {
-			x := float64(t)
-			rawPts[t].X = x
-			rawPts[t].Y = priceSeries[t]
-
 			wf := tools.FourierFeatures(t, 7.0, Kw)
-			weeklySeason[t].X = x
-			weeklySeason[t].Y = dot(wf, bWeekly)
-
-			ycomp := 0.0
+			wsum := dot(wf, bWeekly)
+			ysum := 0.0
 			if useYearly {
 				yf := tools.FourierFeatures(t, 365.25, Ky)
-				yearlySeason[t].X = x
-				yearlySeason[t].Y = dot(yf, bYearly)
-				ycomp = yearlySeason[t].Y
+				ysum = dot(yf, bYearly)
 			}
-
 			trendVal := bTrend * (float64(t) / float64(n))
-			fitted[t].X = x
-			fitted[t].Y = b0 + trendVal + weeklySeason[t].Y + ycomp
-			if fitted[t].Y < 0 {
-				fitted[t].Y = 0
+			yhat := b0 + trendVal + wsum + ysum
+			if yhat < 0 {
+				yhat = 0
 			}
+			proj[h-1].X = x
+			proj[h-1].Y = yhat
 		}
+	}
 
-		var proj plotter.XYs
-		if daysFuture > 0 {
-			fh := int(daysFuture)
-			proj = make(plotter.XYs, fh)
-			for h := 1; h <= fh; h++ {
-				t := n - 1 + h
-				x := float64(t)
-				wf := tools.FourierFeatures(t, 7.0, Kw)
-				wsum := dot(wf, bWeekly)
-				ysum := 0.0
-				if useYearly {
-					yf := tools.FourierFeatures(t, 365.25, Ky)
-					ysum = dot(yf, bYearly)
-				}
-				trendVal := bTrend * (float64(t) / float64(n))
-				yhat := b0 + trendVal + wsum + ysum
-				if yhat < 0 {
-					yhat = 0
-				}
-				proj[h-1].X = x
-				proj[h-1].Y = yhat
-			}
-		}
+	//Create graphs
+	plt := plot.New()
+	plt.Title.Text = "Fourier Seasonality: Fit & Projection"
+	plt.X.Label.Text = "Day"
+	plt.Y.Label.Text = "Price"
 
-		//Create graphs
-		plt := plot.New()
-		plt.Title.Text = "Fourier Seasonality: Fit & Projection"
-		plt.X.Label.Text = "Day"
-		plt.Y.Label.Text = "Price"
+	dots, _ := plotter.NewScatter(rawPts)
+	dots.Color = color.Black
+	dots.Radius = vg.Points(1.2)
 
-		dots, _ := plotter.NewScatter(rawPts)
-		dots.Color = color.Black
-		dots.Radius = vg.Points(1.2)
+	lf, _ := plotter.NewLine(fitted)
+	lf.Color = color.RGBA{R: 34, G: 139, B: 34, A: 255}
+	lf.Width = vg.Points(2)
 
-		lf, _ := plotter.NewLine(fitted)
-		lf.Color = color.RGBA{R: 34, G: 139, B: 34, A: 255}
-		lf.Width = vg.Points(2)
+	lw, _ := plotter.NewLine(weeklySeason)
+	lw.Color = color.RGBA{R: 30, G: 144, B: 255, A: 255}
+	lw.Dashes = []vg.Length{vg.Points(5), vg.Points(3)}
+	lw.Width = vg.Points(1.5)
 
-		lw, _ := plotter.NewLine(weeklySeason)
-		lw.Color = color.RGBA{R: 30, G: 144, B: 255, A: 255}
-		lw.Dashes = []vg.Length{vg.Points(5), vg.Points(3)}
-		lw.Width = vg.Points(1.5)
+	lt, _ := plotter.NewLine(trendLine)
+	lt.Color = color.RGBA{R: 220, G: 20, B: 60, A: 255}
+	lt.Width = vg.Points(2)
 
-		lt, _ := plotter.NewLine(trendLine)
-		lt.Color = color.RGBA{R: 220, G: 20, B: 60, A: 255}
-		lt.Width = vg.Points(2)
+	plt.Add(lt)
+	plt.Legend.Add("Trendline", lt)
 
-		plt.Add(lt)
-		plt.Legend.Add("Trendline", lt)
+	plt.Add(dots, lf, lw)
+	plt.Legend.Add("Raw", dots)
+	plt.Legend.Add("Fitted", lf)
+	plt.Legend.Add("Weekly season", lw)
 
-		plt.Add(dots, lf, lw)
-		plt.Legend.Add("Raw", dots)
-		plt.Legend.Add("Fitted", lf)
-		plt.Legend.Add("Weekly season", lw)
+	if useYearly {
+		ly, _ := plotter.NewLine(yearlySeason)
+		ly.Color = color.RGBA{R: 160, G: 32, B: 240, A: 255}
+		ly.Dashes = []vg.Length{vg.Points(3), vg.Points(3)}
+		ly.Width = vg.Points(1.5)
+		plt.Add(ly)
+		plt.Legend.Add("Yearly season", ly)
+	}
 
+	//Set x-axis ticks to month (30 day intervals)
+	var x_ticks []plot.Tick
+	for i := 0; i <= int(daysBefore); i += 30 {
+		x_ticks = append(x_ticks, plot.Tick{Value: float64(i), Label: fmt.Sprintf("%d", i)})
+	}
+	plt.X.Tick.Marker = plot.ConstantTicks(x_ticks)
+
+	if err := plt.Save(vg.Length(daysBefore/365*300), 450, "data/fourier_stl_model.png"); err != nil {
+		fmt.Println("plot save png:", err)
+	}
+
+	//Classify stable trends with residual component SD
+	residuals := make([]float64, n)
+	for t := 0; t < n; t++ {
+		trendVal := b0 + bTrend*(float64(t)/float64(n))
+		weeklyVal := dot(tools.FourierFeatures(t, 7.0, Kw), bWeekly)
+		yearlyVal := 0.0
 		if useYearly {
-			ly, _ := plotter.NewLine(yearlySeason)
-			ly.Color = color.RGBA{R: 160, G: 32, B: 240, A: 255}
-			ly.Dashes = []vg.Length{vg.Points(3), vg.Points(3)}
-			ly.Width = vg.Points(1.5)
-			plt.Add(ly)
-			plt.Legend.Add("Yearly season", ly)
+			yearlyVal = dot(tools.FourierFeatures(t, 365.25, Ky), bYearly)
 		}
+		fittedVal := trendVal + weeklyVal + yearlyVal
+		residuals[t] = priceSeries[t] - fittedVal
+	}
+	var sumRes float64
+	for _, r := range residuals {
+		sumRes += r * r
+	}
+	residualSD := math.Sqrt(sumRes / float64(n)) //lower = stable
 
-		//Set x-axis ticks to month (30 day intervals)
-		var x_ticks []plot.Tick
-		for i := 0; i <= int(daysBefore); i += 30 {
-			x_ticks = append(x_ticks, plot.Tick{Value: float64(i), Label: fmt.Sprintf("%d", i)})
+	//Pinpoint peaks and dips in model
+	peaks := []int{} // store indices
+	dips := []int{}
+	for t := 1; t < n-1; t++ {
+		prev := fitted[t-1].Y
+		curr := fitted[t].Y
+		next := fitted[t+1].Y
+
+		if curr > prev && curr > next {
+			peaks = append(peaks, t)
 		}
-		plt.X.Tick.Marker = plot.ConstantTicks(x_ticks)
-
-		if err := plt.Save(vg.Length(daysBefore/365 * 300), 450, "data/fourier_stl_model.png"); err != nil {
-			fmt.Println("plot save png:", err)
+		if curr < prev && curr < next {
+			dips = append(dips, t)
 		}
 	}
 
 	//@todo pinpoint peaks and dips, output key breakpoints
 
-	return priceFuture, seriesMean, seriesSD
+	return priceFuture, residualSD, peaks, dips
 }
 
 // Identify dip to support buy decision with price z-score
@@ -498,8 +536,8 @@ type Item struct {
 	z_score float64
 }
 type Prediction struct {
-	id      string
-	z_score float64
+	id          string
+	z_score     float64
 	priceFuture float64
 }
 
@@ -515,7 +553,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
-			priceFuture, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, config.LogConsole)
+			priceFuture, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
 				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture})
@@ -571,12 +609,12 @@ func SearchItemsWithin(z_low float64, z_high float64, priceLow float64, priceHig
 	return onlyItems
 }
 
-//Scans items under z-score threshold within price range and demand level in lookback period
+// Scans items under z-score threshold within price range and demand level in lookback period
 func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isDemand bool) []string {
 	return SearchItemsWithin(-9999, z_high, priceLow, priceHigh, isDemand)
 }
 
-//Looks for item owners within net worth range and construct trade links 
+// Looks for item owners within net worth range and construct trade links
 func FindOwners(targetItemId string, worth_low float64, worth_high float64, limit int) {
 	url := fmt.Sprintf(config.RolimonsSite, targetItemId)
 	ownerIds, _ := extractOwners(url)
@@ -586,10 +624,10 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 	//Calculate net worth of every owner
 	log.Println(len(ownerIds))
 	for _, owner := range ownerIds {
-		if (limit <= 0) { //Don't go over link limit
+		if limit <= 0 { //Don't go over link limit
 			break
 		}
-		limit--
+
 		assetIds := tools.GetInventory(owner)
 		netWorth := 0.0
 		for _, id := range assetIds {
@@ -601,13 +639,15 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 		}
 
 		//Check if total RAP within net worth range
-		if (worth_low <= netWorth && netWorth <= worth_high) {
-			log.Println("Owner Trade Link:", fmt.Sprintf(config.PlayerTrade, owner))
+		if netWorth > 0 && worth_low <= netWorth && netWorth <= worth_high {
+			log.Println("Trade Link:", fmt.Sprintf(config.PlayerTrade, owner), "| Net Worth:", netWorth)
+			limit--
 		}
+		time.Sleep(2 * time.Second) //Avoid rate-limit on inventory scan
 	}
 }
 
-//Analyzes the z-scores of inventory items and prints list of metrics
+// Analyzes the z-scores of inventory items and prints list of metrics
 func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	assetIds := tools.GetInventory(fmt.Sprintf("%d", config.RobloxId))
 	itemDetails := tools.GetLimitedData()
@@ -650,13 +690,13 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 
 			if forecastType == "z_score" {
 				//Examine z-score from 2 months last year compared to its preceding 30 days
-				past_z_score, priceFuture = projectPrice_ZScore(id, 330, 270, 450, 360, config.LogConsole)
+				past_z_score, priceFuture = modelZScore(id, 330, 270, 450, 360, config.LogConsole)
 				if past_z_score != past_z_score {
 					continue //Check for NaN
 				}
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
-				priceFuture, _, _ = projectPrice_FourierSTL(id, 365 * 3, 60, false)
+				priceFuture, _, _, _ = modelFourierSTL(id, 365*3, 60, false)
 				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
 
@@ -671,18 +711,21 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	fmt.Println("Listed Items: ", fmt.Sprintf("%d", itemsProcessed)+"/"+fmt.Sprintf("%d", len(assetIds)))
 }
 
-//Estimates item exchange value by projecting item prices with STL-Fourier
+// Estimates item exchange value by projecting item prices with STL-Fourier
 func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFuture int64) {
 	itemDetails := tools.GetLimitedData()
 
 	var forecast = func(id string) float64 {
+		if len(itemDetails.Items[id]) == 0 {
+			return 0
+		}
 		name := itemDetails.Items[id][0]
 
 		//Forecast prices with STL decomposition
-		priceFuture, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
+		priceFuture, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, true)
 		z_score_stl := findZScore(id, priceFuture, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceFuture)
-		
+
 		return priceFuture
 	}
 
@@ -756,7 +799,7 @@ func init() {
 					if tools.SalesData[id] != nil { //data cache
 						historyData = tools.SalesData[id]
 					} else {
-						if (historyData == nil) {
+						if historyData == nil {
 							_, _, historyData, _ = processPriceSeries(itemID, config.LookbackPeriod, 0)
 						}
 						cycleIncomplete = true
@@ -788,6 +831,6 @@ func init() {
 			tools.StoreSalesStats(sales_stats)
 			tools.StoreSalesData(sales_data)
 		}
-		
+
 	}
 }

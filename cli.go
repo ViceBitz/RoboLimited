@@ -13,36 +13,35 @@ import (
 Command-line interface to run various modules and operations
 */
 
-//Start deal sniper process
+// Start deal sniper process
 func monitor() {
 	snipeDeals(config.LiveMoney)
 }
 
-//Displays player inventory metrics
+// Displays player inventory metrics
 func analyzeInventory(forecast_type string) {
 	AnalyzeInventory(true, forecast_type)
 }
 
-//Assess future value of item trade
+// Assess future value of item trade
 func analyzeTrade(giveItems []string, receiveItems []string, daysPast int64, daysFuture int64) {
 	EvaluateTrade(giveItems, receiveItems, daysPast, daysFuture)
 }
 
-//Finds current price-lowering items in market
+// Finds current price-lowering items in market
 func searchDips(threshold float64, priceLow float64, priceHigh float64, isDemand bool) {
 	SearchFallingItems(threshold, priceLow, priceHigh, isDemand)
 }
 
-//Forecast growth potential with z-score analysis
+// Forecast growth potential with z-score analysis
 func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) {
 	ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand)
 }
 
-//Scan for item owners within net worth range
+// Scan for item owners within net worth range
 func searchOwners(itemId string, worth_low float64, worth_high float64, limit int) {
 	FindOwners(itemId, worth_low, worth_high, limit)
 }
-
 
 // General forecaster
 func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
@@ -51,11 +50,11 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 		name := itemDetails.Items[id][0]
 		log.Println("____________________________________________________")
 		//Forecast prices with z-score analysis
-		z_score, priceFuture := projectPrice_ZScore(id, 330, 270, 450, 360, false)
+		z_score, priceFuture := modelZScore(id, 330, 270, 450, 360, false)
 		log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
 		//Forecast prices with STL decomposition
-		priceSTL, _, _ := projectPrice_FourierSTL(id, daysPast, daysFuture, true)
+		priceSTL, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, true)
 		z_score_stl := findZScore(id, priceSTL, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
 	}
@@ -108,9 +107,9 @@ func main() {
 
 	case "searchForecast":
 		searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand)
-	
+
 	case "searchOwners":
-		if (*itemId == "") {
+		if *itemId == "" {
 			fmt.Println("Please provide a target item id")
 			return
 		}
