@@ -39,8 +39,8 @@ func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFut
 }
 
 //Scan for item owners within net worth range
-func searchOwners(itemId string, worth_low float64, worth_high float64) {
-	FindOwners(itemId, worth_low, worth_high)
+func searchOwners(itemId string, worth_low float64, worth_high float64, limit int) {
+	FindOwners(itemId, worth_low, worth_high, limit)
 }
 
 
@@ -78,6 +78,7 @@ func main() {
 	priceHigh := flag.Float64("priceHigh", 1000000.0, "Maximum price for search")
 	isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
 	itemId := flag.String("item", "", "Specific item to target")
+	limit := flag.Int("limit", 20, "Max records to output")
 
 	// Flags for forecast
 	items := flag.String("items", "", "Comma-separated list of items to forecast")
@@ -113,8 +114,8 @@ func main() {
 			fmt.Println("Please provide a target item id")
 			return
 		}
-		searchOwners(*itemId, *priceLow, *priceHigh)
-		
+		searchOwners(*itemId, *priceLow, *priceHigh, *limit)
+
 	case "forecast":
 		if *items == "" {
 			fmt.Println("Please provide -items for forecast")

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"strconv"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -149,7 +150,7 @@ func extractOwners(url string) ([]string, error) {
 
 	jsonStr := strings.TrimSuffix(match[1], ";")
 	var bcData struct {
-		OwnerIDs []string `json:"owner_ids"`
+		OwnerIDs []int64 `json:"owner_ids"`
 	}
 
 	//Parse the JSON
@@ -161,8 +162,13 @@ func extractOwners(url string) ([]string, error) {
 		}
 		return nil, fmt.Errorf("failed to parse bc_copies_data JSON: %v\nPreview: %s", err, preview)
 	}
+	//Convert to string ids
+	owners := make([]string, len(bcData.OwnerIDs))
+	for i, id := range bcData.OwnerIDs {
+		owners[i] = strconv.FormatInt(id, 10)
+	}
 
-	return bcData.OwnerIDs, nil
+	return owners, nil
 }
 
 // Calculates Z-score of price relative to past sales data; pulls from cached data if exists
@@ -571,14 +577,18 @@ func SearchFallingItems(z_high float64, priceLow float64, priceHigh float64, isD
 }
 
 //Looks for item owners within net worth range and construct trade links 
-func FindOwners(targetItemId string, worth_low float64, worth_high float64) {
+func FindOwners(targetItemId string, worth_low float64, worth_high float64, limit int) {
 	url := fmt.Sprintf(config.RolimonsSite, targetItemId)
 	ownerIds, _ := extractOwners(url)
 
 	itemDetails := tools.GetLimitedData()
 
 	//Calculate net worth of every owner
+	log.Println(len(ownerIds))
 	for _, owner := range ownerIds {
+		if (limit <= 0) { //Don't go over link limit
+			break 
+		}
 		assetIds := tools.GetInventory(owner)
 		netWorth := 0.0
 		for _, id := range assetIds {
