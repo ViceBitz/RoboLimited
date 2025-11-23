@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"math/rand/v2"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
@@ -621,6 +622,12 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 
 	itemDetails := tools.GetLimitedData()
 
+	//Shuffle owners for a random picking
+	for i := range ownerIds {
+		j := rand.IntN(i + 1)
+		ownerIds[i], ownerIds[j] = ownerIds[j], ownerIds[i]
+	}
+	
 	//Calculate net worth of every owner
 	log.Println(len(ownerIds))
 	for _, owner := range ownerIds {
