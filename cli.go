@@ -34,8 +34,8 @@ func searchDips(threshold float64, priceLow float64, priceHigh float64, isDemand
 }
 
 // Forecast growth potential with z-score analysis
-func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) {
-	ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand)
+func searchForecast(priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool, sortBy string) {
+	ForecastWithin(-1000, 1000, priceLow, priceHigh, daysPast, daysFuture, isDemand, sortBy)
 }
 
 // Scan for item owners within net worth range
@@ -54,9 +54,12 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 		log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
 
 		//Forecast prices with STL decomposition
-		priceSTL, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, true)
+		priceSTL, stability, peaks, dips := modelFourierSTL(id, daysPast, daysFuture, true)
 		z_score_stl := findZScore(id, priceSTL, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+		log.Println("Stability (Resid. %CV):", stability)
+		log.Println("Peaks:", peaks)
+		log.Println("Dips:", dips)
 	}
 }
 
@@ -78,6 +81,7 @@ func main() {
 	isDemand := flag.Bool("isDemand", true, "Only include high-demand items")
 	itemId := flag.String("item", "", "Specific item to target")
 	limit := flag.Int("limit", 20, "Max records to output")
+	sortBy := flag.String("sortBy", "z-score", "Attribute to order items by")
 
 	// Flags for forecast
 	items := flag.String("items", "", "Comma-separated list of items to forecast")
@@ -106,7 +110,7 @@ func main() {
 		searchDips(*threshold, *priceLow, *priceHigh, *isDemand)
 
 	case "searchForecast":
-		searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand)
+		searchForecast(*priceLow, *priceHigh, *daysPast, *daysFuture, *isDemand, *sortBy)
 
 	case "searchOwners":
 		if *itemId == "" {

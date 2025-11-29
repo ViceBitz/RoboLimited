@@ -32,7 +32,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Cache sales data to classify price points quickly
 - Finds trends and identifies outliers in past sales data
 - Scans item owners within net worth range for trade opportunity
-- Forecasts future prices with STL decomposition and Fourier regression
+- Models prices with STL decomposition and Fourier regression
 
 ---
 
@@ -49,7 +49,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights
 - **Inventory Scan**: Assesses player inventories to estimate item and trading potential
-- **Price Prediction**: Predicts item potential with seasonal cycles and trend directions
+- **Price Prediction**: Predicts prices, identifies peaks/dips, assesses stability
 - **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
 
 ---
@@ -73,7 +73,7 @@ go run . -mode=<mode> [flags]
 | analyzeInventory | Displays player inventory metrics and forecasts. | None | -forecast_type |
 | analyzeTrade     | Evaluates the future value of a proposed item trade. | -give, -receive | -daysPast, -daysFuture |
 | searchDips       | Finds items in the market that are currently dropping in price. | None | -threshold, -priceLow, -priceHigh, -isDemand |
-| searchForecast   | Forecasts growth potential using past year data. | None | -priceLow, -priceHigh, -daysPast, -daysFuture, -isDemand |
+| searchForecast   | Forecasts growth potential using past year data. | None | -priceLow, -priceHigh, -daysPast, -daysFuture, -isDemand, -sortBy |
 | searchOwners   | Scans item owners within net worth range. | -item | -priceLow, -priceHigh, -limit |
 | forecast         | General price forecasting for a list of items. | -items | -isDemand, -daysPast, -daysFuture |
 
@@ -89,6 +89,7 @@ go run . -mode=<mode> [flags]
 | -isDemand      | bool    | true         | Only include high-demand items |
 | -item      | string    | ""         | Specific item to target |
 | -limit      | int    | 20         | Max number of records to output |
+| -sortBy      | string    | "z-score"         | Attribute to order the items by |
 | -items         | string  | ""            | Comma-separated list of items to forecast |
 | -daysPast      | int64   | 365*3          | Number of past days of historical data to include in forecasts |
 | -daysFuture    | int64   | 30            | Number of days forward to project average price |

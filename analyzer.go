@@ -149,24 +149,34 @@ func extractOwners(url string) ([]string, error) {
 		return nil, fmt.Errorf("bc_copies_data not found in page HTML")
 	}
 
+	//Parse the JSON
 	jsonStr := strings.TrimSuffix(match[1], ";")
 	var bcData struct {
 		OwnerIDs []int64 `json:"owner_ids"`
+		LastOnline []int64 `json:"bc_last_online"`
 	}
-
-	//Parse the JSON
 	err := json.Unmarshal([]byte(jsonStr), &bcData)
 	if err != nil {
-		preview := jsonStr
-		if len(preview) > 200 {
-			preview = preview[:200] + "..."
-		}
-		return nil, fmt.Errorf("failed to parse bc_copies_data JSON: %v\nPreview: %s", err, preview)
+		return nil, fmt.Errorf("failed to parse bc_copies_data JSON: %v", err)
 	}
+
+	//Sort by most recent active users online
+	type bcUser struct {
+		id string
+		lastOnline int64
+	}
+	ownersData := make([]bcUser, len(bcData.OwnerIDs))
+	for i := 0; i < len(bcData.OwnerIDs); i++ {
+		ownersData[i] = bcUser{id: strconv.FormatInt(bcData.OwnerIDs[i], 10), lastOnline: bcData.LastOnline[i]}
+	}
+	sort.Slice(ownersData, func(i, j int) bool {
+		return ownersData[i].lastOnline > ownersData[j].lastOnline
+	})
+
 	//Convert to string ids
 	owners := make([]string, len(bcData.OwnerIDs))
-	for i, id := range bcData.OwnerIDs {
-		owners[i] = strconv.FormatInt(id, 10)
+	for i, u := range ownersData {
+		owners[i] = u.id
 	}
 
 	return owners, nil
@@ -238,7 +248,7 @@ Returns the forecasted price, residual standard dev. (to examine stability), pea
 */
 
 func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, []int, []int) {
-	_, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
+	mean, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
 
 	//Prepare price series for decomposition
 	priceSeries := make([]float64, len(pricePoints))
@@ -477,24 +487,39 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	residualSD := math.Sqrt(sumRes / float64(n)) //lower = stable
 
 	//Pinpoint peaks and dips in model
-	peaks := []int{} // store indices
+	peaks := []int{}
 	dips := []int{}
-	for t := 1; t < n-1; t++ {
-		prev := fitted[t-1].Y
+	epsilon := 30 //neighbor band
+	spacing := 30 //minimum gap
+	amp_min := 0.01 //amplitude % change from mean
+	for t := 1+epsilon; t < int(math.Min(float64(n-1), 365))-epsilon; t++ {
+		prev := fitted[t-epsilon].Y
 		curr := fitted[t].Y
-		next := fitted[t+1].Y
+		next := fitted[t+epsilon].Y
 
+		//Derivative test
 		if curr > prev && curr > next {
-			peaks = append(peaks, t)
+			//Spacing check
+			if (len(peaks) == 0 || t - peaks[len(peaks)-1] >= spacing) {
+				//Amplitude scale
+				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
+					peaks = append(peaks, t)
+				}
+			}
+			
 		}
+		//Derivative test
 		if curr < prev && curr < next {
-			dips = append(dips, t)
+			//Spacing check
+			if (len(dips) == 0 || t - dips[len(dips)-1] >= spacing) {
+				//Amplitude scale
+				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
+					dips = append(dips, t)
+				}
+			}
 		}
 	}
-
-	//@todo pinpoint peaks and dips, output key breakpoints
-
-	return priceFuture, residualSD, peaks, dips
+	return priceFuture, residualSD / mean, peaks, dips
 }
 
 // Identify dip to support buy decision with price z-score
@@ -540,10 +565,18 @@ type Prediction struct {
 	id          string
 	z_score     float64
 	priceFuture float64
+	nextPeak int
+	nextDip int
+	stability float64
 }
 
-// Searches for items of STL price forecast within price range, demand level, and date range
-func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool) []string {
+/*
+Searches for items of STL price forecast within price range, demand level, and date range
+Also finds next peak and dip based on model and assesses overall item stability with
+the %CV of the residue
+*/
+
+func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool, sortBy string) []string {
 	itemDetails := tools.GetLimitedData()
 	var itemsWithin []Prediction
 	for id, _ := range itemDetails.Items {
@@ -554,25 +587,49 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
-			priceFuture, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
+			priceFuture, stability, peaks, dips := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
-				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture})
+				nextPeak := -1
+				if (len(peaks) > 0) { nextPeak = peaks[0]}
+				nextDip := -1
+				if (len(dips) > 0) { nextDip = dips[0]}
+				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture, nextPeak, nextDip, stability})
 			}
 			fmt.Println("Processed item:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture, "|", name)
 		}
 
 	}
+	switch sortBy {
 	//Sort by ascending z-score
-	sort.Slice(itemsWithin, func(i, j int) bool {
-		return itemsWithin[i].z_score < itemsWithin[j].z_score
-	})
+	case "z-score":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return itemsWithin[i].z_score < itemsWithin[j].z_score
+		})
+	//Sort by earliest dip
+	case "dips":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return float64(itemsWithin[i].nextDip) < float64(itemsWithin[j].nextDip)
+		})
+	//Sort by earliest peak
+	case "peaks":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return float64(itemsWithin[i].nextPeak) < float64(itemsWithin[j].nextPeak)
+		})
+	//Sort by stability
+	case "stability":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return float64(itemsWithin[i].stability) < float64(itemsWithin[j].stability)
+		})
+	}
+	
 	var onlyItems []string
 	for _, m := range itemsWithin {
 		name := itemDetails.Items[m.id][0]
 		rap := itemDetails.Items[m.id][2]
 		onlyItems = append(onlyItems, m.id)
 		fmt.Println("Found item:", m.id, "| RAP:", rap, "| Z-Score:", math.Trunc(m.z_score*100)/100, "| Abs. Price Diff:", math.Trunc((m.priceFuture-rap.(float64))*100)/100, "|", name)
+		fmt.Println("Peak:", m.nextPeak, "| Dip:", m.nextDip, "| Stability:", m.stability)
 	}
 
 	return onlyItems
@@ -622,12 +679,13 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 
 	itemDetails := tools.GetLimitedData()
 
-	//Shuffle owners for a random picking
+	//Take recent slice, shuffle owners for a random picking
+	ownerIds = ownerIds[:min(int(len(ownerIds)), limit * 20)]
 	for i := range ownerIds {
 		j := rand.IntN(i + 1)
 		ownerIds[i], ownerIds[j] = ownerIds[j], ownerIds[i]
 	}
-	
+
 	//Calculate net worth of every owner
 	log.Println(len(ownerIds))
 	for _, owner := range ownerIds {
