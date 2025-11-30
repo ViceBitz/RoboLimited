@@ -469,26 +469,17 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 	residualSD := math.Sqrt(sumRes / float64(n)) //lower = stable
 
-	//Calculate amplitude and mean across first and second cycles for peak/dip checks
-	low := fitted[0].Y
-	high := fitted[0].Y
+	//Calculate approx. amplitude for peak/dip check
+	low := math.MaxFloat64
+	high := -math.MaxFloat64
 
 	for t := 1; t < min(n-1, 365); t++ {
 		low = min(low, fitted[t].Y)
 		high = max(high, fitted[t].Y)
 	}
 	amp := high - low
-	amp_mean := (low + high) / 2 //approx. mean averaging high and low pts
-
-	for t := 366; t < min(n-1, 365 * 2); t++ {
-		low = min(low, fitted[t].Y)
-		high = max(high, fitted[t].Y)
-	}
-	amp_mean2 := (low + high) / 2
 
 	//Pinpoint peaks and dips in model in one cycle (rest are periodic)
-
-	
 	peaks := []int{} //Peak times
 	dips := []int{} //Dip times
 	peak_ratios := []float64{} //Peak ratio to mean
@@ -500,8 +491,12 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	epsilon := 30 //neighbor band
 	spacing := 30 //minimum gap
 	amp_min := 0.025 //% of amplitude to consider extrema
+	running_mean := 0.0 //Running avg. of emitted prices
+
+	for t := 1; t <= min(n-1, epsilon); t++ { running_mean += fitted[t].Y}
 
 	for t := 1+epsilon; t < min(n-1, 365 * 2)-epsilon; t++ {
+		running_mean += fitted[t].Y
 		prev := fitted[t-epsilon].Y
 		curr := fitted[t].Y
 		next := fitted[t+epsilon].Y
@@ -522,13 +517,13 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 						//Double check spacing while inserting
 						if len(peaks) == 0 || (i < len(peaks) && peaks[i] - adjustedT >= spacing) || (i == len(peaks) && adjustedT - peaks[i-1] >= spacing) {
 							peaks = slices.Insert(peaks, i, adjustedT)
-							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / amp_mean2)
+							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / (running_mean / float64(t)))
 							last_peak = t
 						}
 					//First cycle: directly add point
 					} else {
 						peaks = append(peaks, t)
-						peak_ratios = append(peak_ratios, fitted[t].Y / amp_mean)
+						peak_ratios = append(peak_ratios, fitted[t].Y / (running_mean / float64(t)))
 						last_peak = t
 					}
 				}
@@ -550,14 +545,14 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 						//Double check spacing while inserting
 						if len(dips) == 0 || (i < len(dips) && adjustedT - dips[i] >= spacing) || (i == len(dips) && adjustedT - dips[i-1] >= spacing) {
 							dips = slices.Insert(dips, i, adjustedT)
-							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / amp_mean2)
+							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / (running_mean / float64(t)))
 							last_dip = t
 						}
 						
 					//First cycle: directly add point
 					} else {
 						dips = append(dips, t)
-						dip_ratios = append(dip_ratios, fitted[t].Y / amp_mean)
+						dip_ratios = append(dip_ratios, fitted[t].Y / (running_mean / float64(t)))
 						last_dip = t
 					}
 				}
