@@ -21,6 +21,7 @@ import (
 	"gonum.org/v1/plot/vg"
 )
 
+
 /**
 Toolkit/API for ingesting, transforming, and analyzing historical price data.
 Uses statistical methods like z-score and STL-Fourier regression for forecasting.
@@ -247,7 +248,7 @@ model to (t, t + 1 ... t + future).
 Returns the forecasted price, residual standard dev. (to examine stability), peaks and dips timestamps
 */
 
-func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, []int, []int) {
+func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats bool) (float64, float64, []int, []int, []float64, []float64) {
 	mean, _, _, pricePoints := processPriceSeries(id, daysBefore, 0)
 
 	//Prepare price series for decomposition
@@ -258,7 +259,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	n := len(priceSeries)
 
 	if n < 20 {
-		return math.NaN(), -1, make([]int, 0), make([]int, 0)
+		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
 	}
 
 	//Fourier regression + linear drift to model seasonality
@@ -296,7 +297,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 
 	//Forecast prices in future days
 	if daysFuture <= 0 {
-		return math.NaN(), -1, make([]int, 0), make([]int, 0)
+		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
 	}
 	horizon := int(daysFuture)
 	var sumF float64
@@ -486,13 +487,29 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 	residualSD := math.Sqrt(sumRes / float64(n)) //lower = stable
 
-	//Pinpoint peaks and dips in model
-	peaks := []int{}
-	dips := []int{}
+	//Calculate amplitude across one cycle for peak/dip check
+	low := fitted[0].Y
+	high := fitted[0].Y
+
+	for t := 1; t < min(n-1, 365); t++ {
+		low = min(low, fitted[t].Y)
+		high = max(high, fitted[t].Y)
+	}
+	amp := high - low
+	amp_mean := (low + high) / 2 //approx. mean averaging high and low pts
+
+	//Pinpoint peaks and dips in model in one cycle (rest are periodic)
+
+	peaks := []int{} //Peak times
+	dips := []int{} //Dip times
+	peak_ratios := []float64{} //Peak ratio to mean
+	dip_ratios := []float64{} //Dip ratio to mean
+
 	epsilon := 30 //neighbor band
 	spacing := 30 //minimum gap
-	amp_min := 0.01 //amplitude % change from mean
-	for t := 1+epsilon; t < int(math.Min(float64(n-1), 365))-epsilon; t++ {
+	amp_min := 0.025 //% of amplitude to consider extrema
+
+	for t := 1+epsilon; t < min(n-1, 365)-epsilon; t++ {
 		prev := fitted[t-epsilon].Y
 		curr := fitted[t].Y
 		next := fitted[t+epsilon].Y
@@ -502,8 +519,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 			//Spacing check
 			if (len(peaks) == 0 || t - peaks[len(peaks)-1] >= spacing) {
 				//Amplitude scale
-				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
+				if (math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp) {
 					peaks = append(peaks, t)
+					peak_ratios = append(peak_ratios, fitted[t].Y / amp_mean)
 				}
 			}
 			
@@ -515,11 +533,12 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 				//Amplitude scale
 				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
 					dips = append(dips, t)
+					dip_ratios = append(dip_ratios, fitted[t].Y / amp_mean)
 				}
 			}
 		}
 	}
-	return priceFuture, residualSD / mean, peaks, dips
+	return priceFuture, residualSD / mean, peaks, dips, peak_ratios, dip_ratios
 }
 
 // Identify dip to support buy decision with price z-score
@@ -567,13 +586,23 @@ type Prediction struct {
 	priceFuture float64
 	nextPeak int
 	nextDip int
+	nextRatioP float64
+	nextRatioD float64
 	stability float64
 }
 
 /*
 Searches for items of STL price forecast within price range, demand level, and date range
 Also finds next peak and dip based on model and assesses overall item stability with
-the %CV of the residue
+the %CV of the residue.
+
+Orders items ascending by specified attribute, which includes:
+- z-score: Z-score of forecasted price compared to past 90 days
+- dips: Dip times
+- peaks: Peak times
+- d_ratio: Dip ratio to mean
+- p_ratio: Peak ratio to mean
+- stability: Stability (std. dev of residual values)
 */
 
 func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh float64, daysPast int64, daysFuture int64, isDemand bool, sortBy string) []string {
@@ -587,14 +616,14 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
-			priceFuture, stability, peaks, dips := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
+			priceFuture, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
 			z_score := findZScore(id, priceFuture, config.LogConsole)
 			if z_low <= z_score && z_score <= z_high {
-				nextPeak := -1
-				if (len(peaks) > 0) { nextPeak = peaks[0]}
-				nextDip := -1
-				if (len(dips) > 0) { nextDip = dips[0]}
-				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture, nextPeak, nextDip, stability})
+				nextPeak := -1; nextRatioP := 0.0
+				if (len(peaks) > 0) { nextPeak = peaks[0]; nextRatioP = p_ratios[0]}
+				nextDip := -1; nextRatioD := 0.0
+				if (len(dips) > 0) { nextDip = dips[0]; nextRatioD = d_ratios[0]}
+				itemsWithin = append(itemsWithin, Prediction{id, z_score, priceFuture, nextPeak, nextDip, nextRatioP, nextRatioD, stability})
 			}
 			fmt.Println("Processed item:", id, "| Z-Score:", z_score, "| Price Prediction:", priceFuture, "|", name)
 		}
@@ -616,6 +645,16 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		sort.Slice(itemsWithin, func(i, j int) bool {
 			return float64(itemsWithin[i].nextPeak) < float64(itemsWithin[j].nextPeak)
 		})
+	//Sort by dip ratios
+	case "d_ratio":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return float64(itemsWithin[i].nextRatioD) < float64(itemsWithin[j].nextRatioD)
+		})
+	//Sort by peak ratios
+	case "p_ratio":
+		sort.Slice(itemsWithin, func(i, j int) bool {
+			return float64(itemsWithin[i].nextRatioP) < float64(itemsWithin[j].nextRatioP)
+		})
 	//Sort by stability
 	case "stability":
 		sort.Slice(itemsWithin, func(i, j int) bool {
@@ -630,6 +669,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		onlyItems = append(onlyItems, m.id)
 		fmt.Println("Found item:", m.id, "| RAP:", rap, "| Z-Score:", math.Trunc(m.z_score*100)/100, "| Abs. Price Diff:", math.Trunc((m.priceFuture-rap.(float64))*100)/100, "|", name)
 		fmt.Println("Peak:", m.nextPeak, "| Dip:", m.nextDip, "| Stability:", m.stability)
+		fmt.Println("Peak Ratio:", m.nextRatioP, "| Dip Ratio:", m.nextRatioD)
 	}
 
 	return onlyItems
@@ -761,7 +801,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				}
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
-				priceFuture, _, _, _ = modelFourierSTL(id, 365*3, 60, false)
+				priceFuture, _, _, _, _, _ = modelFourierSTL(id, 365*3, 60, false)
 				past_z_score = float64(findZScore(id, float64(priceFuture), false))
 			}
 
@@ -787,7 +827,7 @@ func EvaluateTrade(giveIds []string, receiveIds []string, daysPast int64, daysFu
 		name := itemDetails.Items[id][0]
 
 		//Forecast prices with STL decomposition
-		priceFuture, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, true)
+		priceFuture, _, _, _, _, _ := modelFourierSTL(id, daysPast, daysFuture, true)
 		z_score_stl := findZScore(id, priceFuture, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceFuture)
 
