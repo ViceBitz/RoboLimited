@@ -31,8 +31,8 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - Informs immediate purchase decisions with z-score and margin analysis
 - Cache sales data to classify price points quickly
 - Finds trends and identifies outliers in past sales data
-- Scans item owners within net worth range for trade opportunity
-- Models prices with STL decomposition and Fourier regression
+- Scans item owners within net worth range for sending trades
+- Models & forecasts prices with STL decomposition and Fourier regression
 
 ---
 
@@ -46,11 +46,11 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 - **Logging** to track decisions for further reference
 
 ### Market Evaluation
-- **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data and guide buying, trading, selling
+- **Spikes & Dips**: Uses statistical measures (z-score, %CV) to identify trends in sales data
 - **Market Metrics**: Compares prices of item groups to past time periods for market insights
 - **Inventory Scan**: Assesses player inventories to estimate item and trading potential
 - **Price Prediction**: Predicts prices, identifies peaks/dips, assesses stability
-- **Data Caching**: Precomputes and stores mean / standard deviation of past sales for fast querying
+- **Data Caching**: Precomputes and stores past sales for fast modeling and querying
 
 ---
 
