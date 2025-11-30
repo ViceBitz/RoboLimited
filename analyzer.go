@@ -488,7 +488,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	last_peak := -999 //Previous peak
 	last_dip := -999 //Previous dip
 
-	epsilon := 60 //neighbor band
+	epsilon := 30 //neighbor band
 	spacing := epsilon //minimum gap
 	amp_min := 0.025 * float64(epsilon)/30 //% of amplitude to consider extrema
 	running_mean := 0.0 //Running avg. of emitted prices
