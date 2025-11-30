@@ -6,21 +6,21 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"math/rand/v2"
 	"regexp"
 	"robolimited/config"
 	"robolimited/tools"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-	"math/rand/v2"
 
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
 )
-
 
 /**
 Toolkit/API for ingesting, transforming, and analyzing historical price data.
@@ -487,7 +487,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 	residualSD := math.Sqrt(sumRes / float64(n)) //lower = stable
 
-	//Calculate amplitude across one cycle for peak/dip check
+	//Calculate amplitude and mean across first and second cycles for peak/dip checks
 	low := fitted[0].Y
 	high := fitted[0].Y
 
@@ -497,6 +497,12 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 	amp := high - low
 	amp_mean := (low + high) / 2 //approx. mean averaging high and low pts
+
+	for t := 366; t < min(n-1, 365 * 2); t++ {
+		low = min(low, fitted[t].Y)
+		high = max(high, fitted[t].Y)
+	}
+	amp_mean2 := (low + high) / 2
 
 	//Pinpoint peaks and dips in model in one cycle (rest are periodic)
 
@@ -509,7 +515,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	spacing := 30 //minimum gap
 	amp_min := 0.025 //% of amplitude to consider extrema
 
-	for t := 1+epsilon; t < min(n-1, 365)-epsilon; t++ {
+	for t := 1+epsilon; t < min(n-1, 365 * 2)-epsilon; t++ {
 		prev := fitted[t-epsilon].Y
 		curr := fitted[t].Y
 		next := fitted[t+epsilon].Y
@@ -520,11 +526,24 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 			if (len(peaks) == 0 || t - peaks[len(peaks)-1] >= spacing) {
 				//Amplitude scale
 				if (math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp) {
-					peaks = append(peaks, t)
-					peak_ratios = append(peak_ratios, fitted[t].Y / amp_mean)
+					//Second cycle: push back time and insert point into array 
+					if (t > 365) {
+						adjustedT := t - 365
+						i := 0
+						for i < len(peaks) && peaks[i] < adjustedT {
+							i++
+						}
+						peaks = slices.Insert(peaks, i, adjustedT)
+						peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / amp_mean2)
+						
+					//First cycle: directly add point
+					} else {
+						peaks = append(peaks, t)
+						peak_ratios = append(peak_ratios, fitted[t].Y / amp_mean)
+					}
+					
 				}
 			}
-			
 		}
 		//Derivative test
 		if curr < prev && curr < next {
@@ -532,8 +551,21 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 			if (len(dips) == 0 || t - dips[len(dips)-1] >= spacing) {
 				//Amplitude scale
 				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
-					dips = append(dips, t)
-					dip_ratios = append(dip_ratios, fitted[t].Y / amp_mean)
+					//Second cycle: push back time and insert point into array 
+					if (t > 365) {
+						adjustedT := t - 365
+						i := 0
+						for i < len(dips) && dips[i] < adjustedT {
+							i++
+						}
+						dips = slices.Insert(dips, i, adjustedT)
+						dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / amp_mean2)
+						
+					//First cycle: directly add point
+					} else {
+						dips = append(dips, t)
+						dip_ratios = append(dip_ratios, fitted[t].Y / amp_mean)
+					}
 				}
 			}
 		}
@@ -791,23 +823,28 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 			rap := itemDetails.Items[id][2].(float64)
 
 			var past_z_score float64
-			var priceFuture float64
 
 			if forecastType == "z_score" {
 				//Examine z-score from 2 months last year compared to its preceding 30 days
-				past_z_score, priceFuture = modelZScore(id, 330, 270, 450, 360, config.LogConsole)
+				past_z_score, _ = modelZScore(id, 330, 270, 450, 360, config.LogConsole)
 				if past_z_score != past_z_score {
 					continue //Check for NaN
 				}
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
-				priceFuture, _, _, _, _, _ = modelFourierSTL(id, 365*3, 60, false)
-				past_z_score = float64(findZScore(id, float64(priceFuture), false))
+				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
+				z_score_stl := findZScore(id, priceSTL, false)
+				
+				peaks = append(peaks, -1); dips = append(dips, -1); p_ratios = append(p_ratios, -1); d_ratios = append(d_ratios, -1)
+
+				fmt.Println(name, "|", id, "| Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+				fmt.Println("Peak:", peaks[0], "| Dip:", dips[0], "| Stability: ", stability)
+				fmt.Println("Peak Ratio:", p_ratios[0], "| Dip Ratio:", d_ratios[0], "\n")
 			}
 
 			tot_past_z += past_z_score
 			weighted_past_z += rap * past_z_score
-			fmt.Println(name, "| Forecast Z-Score:", past_z_score, "| Price Prediction:", priceFuture)
+			
 		}
 		fmt.Println()
 		fmt.Println("Avg. Forecast Z-Score: ", (tot_past_z / float64(itemsProcessed)), " | ", "Weighted Forecast Z-Score: ", (weighted_past_z / float64(tot_rap)))
