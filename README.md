@@ -100,6 +100,6 @@ go run . -mode=analyzeTrade -give=11188705,119040562647325,20573078,11700905898 
 ```
 
 ## 📊 Results
-During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **30% avg. ROI** after internal marketplace fees but before currency conversion costs.
+During experimental tests, the algorithm scanned over **2000 virtual assets** in live markets during a one-month period. These actions netted **40% avg. ROI** after internal marketplace fees but before currency conversion costs.
 
 #
