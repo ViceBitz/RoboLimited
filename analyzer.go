@@ -400,7 +400,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 
 	//Graph Visualization
-	
+
 	plt := plot.New()
 	plt.Title.Text = "Fourier Seasonality: Fit & Projection"
 	plt.X.Label.Text = "Day"
@@ -511,9 +511,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 			//Spacing check
 			if (t - last_peak >= spacing) {
 				//Amplitude scale
-				
 				if (math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp) {
-					log.Println(t - 365)
 					//Second cycle: push back time and insert point into array 
 					if (t > 365) {
 						adjustedT := t - 365
@@ -522,7 +520,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 							i++
 						}
 						//Double check spacing while inserting
-						if (i < len(peaks) && peaks[i] - adjustedT >= spacing) || (i == len(peaks) && adjustedT - peaks[i-1] >= spacing) {
+						if len(peaks) == 0 || (i < len(peaks) && peaks[i] - adjustedT >= spacing) || (i == len(peaks) && adjustedT - peaks[i-1] >= spacing) {
 							peaks = slices.Insert(peaks, i, adjustedT)
 							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / amp_mean2)
 							last_peak = t
@@ -550,7 +548,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 							i++
 						}
 						//Double check spacing while inserting
-						if (i < len(dips) && adjustedT - dips[i] >= spacing) || (i == len(dips) && adjustedT - dips[i-1] >= spacing) {
+						if len(dips) == 0 || (i < len(dips) && adjustedT - dips[i] >= spacing) || (i == len(dips) && adjustedT - dips[i-1] >= spacing) {
 							dips = slices.Insert(dips, i, adjustedT)
 							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / amp_mean2)
 							last_dip = t
@@ -567,7 +565,6 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		}
 	}
 
-	log.Println(ground)
 	//Adjust peaks/dips for sales data age
 	for i := 0; i < len(peaks); i++ {
 		peaks[i] -= ground
