@@ -488,9 +488,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	last_peak := -999 //Previous peak
 	last_dip := -999 //Previous dip
 
-	epsilon := 30 //neighbor band
+	epsilon := 60 //neighbor band
 	spacing := 30 //minimum gap
-	amp_min := 0.025 //% of amplitude to consider extrema
+	amp_min := 0.05 //% of amplitude to consider extrema
 	running_mean := 0.0 //Running avg. of emitted prices
 
 	for t := 1; t <= min(n-1, epsilon); t++ { running_mean += fitted[t].Y}
@@ -515,7 +515,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 							i++
 						}
 						//Double check spacing while inserting
-						if len(peaks) == 0 || (i < len(peaks) && peaks[i] - adjustedT >= spacing) || (i == len(peaks) && adjustedT - peaks[i-1] >= spacing) {
+						left := i <= 0 || adjustedT - peaks[i-1] >= spacing
+						right := i >= len(peaks) || peaks[i] - adjustedT >= spacing
+						if left && right {
 							peaks = slices.Insert(peaks, i, adjustedT)
 							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / (running_mean / float64(t)))
 							last_peak = t
@@ -543,7 +545,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 							i++
 						}
 						//Double check spacing while inserting
-						if len(dips) == 0 || (i < len(dips) && adjustedT - dips[i] >= spacing) || (i == len(dips) && adjustedT - dips[i-1] >= spacing) {
+						left := i <= 0 || adjustedT - dips[i-1] >= spacing
+						right := i >= len(dips) || dips[i] - adjustedT >= spacing
+						if left && right {
 							dips = slices.Insert(dips, i, adjustedT)
 							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / (running_mean / float64(t)))
 							last_dip = t
