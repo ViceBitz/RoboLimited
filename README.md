@@ -69,9 +69,9 @@ go run . -mode=<mode> [flags]
 
 | Mode             | Description | Required Flags | Optional Flags |
 | ---------------- | ----------- | --------------- | --------------- |
-| monitor          | Starts the deal sniper to track live trades. | None | None |
+| monitor          | Starts the deal sniper to track live market changes. | None | None |
 | analyzeInventory | Displays player inventory metrics and forecasts. | None | -forecast_type |
-| analyzeTrade     | Evaluates the future value of a proposed item trade. | -give, -receive | -daysPast, -daysFuture |
+| analyzeTrade     | Evaluates the potential value of an item exchange. | -give, -receive | -daysPast, -daysFuture |
 | searchDips       | Finds items in the market that are currently dropping in price. | None | -threshold, -priceLow, -priceHigh, -isDemand |
 | searchForecast   | Forecasts growth potential using past year data. | None | -priceLow, -priceHigh, -daysPast, -daysFuture, -isDemand, -sortBy |
 | searchOwners   | Scans item owners within net worth range. | -item | -priceLow, -priceHigh, -limit |
