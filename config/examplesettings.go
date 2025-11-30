@@ -30,6 +30,7 @@ const (
 
 	//Data Caching (back up old file!)
 	PopulateSalesData = false //Updates all sales data (KEEP FALSE UNLESS UPDATE NEEDED, TAKES A LONG TIME)
+	SalesDataOrigin = 1762867200 //Unix timestamp of last scrape (update every data collection)
 
 	//Purchase Margins
 	MarginD  = 0.25 //Demand: margin below RAP/Value to buy

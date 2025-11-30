@@ -295,11 +295,15 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	//Solve the regression for optimal betas
 	beta, _ := tools.SolveNormalEq(X, y)
 
-	//Forecast prices in future days
+	//Forecast future price
+	ground := int((time.Now().Unix() - config.SalesDataOrigin) / (24 * 60 * 60))
+	horizon := int(daysFuture + int64(ground)) //Adjust for sales data age
+
 	if daysFuture <= 0 {
 		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
 	}
-	horizon := int(daysFuture)
+	
+	
 	var sumF float64
 	for h := 1; h <= horizon; h++ {
 		t := n - 1 + h
@@ -322,10 +326,12 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		if pred < 0 {
 			pred = 0
 		}
-		sumF += pred
+		if (h >= 1+ground) { //Only include values after current date
+			sumF += pred
+		}
 	}
 
-	priceFuture := sumF / float64(horizon)
+	priceFuture := sumF / float64(daysFuture)
 
 	//Recover coefficients from beta array
 	idx := 0
@@ -393,32 +399,8 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		}
 	}
 
-	//Visualization
-	var proj plotter.XYs
-	if daysFuture > 0 {
-		fh := int(daysFuture)
-		proj = make(plotter.XYs, fh)
-		for h := 1; h <= fh; h++ {
-			t := n - 1 + h
-			x := float64(t)
-			wf := tools.FourierFeatures(t, 7.0, Kw)
-			wsum := dot(wf, bWeekly)
-			ysum := 0.0
-			if useYearly {
-				yf := tools.FourierFeatures(t, 365.25, Ky)
-				ysum = dot(yf, bYearly)
-			}
-			trendVal := bTrend * (float64(t) / float64(n))
-			yhat := b0 + trendVal + wsum + ysum
-			if yhat < 0 {
-				yhat = 0
-			}
-			proj[h-1].X = x
-			proj[h-1].Y = yhat
-		}
-	}
-
-	//Create graphs
+	//Graph Visualization
+	
 	plt := plot.New()
 	plt.Title.Text = "Fourier Seasonality: Fit & Projection"
 	plt.X.Label.Text = "Day"
@@ -506,10 +488,14 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 
 	//Pinpoint peaks and dips in model in one cycle (rest are periodic)
 
+	
 	peaks := []int{} //Peak times
 	dips := []int{} //Dip times
 	peak_ratios := []float64{} //Peak ratio to mean
 	dip_ratios := []float64{} //Dip ratio to mean
+
+	last_peak := -999 //Previous peak
+	last_dip := -999 //Previous dip
 
 	epsilon := 30 //neighbor band
 	spacing := 30 //minimum gap
@@ -523,9 +509,11 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		//Derivative test
 		if curr > prev && curr > next {
 			//Spacing check
-			if (len(peaks) == 0 || t - peaks[len(peaks)-1] >= spacing) {
+			if (t - last_peak >= spacing) {
 				//Amplitude scale
+				
 				if (math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp) {
+					log.Println(t - 365)
 					//Second cycle: push back time and insert point into array 
 					if (t > 365) {
 						adjustedT := t - 365
@@ -533,22 +521,25 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 						for i < len(peaks) && peaks[i] < adjustedT {
 							i++
 						}
-						peaks = slices.Insert(peaks, i, adjustedT)
-						peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / amp_mean2)
-						
+						//Double check spacing while inserting
+						if (i < len(peaks) && peaks[i] - adjustedT >= spacing) || (i == len(peaks) && adjustedT - peaks[i-1] >= spacing) {
+							peaks = slices.Insert(peaks, i, adjustedT)
+							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / amp_mean2)
+							last_peak = t
+						}
 					//First cycle: directly add point
 					} else {
 						peaks = append(peaks, t)
 						peak_ratios = append(peak_ratios, fitted[t].Y / amp_mean)
+						last_peak = t
 					}
-					
 				}
 			}
 		}
 		//Derivative test
 		if curr < prev && curr < next {
 			//Spacing check
-			if (len(dips) == 0 || t - dips[len(dips)-1] >= spacing) {
+			if (t - last_dip >= spacing) {
 				//Amplitude scale
 				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
 					//Second cycle: push back time and insert point into array 
@@ -558,18 +549,33 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 						for i < len(dips) && dips[i] < adjustedT {
 							i++
 						}
-						dips = slices.Insert(dips, i, adjustedT)
-						dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / amp_mean2)
+						//Double check spacing while inserting
+						if (i < len(dips) && adjustedT - dips[i] >= spacing) || (i == len(dips) && adjustedT - dips[i-1] >= spacing) {
+							dips = slices.Insert(dips, i, adjustedT)
+							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / amp_mean2)
+							last_dip = t
+						}
 						
 					//First cycle: directly add point
 					} else {
 						dips = append(dips, t)
 						dip_ratios = append(dip_ratios, fitted[t].Y / amp_mean)
+						last_dip = t
 					}
 				}
 			}
 		}
 	}
+
+	log.Println(ground)
+	//Adjust peaks/dips for sales data age
+	for i := 0; i < len(peaks); i++ {
+		peaks[i] -= ground
+	}
+	for i := 0; i < len(dips); i++ {
+		dips[i] -= ground
+	}
+
 	return priceFuture, residualSD / mean, peaks, dips, peak_ratios, dip_ratios
 }
 
