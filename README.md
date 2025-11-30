@@ -58,7 +58,7 @@ Two key processes drive the entire system. One acts as the hand, monitoring pric
 
 ### Command-Line Interface
 
-The project CLI provides a unified way to run various modules and operations related to price sniping, item trading, inventory analysis, and forecasting. You can execute different functions directly from the terminal.
+The project CLI provides a unified way to run various tools, methods, and modules related to price sniping, item trading, inventory analysis, and forecasting. You can execute different functions directly from the terminal.
 
 ### Running the CLI
 
