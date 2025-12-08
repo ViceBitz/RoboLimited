@@ -564,13 +564,24 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		}
 	}
 
-	//Adjust peaks/dips for sales data age
+	//Adjust peaks/dips for sales data age & filter out old points beyond certain age (>30 days)
+	var peaks_filt []int
+	var dips_filt []int
+	maxAge := 30
 	for i := 0; i < len(peaks); i++ {
 		peaks[i] -= ground
+		if (peaks[i] >= -maxAge) {
+			peaks_filt = append(peaks_filt, peaks[i])
+		}
 	}
 	for i := 0; i < len(dips); i++ {
 		dips[i] -= ground
+		if (dips[i] >= -maxAge) {
+			dips_filt = append(dips_filt, dips[i])
+		}
 	}
+	peaks = peaks_filt
+	dips = dips_filt
 
 	return priceFuture, residualSD / mean, peaks, dips, peak_ratios, dip_ratios
 }
