@@ -514,6 +514,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 						for i < len(peaks) && peaks[i] < adjustedT {
 							i++
 						}
+						
 						//Double check spacing while inserting
 						left := i <= 0 || adjustedT - peaks[i-1] >= spacing
 						right := i >= len(peaks) || peaks[i] - adjustedT >= spacing
@@ -561,6 +562,11 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 					}
 				}
 			}
+		}
+		//Reset neighbor extremas if entering into repeating section (i.e. at 365)
+		if (t == 365) {
+			last_peak = -1
+			last_dip = -1
 		}
 	}
 
@@ -847,6 +853,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				//Forecast future prices with STL + Fourier regression
 				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
 				z_score_stl := findZScore(id, priceSTL, false)
+				past_z_score = z_score_stl
 				
 				peaks = append(peaks, -1); dips = append(dips, -1); p_ratios = append(p_ratios, -1); d_ratios = append(d_ratios, -1)
 
