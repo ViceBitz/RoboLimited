@@ -262,7 +262,10 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
 	}
 
-	//Fourier regression + linear drift to model seasonality
+	/*
+	[[Fourier regression + linear drift to model seasonality]]
+	*/
+	
 	Kw := 3 //weekly order
 	Ky := 5 //yearly order
 	useYearly := n >= 400
@@ -479,7 +482,10 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	}
 	amp := high - low
 
-	//Pinpoint peaks and dips in model in one cycle (rest are periodic)
+	/*
+	[[Pinpoint peaks and dips in model in one cycle (rest are periodic)]]
+	*/
+
 	peaks := []int{} //Peak times
 	dips := []int{} //Dip times
 	peak_ratios := []float64{} //Peak ratio to mean
@@ -570,24 +576,40 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		}
 	}
 
-	//Adjust peaks/dips for sales data age & filter out old points beyond certain age (>30 days)
+	/*
+	[[Date Filtering:]]
+
+	(1) Adjust peaks/dips for sales data age & filter out old points beyond certain age (>30 days)
+	
+	(2) Flip values greater than half year from x -> x-365 to place in previous cycle 
+	so first peak/dip will be proximal to current time (if beyond age, will be cut anyways)
+
+	*/
 	var peaks_filt []int
 	var dips_filt []int
 	maxAge := 30
 	for i := 0; i < len(peaks); i++ {
 		peaks[i] -= ground
-		if (peaks[i] >= -maxAge) {
+		if (peaks[i] > 365/2) {
+			peaks[i] -= 365
+		}
+		if (peaks[i] >= -maxAge) { 
 			peaks_filt = append(peaks_filt, peaks[i])
 		}
 	}
 	for i := 0; i < len(dips); i++ {
 		dips[i] -= ground
+		if (dips[i] > 365/2) {
+			dips[i] -= 365
+		}
 		if (dips[i] >= -maxAge) {
 			dips_filt = append(dips_filt, dips[i])
 		}
 	}
 	peaks = peaks_filt
 	dips = dips_filt
+	sort.Ints(peaks_filt)
+	sort.Ints(dips_filt)
 
 	return priceFuture, residualSD / mean, peaks, dips, peak_ratios, dip_ratios
 }
