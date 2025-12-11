@@ -484,6 +484,11 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 
 	/*
 	[[Pinpoint peaks and dips in model in one cycle (rest are periodic)]]
+
+	(1) Use derivative (dy/dx for adjacent points) to determine uphill vs. downhill
+	(2) Check if magnitude of change is significant enough relative to amplitude 
+	(3) Keep minimum spacing between consecutive peak/dip records
+	(4) Ascend to peaks and descend to dips, store times
 	*/
 
 	peaks := []int{} //Peak times
@@ -493,6 +498,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 
 	last_peak := -999 //Previous peak
 	last_dip := -999 //Previous dip
+	
+	ascending := false //Ascending to peak
+	descending := false //Descending to dip
 
 	epsilon := 30 //neighbor band
 	spacing := epsilon //minimum gap
@@ -507,79 +515,105 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		curr := fitted[t].Y
 		next := fitted[t+epsilon].Y
 
-		//Derivative test
-		if curr > prev && curr > next {
-			//Spacing check
-			if (t - last_peak >= spacing) {
-				//Amplitude scale
-				if (math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp) {
-					//Second cycle: push back time and insert point into array 
-					if (t > 365) {
-						adjustedT := t - 365
-						i := 0
-						for i < len(peaks) && peaks[i] < adjustedT {
-							i++
-						}
-						
-						//Double check spacing while inserting
-						left := i <= 0 || adjustedT - peaks[i-1] >= spacing
-						right := i >= len(peaks) || peaks[i] - adjustedT >= spacing
-						if left && right {
-							peaks = slices.Insert(peaks, i, adjustedT)
-							peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / (running_mean / float64(t)))
-							last_peak = t
-						}
-					//First cycle: directly add point
-					} else {
-						peaks = append(peaks, t)
-						peak_ratios = append(peak_ratios, fitted[t].Y / (running_mean / float64(t)))
+		//Derivative & amplitude test
+		if (curr > prev && curr > next &&
+			math.Abs(curr-prev) > amp_min * amp && math.Abs(curr-next) > amp_min * amp){
+			//Extend current ascending peak if moving uphill
+			if ascending {
+				adjustedT := t
+				if (t > 365) {
+					adjustedT = t - 365
+				}
+				peaks[len(peaks)-1] = adjustedT
+				peak_ratios[len(peak_ratios)-1] = fitted[t].Y / (running_mean / float64(t))
+				last_peak = t
+				continue
+			}
+			//Insert new peak if changing directions (downhill to uphill)
+			if (t - last_peak >= spacing) { //Spacing check
+				//Second cycle: push back time and insert point into array 
+				if (t > 365) {
+					adjustedT := t - 365
+					i := 0
+					for i < len(peaks) && peaks[i] < adjustedT {
+						i++
+					}
+					
+					//Double check spacing while inserting
+					left := i <= 0 || adjustedT - peaks[i-1] >= spacing
+					right := i >= len(peaks) || peaks[i] - adjustedT >= spacing
+					if left && right {
+						peaks = slices.Insert(peaks, i, adjustedT)
+						peak_ratios = slices.Insert(peak_ratios, i, fitted[t].Y / (running_mean / float64(t)))
 						last_peak = t
+						ascending = true
 					}
+				//First cycle: directly add point
+				} else {
+					peaks = append(peaks, t)
+					peak_ratios = append(peak_ratios, fitted[t].Y / (running_mean / float64(t)))
+					last_peak = t
+					ascending = true
 				}
 			}
+			descending = false
 		}
-		//Derivative test
-		if curr < prev && curr < next {
-			//Spacing check
-			if (t - last_dip >= spacing) {
-				//Amplitude scale
-				if (math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
-					//Second cycle: push back time and insert point into array 
-					if (t > 365) {
-						adjustedT := t - 365
-						i := 0
-						for i < len(dips) && dips[i] < adjustedT {
-							i++
-						}
-						//Double check spacing while inserting
-						left := i <= 0 || adjustedT - dips[i-1] >= spacing
-						right := i >= len(dips) || dips[i] - adjustedT >= spacing
-						if left && right {
-							dips = slices.Insert(dips, i, adjustedT)
-							dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / (running_mean / float64(t)))
-							last_dip = t
-						}
-						
-					//First cycle: directly add point
-					} else {
-						dips = append(dips, t)
-						dip_ratios = append(dip_ratios, fitted[t].Y / (running_mean / float64(t)))
-						last_dip = t
+		//Derivative & amplitude test
+		if (curr < prev && curr < next &&
+			math.Abs(curr-prev) > amp_min * mean && math.Abs(curr-next) > amp_min * mean) {
+			//Extend current descending dip if moving downhill
+			if descending {
+				adjustedT := t
+				if (t > 365) {
+					adjustedT = t - 365
+				}
+				dips[len(dips)-1] = adjustedT
+				dip_ratios[len(dip_ratios)-1] = fitted[t].Y / (running_mean / float64(t))
+				last_dip = t
+				continue
+			}
+			//Insert new dip if changing directions (uphill to downhill)
+			if (t - last_dip >= spacing) { //Spacing check
+				//Second cycle: push back time and insert point into array 
+				if (t > 365) {
+					adjustedT := t - 365
+					i := 0
+					for i < len(dips) && dips[i] < adjustedT {
+						i++
 					}
+					//Double check spacing while inserting
+					left := i <= 0 || adjustedT - dips[i-1] >= spacing
+					right := i >= len(dips) || dips[i] - adjustedT >= spacing
+					if left && right {
+						dips = slices.Insert(dips, i, adjustedT)
+						dip_ratios = slices.Insert(dip_ratios, i, fitted[t].Y / (running_mean / float64(t)))
+						last_dip = t
+						descending = true
+					}
+					
+				//First cycle: directly add point
+				} else {
+					dips = append(dips, t)
+					dip_ratios = append(dip_ratios, fitted[t].Y / (running_mean / float64(t)))
+					last_dip = t
+					descending = true
 				}
 			}
+			ascending = false
 		}
 		//Reset neighbor extremas if entering into repeating section (i.e. at 365)
 		if (t == 365) {
 			last_peak = -1
 			last_dip = -1
+			ascending = false
+			descending = false
 		}
 	}
 
 	/*
 	[[Date Filtering:]]
 
-	(1) Adjust peaks/dips for sales data age & filter out old points beyond certain age (>30 days)
+	(1) Adjust peaks/dips for sales data age & filter out old points beyond certain age (>75 days)
 	
 	(2) Flip values greater than half year from x -> x-365 to place in previous cycle 
 	so first peak/dip will be proximal to current time (if beyond age, will be cut anyways)
@@ -587,21 +621,21 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	*/
 	var peaks_filt []int
 	var dips_filt []int
-	maxAge := 30
+	maxAge := 75
 	for i := 0; i < len(peaks); i++ {
-		peaks[i] -= ground
 		if (peaks[i] > 365/2) {
 			peaks[i] -= 365
 		}
+		peaks[i] -= ground
 		if (peaks[i] >= -maxAge) { 
 			peaks_filt = append(peaks_filt, peaks[i])
 		}
 	}
 	for i := 0; i < len(dips); i++ {
-		dips[i] -= ground
 		if (dips[i] > 365/2) {
 			dips[i] -= 365
 		}
+		dips[i] -= ground
 		if (dips[i] >= -maxAge) {
 			dips_filt = append(dips_filt, dips[i])
 		}
@@ -936,6 +970,7 @@ func init() {
 
 	//Precompute mean & standard deviation for past sales data of all items
 	//Write to a .csv file to use for querying later
+	//Make sure to update SalesDataOrigin in settings.go
 	if config.PopulateSalesData {
 		cycleIncomplete := true //to check if data collection is complete
 
