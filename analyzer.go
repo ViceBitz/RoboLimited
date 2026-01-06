@@ -909,6 +909,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 	if forecastPrices {
 		var tot_past_z float64      //Total forecasted z-scores
 		var weighted_past_z float64 //Weighted forecasted z-scores
+		var tot_rap float64 //Total predicted item RAP values
 		fmt.Println("Forecasts:")
 		for _, id := range assetIds {
 			if len(itemDetails.Items[id]) == 0 {
@@ -930,6 +931,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
 				z_score_stl := findZScore(id, priceSTL, false)
 				past_z_score = z_score_stl
+				tot_rap += priceSTL
 				
 				peaks = append(peaks, -1); dips = append(dips, -1); p_ratios = append(p_ratios, -1); d_ratios = append(d_ratios, -1)
 
@@ -942,7 +944,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 			weighted_past_z += rap * past_z_score
 			
 		}
-		fmt.Println()
+		fmt.Println("Predicted Portfolio Value: ", tot_rap)
 		fmt.Println("Avg. Forecast Z-Score: ", (tot_past_z / float64(itemsProcessed)), " | ", "Weighted Forecast Z-Score: ", (weighted_past_z / float64(tot_rap)))
 		fmt.Println("____________________________________________________")
 	}
