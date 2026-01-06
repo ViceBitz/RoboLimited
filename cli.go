@@ -52,8 +52,10 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 
 		log.Println("____________________________________________________")
 		//Forecast prices with z-score analysis
+		/* DEPRECATED
 		z_score, priceFuture := modelZScore(id, 330, 270, 450, 360, false)
 		log.Println(name, "(Z-Score) | Z-Score:", z_score, "| Price Prediction:", priceFuture)
+		*/
 
 		//Forecast prices with STL decomposition
 		priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, true)

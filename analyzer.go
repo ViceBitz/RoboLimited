@@ -937,11 +937,13 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 			var past_z_score float64
 
 			if forecastType == "z_score" {
+				/* DEPRECATED
 				//Examine z-score from 2 months last year compared to its preceding 30 days
 				past_z_score, _ = modelZScore(id, 330, 270, 450, 360, config.LogConsole)
 				if past_z_score != past_z_score {
 					continue //Check for NaN
 				}
+				*/
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
 				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
