@@ -183,10 +183,25 @@ func extractOwners(url string) ([]string, error) {
 	return owners, nil
 }
 
-// Calculates Z-score of price relative to past sales data; pulls from cached data if exists
+//Calculates z-score of price relative to designated origin
+func findZScoreRelativeTo(id string, price float64, origin float64, logStats bool) float64 {
+	_, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
+	if std == 0.0 { //Scrape mean and SD if not cached
+		_, std, _, _ = processPriceSeries(id, config.LookbackPeriod, 0) //Get data from lookback period
+	}
+	z_score := (price - origin) / std
+
+	if logStats {
+		fmt.Println("Z-Score: ", z_score, "| Origin: ", origin, "| SD: ", std)
+	}
+
+	return z_score
+}
+
+//Calculates z-score of price relative to past sales data; pulls from cached data if exists
 func findZScore(id string, price float64, logStats bool) float64 {
 	mean, std := tools.SalesStats[id].Mean, tools.SalesStats[id].StdDev //Use cache for fast query
-	if mean == 0.0 && std == 0.0 {                                      //Scrape mean and SD if not cached
+	if mean == 0.0 && std == 0.0 { //Scrape mean and SD if not cached
 		mean, std, _, _ = processPriceSeries(id, config.LookbackPeriod, 0) //Get data from lookback period
 	}
 	z_score := (price - mean) / std
@@ -745,7 +760,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
 			priceFuture, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
-			z_score := findZScore(id, priceFuture, config.LogConsole)
+			z_score := findZScoreRelativeTo(id, priceFuture, rap, config.LogConsole) //Get z-score relative to live RAP
 			if z_low <= z_score && z_score <= z_high {
 				nextPeak := -1; nextRatioP := 0.0
 				if (len(peaks) > 0) { nextPeak = peaks[0]; nextRatioP = p_ratios[0]}
