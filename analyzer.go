@@ -262,8 +262,14 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
 	}
 
+	
 	/*
 	[[Fourier regression + linear drift to model seasonality]]
+
+	(a) Fourier regression periodic function
+	(b) Linear trendline
+	(c) Raw price point scatterplot
+	(d) Vertical dateline
 	*/
 	
 	Kw := 3 //weekly order
@@ -298,9 +304,9 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	//Solve the regression for optimal betas
 	beta, _ := tools.SolveNormalEq(X, y)
 
-	//Forecast future price
-	ground := int((time.Now().Unix() - config.SalesDataOrigin) / (24 * 60 * 60))
-	horizon := int(daysFuture + int64(ground)) //Adjust for sales data age
+	//Forecast future price average across set period
+	ground := int((time.Now().Unix() - config.SalesDataOrigin) / (24 * 60 * 60)) //Days since data snapshot age
+	horizon := int(daysFuture + int64(ground)) //Adjust for sales data age (predict avg. in [ground, daysFuture + ground])
 
 	if daysFuture <= 0 {
 		return math.NaN(), -1, make([]int, 0), make([]int, 0), make([]float64, 0), make([]float64, 0)
@@ -357,7 +363,10 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		}
 		return s
 	}
-	//Visualize Fourier regression
+
+	/*
+	[[Visualize Fourier regression model]]
+	*/
 	fitted := make(plotter.XYs, n)
 	weeklySeason := make(plotter.XYs, n)
 	var yearlySeason plotter.XYs
@@ -443,6 +452,16 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 		plt.Legend.Add("Yearly season", ly)
 	}
 
+	//Add vertical dateline at offset from data age origin
+	l, _ := plotter.NewLine(plotter.XYs{
+		{X: float64(ground), Y: plt.Y.Min},
+		{X: float64(ground), Y: plt.Y.Max},
+	})
+	plt.Add(l)
+	plt.Legend.Add("Today", l)
+	l.Color = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+	l.Width = vg.Points(1)
+
 	//Set x-axis ticks to month (30 day intervals)
 	var x_ticks []plot.Tick
 	for i := 0; i <= int(daysBefore); i += 30 {
@@ -493,8 +512,8 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 
 	peaks := []int{} //Peak times
 	dips := []int{} //Dip times
-	peak_ratios := []float64{} //Peak ratio to mean
-	dip_ratios := []float64{} //Dip ratio to mean
+	peak_ratios := []float64{} //Peak scale relative to mean
+	dip_ratios := []float64{} //Dip scale relative to mean
 
 	last_peak := -999 //Previous peak
 	last_dip := -999 //Previous dip
@@ -613,7 +632,7 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	/*
 	[[Date Filtering:]]
 
-	(1) Adjust peaks/dips for sales data age & filter out old points beyond certain age (>75 days)
+	(1) Adjust peaks/dips for sales data age & filter out old points beyond certain age (>45 days)
 	
 	(2) Flip values greater than half year from x -> x-365 to place in previous cycle 
 	so first peak/dip will be proximal to current time (if beyond age, will be cut anyways)
@@ -621,7 +640,8 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	*/
 	var peaks_filt []int
 	var dips_filt []int
-	maxAge := 75
+	maxAge := 90
+	log.Println(peaks, dips)
 	for i := 0; i < len(peaks); i++ {
 		if (peaks[i] > 365/2) {
 			peaks[i] -= 365
