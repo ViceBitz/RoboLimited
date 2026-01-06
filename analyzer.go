@@ -640,22 +640,23 @@ func modelFourierSTL(id string, daysBefore int64, daysFuture int64, logStats boo
 	*/
 	var peaks_filt []int
 	var dips_filt []int
-	maxAge := 90
+	maxAge := 90 //Ignore adjusted extrema further back than this
 	log.Println(peaks, dips)
 	for i := 0; i < len(peaks); i++ {
+		peaks[i] -= ground
 		if (peaks[i] > 365/2) {
 			peaks[i] -= 365
 		}
-		peaks[i] -= ground
 		if (peaks[i] >= -maxAge) { 
 			peaks_filt = append(peaks_filt, peaks[i])
 		}
 	}
 	for i := 0; i < len(dips); i++ {
+		dips[i] -= ground
 		if (dips[i] > 365/2) {
 			dips[i] -= 365
 		}
-		dips[i] -= ground
+		
 		if (dips[i] >= -maxAge) {
 			dips_filt = append(dips_filt, dips[i])
 		}
