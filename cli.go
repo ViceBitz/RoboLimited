@@ -48,6 +48,8 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 	itemDetails := tools.GetLimitedData()
 	for _, id := range forecastItems {
 		name := itemDetails.Items[id][0]
+		rap := itemDetails.Items[id][2].(float64)
+
 		log.Println("____________________________________________________")
 		//Forecast prices with z-score analysis
 		z_score, priceFuture := modelZScore(id, 330, 270, 450, 360, false)
@@ -55,8 +57,8 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 
 		//Forecast prices with STL decomposition
 		priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, true)
-		z_score_stl := findZScore(id, priceSTL, false)
-		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+		z_score_stl := findZScoreRelativeTo(id, priceSTL, rap, false)
+		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| RAP:", rap, "| Price Prediction:", priceSTL)
 		log.Println("Stability (Resid. %CV):", stability)
 		log.Println("Peaks:", peaks)
 		log.Println("Dips:", dips)

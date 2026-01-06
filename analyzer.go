@@ -945,13 +945,13 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
 				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
-				z_score_stl := findZScore(id, priceSTL, false)
+				z_score_stl := findZScoreRelativeTo(id, priceSTL, rap, false)
 				past_z_score = z_score_stl
 				tot_rap += priceSTL
 				
 				peaks = append(peaks, -1); dips = append(dips, -1); p_ratios = append(p_ratios, -1); d_ratios = append(d_ratios, -1)
 
-				fmt.Println(name, "|", id, "| Z-Score:", z_score_stl, "| Price Prediction:", priceSTL)
+				fmt.Println(name, "|", id, "| Z-Score:", z_score_stl, "| RAP:", rap, "| Price Prediction:", priceSTL)
 				fmt.Println("Peak:", peaks[0], "| Dip:", dips[0], "| Stability: ", stability)
 				fmt.Println("Peak Ratio:", p_ratios[0], "| Dip Ratio:", d_ratios[0], "\n")
 			}
