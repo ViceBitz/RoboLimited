@@ -59,7 +59,7 @@ func forecast(forecastItems []string, daysPast int64, daysFuture int64) {
 
 		//Forecast prices with STL decomposition
 		priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, true)
-		z_score_stl := findZScoreRelativeTo(id, priceSTL, rap, false)
+		z_score_stl := findZScore(id, priceSTL, false)
 		log.Println(name, "(STL) | Z-Score:", z_score_stl, "| RAP:", rap, "| Price Prediction:", priceSTL)
 		log.Println("Stability (Resid. %CV):", stability)
 		log.Println("Peaks:", peaks)

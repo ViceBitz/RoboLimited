@@ -760,7 +760,7 @@ func ForecastWithin(z_low float64, z_high float64, priceLow float64, priceHigh f
 		//Filter out items outside price range and demand
 		if priceLow <= price && price <= priceHigh && (!isDemand || demand >= 1) {
 			priceFuture, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, daysPast, daysFuture, config.LogConsole)
-			z_score := findZScoreRelativeTo(id, priceFuture, rap, config.LogConsole) //Get z-score relative to live RAP
+			z_score := findZScore(id, priceFuture, config.LogConsole) //Get z-score relative to live RAP
 			if z_low <= z_score && z_score <= z_high {
 				nextPeak := -1; nextRatioP := 0.0
 				if (len(peaks) > 0) { nextPeak = peaks[0]; nextRatioP = p_ratios[0]}
@@ -947,7 +947,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
 				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
-				z_score_stl := findZScoreRelativeTo(id, priceSTL, rap, false)
+				z_score_stl := findZScore(id, priceSTL, false)
 				past_z_score = z_score_stl
 				tot_rap += priceSTL
 				
