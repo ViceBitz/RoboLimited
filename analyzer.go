@@ -868,6 +868,7 @@ func FindOwners(targetItemId string, worth_low float64, worth_high float64, limi
 		j := rand.IntN(i + 1)
 		ownerIds[i], ownerIds[j] = ownerIds[j], ownerIds[i]
 	}
+	
 
 	//Calculate net worth of every owner
 	log.Println(len(ownerIds))
@@ -946,7 +947,7 @@ func AnalyzeInventory(forecastPrices bool, forecastType string) {
 				*/
 			} else if forecastType == "stl" {
 				//Forecast future prices with STL + Fourier regression
-				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 4, 30, true)
+				priceSTL, stability, peaks, dips, p_ratios, d_ratios := modelFourierSTL(id, 365 * 5, 30, true)
 				z_score_stl := findZScore(id, priceSTL, false)
 				past_z_score = z_score_stl
 				tot_rap += priceSTL
